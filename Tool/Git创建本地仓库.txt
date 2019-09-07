@@ -1,17 +1,37 @@
 使用Git创建本地仓库，
 可以记录文本文件变化，
 这里以自己的文章为例，
-利用TortoiseGit工具创建一个本地的Git仓库。
-1.切换到需要创建仓库的目录下，
+利用TortoiseGit工具创建一个本地Git仓库。
+### 1.
+切换到需要创建仓库的目录下，
 比如：D:\MyDoc\DevelopNote
-2.鼠标右键打开菜单，点击Git Create repository here...
-3.不要勾选Make it Bare,点击OK
-4.右键打开菜单，Git Commit -> "master"...，
-如果该目录下有未提交的文件，则可以看到如下：
-5.输入提交信息Message，
+### 2.
+鼠标右键打开菜单，点击Git Create repository here...
+![](https://upload-images.jianshu.io/upload_images/11810589-e0d81c4c3c22a0cf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+### 3.
+不要勾选Make it Bare,点击OK
+![](https://upload-images.jianshu.io/upload_images/11810589-7300305321172d59.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+### 4.
+右键打开菜单，Git Commit -> "master"...
+![](https://upload-images.jianshu.io/upload_images/11810589-6b2908dd903e2cfd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+### 5.
+输入提交信息Message，
 选择所有文件All,
-点击右下角的Commit提交
-6.右键打开菜单，TortoiseGit, Show log，
+如果该目录下有未提交的文件，则可以提交，
+点击右下角的Commit提交。
+![](https://upload-images.jianshu.io/upload_images/11810589-6a0e18ddc406d554.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+### 6.
+右键打开菜单，TortoiseGit, Show log，
 查看提交记录，可以看到每一次的提交记录，
 双击对提交记录里面的文件，
 可以看到文件详细的修改内容。
+![](https://upload-images.jianshu.io/upload_images/11810589-4a5d6d01bb810523.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-ed90017a85ea713d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+### 7.
+因为是本地仓库，所以不需要Git Push了，
+但是要注意备份，仓库目录被删除了就没有了。
