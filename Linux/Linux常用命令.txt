@@ -140,6 +140,8 @@ top
 
 查看当前用户的进程
 ps -ef | grep `whoami`
+查看进程启动时间和启动后所流逝的时间
+ps -eo pid,lstart,etime,cmd | grep cmdkeyword
 
 查看端口占用情况
 lsof -i:8080
@@ -167,6 +169,16 @@ vi全局替换文本
 %s/info/debug/g
 替换时忽略大小写
 %s/\cinfo/debug/g
+
+less命令查看超大文件
+less bigfile.log
+里面的命令操作类似VIM
+ctrl+f向前一屏幕
+G直接到最后
+查看文件，并定位到某行
+less +[lineNumber]g bigfile.log
+查看文件,并显示行号
+ less -N catalina.out
 
 查看操作系统对应版本
 uname -a
