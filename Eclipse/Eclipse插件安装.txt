@@ -1,0 +1,70 @@
+# 1.解决Eclipse安装或更新插件非常缓慢的问题
+Eclipse中在在线安装或更新插件的时候速度出奇的慢，
+开始还以为是网速的问题，后来发现是配置的问题，
+可以采用下面两种方法来提升安装更新的速度： 
+## 1.1
+打开Windows-Preferences配置窗口，
+找到Install/Update – Available Software Sites，
+将里面不用的信息删除，将本次更新不需要的停用
+（选中之后然后点右边的Disable按钮）。 
+## 1.2
+打开在线安装插件的Install窗口，
+将下面的 Contact all update sites during install to find required software 前面的选项去掉。 
+
+经过上面两步设置之后，再次更新的话速度就会提升很多，
+如果被墙的话可以设置代理或者先下载下来，然后在本地安装。
+
+# 2.为当前的Eclipse安装Java EE开发插件
+Eclipse -> Help -> Install New Software
+在打开的安装向导的窗口, 点击"Work With"下拉，
+根据你的Eclipse版本名选择：
+``` 
+"http://download.eclipse.org/releases/kepler"(如果你是 Eclipse Kepler版本)
+OR "http://download.eclipse.org/releases/juno"(如果你是 Eclipse Juno版本)
+OR "http://download.eclipse.org/releases/indigo"(如果你是 EclipseIndigo版本)
+OR "http://download.eclipse.org/releases/helios"(如果你是 Eclipse Helios版本) 
+``` 
+注意：如果你在下拉框里面看不到上面的内容，可以直接把链接复制进去。
+
+然后Eclipse会搜寻这个网址的所有软件，并且显示到下面的列表，
+建议使用代理，否则可能要花很长时间显示和下载插件。
+
+展开 "Web, XML, Java EE and OSGi Enterprise Development" 选项，并且将下面四个选项打上勾：
+```
+Eclipse Java EE Developer Tools
+Eclipse Java Web Developer Tools
+Eclipse Web Developer Tools
+Eclipse XML Editors and Tools
+```
+然后一路点击Next，直到你看 Review licences窗口，
+在这个窗口选择 "I accept the terms of the licence agreement" 并且点击“Finish”。
+Eclipse会开始安装新的软件，
+安装完插件之后, Eclipse会要求你重启eclipse，选择“yes”。
+重启Eclipse之后, 打开新建项目的面板，
+就可以看到 Web文件夹 和 “Dynamic Web Project” 选项了。
+
+# 3.在线安装Findbugs插件
+Eclipse -> Help -> Install New Software
+输入地址：http://findbugs.cs.umd.edu/eclipse，
+并一路Next就可安装成功，
+重新启动eclipse，
+打开Eclipse->Window->Preferences，
+就可以看到findbugs已经安装好了。
+
+# 4.在线安装Eclipse Explorer
+Eclipse -> Help -> Eclipse MarketPlace
+Search标签下的Find输入Eclipse Explorer查找，
+在搜索结果里面找到Eclipse Explorer 4.1.0，
+点击install安装，一路Next即可。
+功能类似的插件：Start Explorer
+
+# 5.在线安装Eclipse反编译插件
+Eclipse -> Help -> Eclipse MarketPlace
+在插件市场搜索：Enhanced Class Decompiler 
+```
+Eclipse Class Decompiler integrates JD, Jad, FernFlower, CFR, Procyon with Eclipse seamlessly. 
+It allows Java developers to debug class files without source code directly.
+```
+点击install安装，一路Next即可。
+再给一个插件在线安装的地址：
+http://www.cpupk.com/decompiler/update

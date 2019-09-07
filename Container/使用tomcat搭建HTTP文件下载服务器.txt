@@ -1,0 +1,59 @@
+使用tomcat搭建HTTP文件下载服务器,
+有时我们的应用或者服务需要去外网下载一些资源，
+但是如果在内网环境或者网络不好的情况下，
+我们可以在内网提供文件下载服务，
+将预先下载好的资源放在某个地方并且提供http下载，
+避免每次下载都去访问外网，
+使用的tomcat安装包为apache-tomcat-6.0.44.tar.gz。
+
+# 1.上传并且解压安装包
+tar -zxvf apache-tomcat-6.0.44.tar.gz
+
+# 2.修改配置文件
+vim conf/web.xml
+```
+<init-param>
+  <param-name>listings</param-name>
+  <param-value>true</param-value>
+</init-param>
+```
+注意将原来的false改为true
+
+# 2.在webapps在创建个目录
+在webapps下创建个目录download
+mkdir download
+将需要提供下载的包放到download目录下面即可。
+比如：touch test.txt
+
+# 3.启动tomcat
+bin/startup.sh
+
+停止tomcat
+bin/shutdown.sh
+
+# 4.通过浏览器访问提供下载的内容
+http://10.43.159.11:8080/download
+点击条目即可下载，
+或者知道完整路径也可以直接下载,如下：
+http://10.43.159.11:8080/download/test.txt
+
+# 5.添加新文件下载
+只要把文件拷贝到webapps/download目录下即可下载，
+不需要重新启动。
+
+# 6.tomcat外部文件映射
+如果不想把文件放到webapps目录下面，
+想把外部文件路径映射到tomcat的某个下载路径下时，
+还需要配置文件conf/server.xml:
+```
+<Host name="localhost" appBase="webapps" unpackWARs="true" autoDeploy="true">
+	<Valve className="org.apache.catalina.valves.AccessLogValve" 
+		directory="logs" prefix="localhost_access_log." suffix=".txt"
+		pattern="%h %l %u %t &quot;%r&quot; %s %b" />
+	<Context path="/download2" docBase="/home/tomcat/download2"></Context>
+</Host>
+```
+其中path为虚拟路径，docBase为本地真实路径。
+
+# 7.重启tomcat，使用如下URL路径访问
+http://10.43.159.11:8080/download2

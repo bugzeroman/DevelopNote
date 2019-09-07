@@ -1,0 +1,139 @@
+# Ranger介绍
+2016年，Hadoop迎来了自己十周岁生日。过去的十年，Hadoop雄霸武林盟主之位，号令天下，引领大数据技术生态不断发展壮大，一时间百家争鸣，百花齐放。然而，兄弟多了不好管，为了抢占企业级市场，各家都迭代出自己的一套访问控制体系，不管是老牌系统(比如HDFS、HBase)，还是生态新贵(比如Kafka、Alluxio)，ACL(Access Control List)支持都是Roadmap里被关注最高的issue之一。
+历史证明跳出混沌状态的最好方式就是——出台标准。于是，Hadoop两大厂Cloudera和Hortonworks先后发起标准化运动，分别开源了Sentry和Ranger，在centralized访问控制领域展开新一轮的角逐。
+Apache Ranger能够监控和管理整个Hadoop平台的综合数据安全。Ranger在0.4版本的时候被Hortonworks加入到其Hadoop发行版HDP里，目前作为Apache Top Level Project(顶级项目)，最新版本是1.0.0。
+
+它主要提供如下特性:
+- 基于策略(Policy-based)的访问权限模型
+- 通用的策略同步与决策逻辑，方便控制插件的扩展接入
+- 内置常见系统(如HDFS、YARN、HBase等12个)的控制插件，且可扩展
+- 内置基于LDAP、File、Unix的用户同步机制，且可扩展
+- 统一的中心化的管理界面，包括策略管理、审计查看、插件管理等
+
+本文将从权限模型、总体架构、系统插件三个角度来展开，配合一个组件的用户使用Ranger权限控制的全流程，剖析Ranger如何实现访问权限控制。
+
+# 权限模型
+访问权限无非是定义了”用户-资源-权限“这三者间的关系，Ranger基于策略来抽象这种关系，进而延伸出自己的权限模型。”用户-资源-权限”的含义详解：
+- 用户：由User或Group来表达，User代表访问资源的用户，Group代表用户所属的用户组。
+- 资源：由Resource来表达，不同的组件对应的业务资源是不一样的，比如HDFS的File Path，HBase的Table。
+- 权限：由(AllowACL, DenyACL)来表达，类似白名单和黑名单机制，AllowACL用来描述允许访问的情况，DenyACL用来描述拒绝访问的情况。不同的组件对应的权限也是不一样的。
+
+Ranger中的访问权限模型可以用下面的表达式来描述，从而抽象出了”用户-资源-权限“这三者间的关系：
+```
+Service = List<Policy>
+Policy =  List<Resource> + AllowACL + DenyACL
+AllowACL = List<AccessItem> allow + List<AccssItem> allowException
+DenyACL = List<AccessItem> deny + List<AccssItem> denyException
+AccessItem = List<User/Group> + List<AccessType>
+```
+ 
+
+下表列出了Ranger支持的所有系统的模型实体枚举值:
+
+|Service |Resource |Access Type |
+-----------|--------------|------------------|
+|HDFS |Path |Read,Write,Execute |
+|HBase |Table,Column-family,Column |Read,Write,Create,Admin |
+|Hive | Database,Table,UDF,Column,URL |Select,Update,Create,Drop,Alter,Index,Lock,Write,Read,ALL|
+|Sqoop |Connector,Link,Job |READ,WRITE |
+|Storm |Topology |Submit Topology,File Upload,File Download,Kill Topology,Rebalance,Activate,Deactivate,Get Topology Conf, Get Topology,Get User Topology,Get Topology Info,Upload New Credential |
+|Solr |Collection |Query,Update,Others,Solr Admin |
+|Kafka |Topic |Publish,Consume,Configure,Describe,Create,Delete,Kafka Admin |
+|Knox |Topology,Service |Allow |
+|Kylin |Project |QUERY,OPERATION,MANAGEMENT,ADMIN |
+|YARN |Queue |submit-app,admin-queue |
+|Atlas |Type Catagory,Type Name,Entity Type,Entity Classification,Entity ID,Atlas Service |Create Type,UpdateType,Delete Type,Read Entity,Create Entity,Update Entity,Delete Entity,Read Classification,Add Classification,Update Classification,Remove Classification,Admin Export,Admin Import |
+|Nifi |NiFi Resource |Read,Write |
+
+关于权限这个部分,为什么AllowACL和DenyACL需要分别对应两组AccessItem？这是由具体使用场景引出的设计：
+以AllowACL为例，假定我们要将资源授权给一个用户组G1，但是用户组里某个用户U1除外，这时只要增加一条包含G1的AccessItem到AllowACL_allow，同时增加一条包含U1的AccessItem到AllowACL_allowException即可。
+类似的原因可反推到DenyACL。
+既然现在一条Policy有(allow, allowException, deny, denyException)这么四组AccessItem，那么判断用户最终权限的决策过程是怎样的？
+总体来说，这四组AccessItem的作用优先级由高到低依次是：
+```
+denyException > deny > allowException > allow
+```
+访问决策树可以用以下流程图来描述：
+![](https://upload-images.jianshu.io/upload_images/11810589-177b4785b7fac4b6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+总结一下就是黑名单优先级高于白名单，黑名单排除优先级高于黑名单，白名单排除优先级高于白名单。
+决策下放：如果没有policy能决策访问，一般情况是认为没有权限拒绝访问，然而Ranger还可以选择将决策下放给系统自身的访问控制层，比如HDFS的ACL，这个和每个Ranger插件以及应用系统自己的实现有关。
+
+#总体架构
+Ranger的总体架构如下图所示：
+![](https://upload-images.jianshu.io/upload_images/11810589-dc6adb85f81dd7e7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+ 
+Ranger主要由以下三个组件构成：
+- RangerAdmin: 以RESTFUL形式提供策略的增删改查接口，同时内置一个Web管理页面。
+- AgentPlugin: 嵌入到各系统执行流程中，定期从RangerAdmin拉取策略，根据策略执行访问决策树，并且记录访问审计。插件的实现原理将在后文详细介绍。
+- UserSync: 定期从LDAP/Unix/File中加载用户，上报给RangerAdmin。
+
+Ranger的其他架构简要说明：
+- KMS: Hadoop透明加密，Hadoop Key Management Server（KMS）是一个基于HadoopKeyProvider API编写的密钥管理服务器。RangerKMS就是对KMS的策略管理和秘钥管理，使用keyadmin用户登陆。
+- TAG: 基于标签的权限管理，当一个用户的请求涉及到多个应用系统中的多个资源的权限时，可以通过只配置这些资源的tag方便快速的授权。
+
+#系统插件
+系统插件主要负责三件事：
+- 定期从RangerAdmin拉取策略
+- 根据策略执行访问决策树
+- 实时记录访问审计
+
+以上执行逻辑是通用的，可由所有系统插件引用，因此剩下的问题是如何把这些逻辑嵌入到各个系统的访问决策流程中去。
+实现可扩展接口：多数的系统在实现时都有考虑功能扩展性的问题，一般会为核心的模块暴露出可扩展的接口，访问控制模块也不例外。Ranger通过实现访问控制接口，将自己的逻辑嵌入各个系统。
+
+下表列出了Ranger插件对所有支持的系统的扩展接口：
+
+|Service |Extensible Interface |Ranger Implement Class |
+|-----------|---------------------------|----------------------------------|
+|HDFS |org.apache.hadoop.hdfs.server.namenode.INodeAttributeProvider |org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer |
+|HBase |org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos.AccessControlService.Interface |org.apache.ranger.authorization.hbase.RangerAuthorizationCoprocessor |
+|Hive |org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthorizerFactory |org.apache.ranger.authorization.hive.authorizer.RangerHiveAuthorizerFactory |
+|Sqoop |org.apache.sqoop.security.AuthorizationValidator |org.apache.ranger.authorization.sqoop.authorizer.RangerSqoopAuthorizer |
+|Storm |org.apache.storm.security.auth.IAuthorizer |org.apache.ranger.authorization.storm.authorizer.RangerStormAuthorizer |
+|Solr |org.apache.solr.security.AuthorizationPlugin |org.apache.ranger.authorization.solr.authorizer.RangerSolrAuthorizer |
+|Kafka |kafka.security.auth.Authorizer |org.apache.ranger.authorization.kafka.authorizer.RangerKafkaAuthorizer |
+|Knox |org.apache.knox.gateway.deploy.ProviderDeploymentContributorBase |org.apache.ranger.authorization.knox.deploy.RangerPDPKnoxDeploymentContributor |
+|Kylin |org.apache.kylin.rest.security.ExternalAclProvider |org.apache.ranger.authorization.kylin.authorizer.RangerKylinAuthorizer |
+|YARN |org.apache.hadoop.yarn.security.YarnAuthorizationProvider |org.apache.ranger.authorization.yarn.authorizer.RangerYarnAuthorizer |
+|Atlas |org.apache.atlas.authorize.AtlasAuthorizer |org.apache.ranger.authorization.atlas.authorizer.RangerAtlasAuthorizer |
+|Nifi |NA |NA |
+
+
+各个系统插件安装节点:
+
+|Service |Install Node |
+|-----------|-----------------|
+|HDFS |Name Node |
+|HBase |Master,Regional Server |
+|Hive |HiveServer2 |
+|Sqoop |ALL/Stand-alone |
+|Storm |ALL/Cluster |
+|Solr |ALL/Cluster |
+|Kafka |ALL/Cluster |
+|Knox |Knox gateway |
+|Kylin |ALL/Stand-alone |
+|YARN |Resource Manager |
+|Atlas |ALL/Stand-alone |
+|Nifi |NA |
+
+系统插件拉取策略:
+主动到RangerAdmin拉取策略，而非RangerAdmin把策略下发给各个插件，
+策略有变化，拉取新的策略更新内存中鉴权引擎，同时保存一份备份文件在本地，RangerAdmin挂掉后，组件也重启时，可以使用本地的备份继续鉴权。删除RangerAdmin上面的service，会使插件鉴权不可用。
+
+系统插件性能考虑:
+关闭策略中的audit审计日志
+插件鉴权引擎定时对策略排序，优先匹配高命中的策略
+
+权限管理流程，以Sqoop2插件的权限控制为例：
+1. RangerAdmin创建服务Service
+2. RangerAdmin创建策略Policy
+3. SqoopPlugin插件拉取策略
+4. SqoopPlugin对用户访问请求鉴权：show connector
+5. SqoopPlugin插件记录审计日志Audit
+6. RangerAdmin查看审计日志Audit
+
+# 结语
+随着Hadoop生态圈进军企业级市场，数据安全逐渐成为关注焦点。Ranger作为标准化的访问控制层，引入统一的权限模型与管理界面，极大地简化了数据权限的管理，统一的权限管理降低了学习成本，非常易于使用。同时，虽然Ranger目前已经是Apache顶级项目，支持了12个Apache生态系统组件，但是还有可以优化和提升的地方，希望未来其能覆盖更多的系统，大量进入商用市场，一统江湖成为事实上的标准，让我们拭目以待。
+
+# 参考文章：
+[Apache Ranger剖析：Hadoop生态圈的安全管家](http://blog.csdn.net/zhangjun2915/article/details/44830231)

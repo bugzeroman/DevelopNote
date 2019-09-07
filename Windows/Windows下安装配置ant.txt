@@ -1,0 +1,33 @@
+# 1.ant安装
+请从官网下载ant的\*.zip格式的安装包，
+Windows建议下载\*.zip版本，
+Linux建议下载\*.gz版本。
+
+# 2.配置环境变量
+解压之后，在Windows中配置环境变量，
+在系统变量的path后面添加ant的bin目录的路径：
+D:\GreenProgramFiles\apache-ant-1.9.7\bin
+如果有多个配置项，请注意使用**;**分隔开；
+
+# 3.测试命令
+进入cmd命令行窗口，
+执行如下命令：
+ant -v
+
+出现下面结果就说明安装成功：
+```
+Apache Ant(TM) version 1.9.7 compiled on April 9 2016
+Trying the default build file: build.xml
+Buildfile: build.xml does not exist!
+Build failed
+```
+
+# 4.问题解决
+Ant运行时找不到tools.jar解决方法
+命令行输入ant命令后提示：
+```
+“Unable to locate tools.jar. Expected to find it in C:\Program Files\Java\jre6\lib”；
+```
+由于tools.jar在jdk下的lib中，
+需要安装jdk并且设置环境变量，
+请参考[Windows下安装配置jdk](https://www.jianshu.com/p/042dbf46cace)。

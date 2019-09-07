@@ -1,0 +1,254 @@
+
+Ranger-AdminServer安装(开启Kerberos)
+ 已发布
+
+Ranger-AdminServer安装，
+同时开启Kerberos安全模式，
+基于ranger版本0.7.0。
+
+# 安装规划
+10.43.159.240 zdh-240
+10.43.159.245 zdh-245
+root/zdh1234
+mysql数据库mysql/zdh1234:
+DBUser:root/zdh1234
+Link: zdh-245:3306
+Kerberos服务器 root/zdh1234:
+10.43.159.240 zdh-240 
+其他Kerberos从机和客户端未列出。
+
+|IP/机器名 |安装软件 |运行进程 |
+|-------------|-------------|-------------|
+|zdh-240| AdminServer,Usersync,Kerberos |EmbeddedServer,UnixAuthenticationService,KerberosServer |
+|zdh-245 |MySQL |mysql |
+
+# 安装用户
+rangeradmin/zdh1234
+rangerusersync/zdh1234
+
+Kerberos认证用户，ranger安装机器上面需要有keberos的客户端：
+HTTP HTTP.keytab(用于rangeradmin对外提供HTTP服务，即RESTful服务)
+rangeradmin rangeradmin.keytab （用于rangeradmin作为Server鉴权）
+rangerlookup rangerlookup.keytab （用于rangeradmin作为Client使用TestConnection鉴权）
+
+# 1.安装AdminServer，需要使用root用户
+
+安装jdk到/usr/share/java
+配置JAVA_HOME环境变量供root使用
+```
+export JAVA_HOME=/usr/share/java/jdk1.7.0_80
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar 
+alias logs='cd /home/rangeradmin/ranger-0.7.0-SNAPSHOT-admin/ews/logs'
+alias conf='cd /home/rangeradmin/ranger-0.7.0-SNAPSHOT-admin/conf'
+```
+拷贝mysql-connector-java.jar到/usr/share/java目录下：
+scp root@10.43.159.41:/usr/share/java/mysql-connector-java.jar .
+
+# 2.安装rangerAdmin到/home/rangeradmin
+创建目录/home/rangeradmin，获取安装包
+scp root@10.43.156.193:/home/pub/ranger/ranger-0.7.0/target/ranger-0.7.0-SNAPSHOT-admin.tar.gz .
+解压安装包
+tar -zxvf ranger-0.7.0-SNAPSHOT-admin.tar.gz 
+在ranger-0.7.0-SNAPSHOT-admin目录下创建keytabs目录
+mkdir keytabs
+
+修改配置文件install.properties参数
+```
+DB_FLAVOR=MYSQL
+SQL_CONNECTOR_JAR=/usr/share/java/mysql-connector-java.jar
+db_root_user=root
+db_root_password=zdh1234
+db_host=zdh-245
+db_name=rangerkerberos
+db_user=rangeradmin
+db_password=zdh1234
+
+audit_store=db
+
+policymgr_external_url=http://localhost:6080
+policymgr_http_enabled=true
+
+unix_user=rangeradmin
+unix_group=hadoop
+
+spnego_principal=HTTP/zdh-240@ZDH.COM
+spnego_keytab=/home/rangeradmin/ranger-0.7.0-SNAPSHOT-admin/keytabs/HTTP.keytab
+token_valid=30
+cookie_domain=zdh-240
+cookie_path=/
+admin_principal=rangeradmin/zdh-240@ZDH.COM
+admin_keytab=/home/rangeradmin/ranger-0.7.0-SNAPSHOT-admin/keytabs/rangeradmin.keytab
+lookup_principal=rangerlookup/zdh-240@ZDH.COM
+lookup_keytab=/home/rangeradmin/ranger-0.7.0-SNAPSHOT-admin/keytabs/rangerlookup.keytab
+hadoop_conf=/home/rangeradmin/ranger-0.7.0-SNAPSHOT-admin/hadoop/conf
+```
+
+其中hadoop_conf可以不配置，或者为空或者不存在，
+如果配置了，需要hadoop里面的core-site.xml存在以下2个配置项,
+如果没有配置，需要在rangeradmin生成的conf目录下面的空的core-site.xml里面增加以下2个配置项：
+```
+<property>
+  <name>hadoop.security.auth_to_local</name>
+  <value>DEFAULT</value>
+</property>
+<property>
+  <name>hadoop.security.authentication</name>
+  <value>kerberos</value>
+</property>
+```
+用于开启kerberos，auth_to_local的值随意，
+主要是ranger使用了hadoop提供的一套代码开启kerberos。
+
+# 3.创建rangeradmin的principal
+操作机器：
+在kerberos Server zdh-240上，使用root用户，在/root/keytabs目录下
+操作命令：
+```
+kadmin.local
+addprinc -randkey HTTP/zdh-240@ZDH.COM
+xst -k HTTP.keytab HTTP/zdh-240@ZDH.COM
+addprinc -randkey rangeradmin/zdh-240@ZDH.COM
+xst -k rangeradmin.keytab rangeradmin/zdh-240@ZDH.COM
+addprinc -randkey rangerlookup/zdh-240@ZDH.COM
+xst -k rangerlookup.keytab rangerlookup/zdh-240@ZDH.COM
+exit
+```
+把keytab都拷贝到rangeradmin的conf目录下
+cp HTTP.keytab /home/rangeradmin/ranger-0.7.0-SNAPSHOT-admin/keytabs
+
+
+# 4.执行安装Ranger Admin,需要root权限:
+./setup.sh
+
+# 5.启动Ranger Admin
+安装完成后虽然解压的目录属主从root变成ranger了，但是启动停止仍然建议使用root用户：
+ranger-admin start
+
+# 6.验证是否安装成功
+http://10.43.159.240:6080
+zdh-240:6080
+默认用户名密码 admin/admin
+在启动日志catalina.out中可以查看到如下信息：
+Starting Server using kerberos credential
+Ranger-AdminServer安装(开启Kerberos)
+Ranger-AdminServer安装，
+同时开启Kerberos安全模式，
+基于ranger版本0.7.0。
+
+安装规划
+10.43.159.240 zdh-240
+10.43.159.245 zdh-245
+root/zdh1234
+mysql数据库mysql/zdh1234:
+DBUser:root/zdh1234
+Link: zdh-245:3306
+Kerberos服务器 root/zdh1234:
+10.43.159.240 zdh-240
+其他Kerberos从机和客户端未列出。
+
+IP/机器名	安装软件	运行进程
+zdh-240	AdminServer,Usersync,Kerberos	EmbeddedServer,UnixAuthenticationService,KerberosServer
+zdh-245	MySQL	mysql
+安装用户
+rangeradmin/zdh1234
+rangerusersync/zdh1234
+
+Kerberos认证用户，ranger安装机器上面需要有keberos的客户端：
+HTTP HTTP.keytab(用于rangeradmin对外提供HTTP服务，即RESTful服务)
+rangeradmin rangeradmin.keytab （用于rangeradmin作为Server鉴权）
+rangerlookup rangerlookup.keytab （用于rangeradmin作为Client使用TestConnection鉴权）
+
+1.安装AdminServer，需要使用root用户
+安装jdk到/usr/share/java
+配置JAVA_HOME环境变量供root使用
+
+export JAVA_HOME=/usr/share/java/jdk1.7.0_80
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar 
+alias logs='cd /home/rangeradmin/ranger-0.7.0-SNAPSHOT-admin/ews/logs'
+alias conf='cd /home/rangeradmin/ranger-0.7.0-SNAPSHOT-admin/conf'
+拷贝mysql-connector-java.jar到/usr/share/java目录下：
+scp root@10.43.159.41:/usr/share/java/mysql-connector-java.jar .
+
+2.安装rangerAdmin到/home/rangeradmin
+创建目录/home/rangeradmin，获取安装包
+scp root@10.43.156.193:/home/pub/ranger/ranger-0.7.0/target/ranger-0.7.0-SNAPSHOT-admin.tar.gz .
+解压安装包
+tar -zxvf ranger-0.7.0-SNAPSHOT-admin.tar.gz
+在ranger-0.7.0-SNAPSHOT-admin目录下创建keytabs目录
+mkdir keytabs
+
+修改配置文件install.properties参数
+
+DB_FLAVOR=MYSQL
+SQL_CONNECTOR_JAR=/usr/share/java/mysql-connector-java.jar
+db_root_user=root
+db_root_password=zdh1234
+db_host=zdh-245
+db_name=rangerkerberos
+db_user=rangeradmin
+db_password=zdh1234
+
+audit_store=db
+
+policymgr_external_url=http://localhost:6080
+policymgr_http_enabled=true
+
+unix_user=rangeradmin
+unix_group=hadoop
+
+spnego_principal=HTTP/zdh-240@ZDH.COM
+spnego_keytab=/home/rangeradmin/ranger-0.7.0-SNAPSHOT-admin/keytabs/HTTP.keytab
+token_valid=30
+cookie_domain=zdh-240
+cookie_path=/
+admin_principal=rangeradmin/zdh-240@ZDH.COM
+admin_keytab=/home/rangeradmin/ranger-0.7.0-SNAPSHOT-admin/keytabs/rangeradmin.keytab
+lookup_principal=rangerlookup/zdh-240@ZDH.COM
+lookup_keytab=/home/rangeradmin/ranger-0.7.0-SNAPSHOT-admin/keytabs/rangerlookup.keytab
+hadoop_conf=/home/rangeradmin/ranger-0.7.0-SNAPSHOT-admin/hadoop/conf
+其中hadoop_conf可以不配置，或者为空或者不存在，
+如果配置了，需要hadoop里面的core-site.xml存在以下2个配置项,
+如果没有配置，需要在rangeradmin生成的conf目录下面的空的core-site.xml里面增加以下2个配置项：
+
+<property>
+  <name>hadoop.security.auth_to_local</name>
+  <value>DEFAULT</value>
+</property>
+<property>
+  <name>hadoop.security.authentication</name>
+  <value>kerberos</value>
+</property>
+用于开启kerberos，auth_to_local的值随意，
+主要是ranger使用了hadoop提供的一套代码开启kerberos。
+
+3.创建rangeradmin的principal
+操作机器：
+在kerberos Server zdh-240上，使用root用户，在/root/keytabs目录下
+操作命令：
+
+kadmin.local
+addprinc -randkey HTTP/zdh-240@ZDH.COM
+xst -k HTTP.keytab HTTP/zdh-240@ZDH.COM
+addprinc -randkey rangeradmin/zdh-240@ZDH.COM
+xst -k rangeradmin.keytab rangeradmin/zdh-240@ZDH.COM
+addprinc -randkey rangerlookup/zdh-240@ZDH.COM
+xst -k rangerlookup.keytab rangerlookup/zdh-240@ZDH.COM
+exit
+把keytab都拷贝到rangeradmin的conf目录下
+cp HTTP.keytab /home/rangeradmin/ranger-0.7.0-SNAPSHOT-admin/keytabs
+
+4.执行安装Ranger Admin,需要root权限:
+./setup.sh
+
+5.启动Ranger Admin
+安装完成后虽然解压的目录属主从root变成ranger了，但是启动停止仍然建议使用root用户：
+ranger-admin start
+
+6.验证是否安装成功
+http://10.43.159.240:6080
+zdh-240:6080
+默认用户名密码 admin/admin
+在启动日志catalina.out中可以查看到如下信息：
+Starting Server using kerberos credential

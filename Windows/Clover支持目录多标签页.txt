@@ -1,0 +1,15 @@
+# 1.简介
+Clover是Windows Explorer资源管理器的一个扩展，
+为其增加类似谷歌 Chrome 浏览器的多标签页功能。
+![](https://upload-images.jianshu.io/upload_images/11810589-60f3d6562513167d.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 2.推荐用法
+下面是我使用的Clover的截图：
+![](https://upload-images.jianshu.io/upload_images/11810589-8917e5f05aed1556.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+可以看到同时打开多个目录，会形成Tab页面多标签的效果。
+还可以拖动目录到标签栏，方便以后快速打开常用目录。
+
+# 3.参考
+Clover详细介绍和下载：
+[**Clover 3**官网](http://cn.ejie.me/)

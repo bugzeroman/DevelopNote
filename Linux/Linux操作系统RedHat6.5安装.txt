@@ -1,0 +1,130 @@
+# 1.说明
+安装Linux操作系统Red Hat 6.5，
+安装镜像为rhel-server-6.5-x86_64-dvd.iso。
+
+# 2.开始安装
+在BIOS里设置成从光驱启动，
+服务器上电后会加载光驱中的镜像，
+也可以设置成从本地硬盘或者移动硬盘启动，
+选择里面已下载的操作系统镜像即可。
+服务器启动出现如下安装选项，
+第一次安装选择:
+Install or upgrade an existing system
+![](https://upload-images.jianshu.io/upload_images/11810589-28ad80bfc7073158.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 3.介质检查
+用来判断安装介质是否有错误，
+一般不需要检查，选择skip跳过。
+![](https://upload-images.jianshu.io/upload_images/11810589-047dc24368012ef8.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 4.欢迎界面
+直接点击Next
+![](https://upload-images.jianshu.io/upload_images/11810589-60e0a637542ea8b7.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 5.选择安装过程使用的语言
+一般选择English(English)，
+不推荐选择中文。
+![](https://upload-images.jianshu.io/upload_images/11810589-a8f61dec1d3492cb.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 6.选择键盘布局
+使用默认值U.S.English即可。
+![](https://upload-images.jianshu.io/upload_images/11810589-bbca45837e5ea255.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 7.选择存储类型
+这里操作系统安装在本地硬盘上面，
+因此选择第一项Basic Storage Devices。
+![](https://upload-images.jianshu.io/upload_images/11810589-e575c06f703b51fc.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+点击Next,弹出告警，
+选择"Yes，discard any data",
+丢弃磁盘上现有数据。
+![](https://upload-images.jianshu.io/upload_images/11810589-91add8bc217b1861.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 8.设置本机主机名和网络
+主机名HostName：dap143-159
+点击"Configure Network"配置网络。
+![](https://upload-images.jianshu.io/upload_images/11810589-7adbbae3d2bdc8b1.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+这里一定要注意把网络配置正确，
+不建议安装后手工修改，非常麻烦。
+    
+选择网卡System eth0，
+点击右边的edit编辑。
+![](https://upload-images.jianshu.io/upload_images/11810589-34d3984f8f9600e9.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+在弹出的Editing Sytem eth0窗口，
+勾选Connect automaticall,
+点击IPv4 Settings选项卡，
+Method选择Manual，
+手动配置IPv4地址，
+点击Add添加Address，
+输入地址、掩码、默认网关：
+Address:10.43.159.143
+Netmask:255.255.255.0
+Gateway:10.43.159.1
+点击Apply应用配置，
+点击close回到安装界面。
+![](https://upload-images.jianshu.io/upload_images/11810589-ae7fc7d5b8270de5.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+简单介绍一下网络知识，
+这里新建的虚拟机10.43.159.143
+和宿主机10.43.159.246必须在同一个网段，
+新建的虚拟机找一下10.43.159.1-255之间
+没人使用的地址即可，
+网关地址10.43.159.1一般最后一位是1，
+另外广播地址最后一位是255。
+
+# 9.选择时区
+Linux现在没有北京时区，
+选择上海时区Asia/Shanghai。
+![](https://upload-images.jianshu.io/upload_images/11810589-9138733dee196de7.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+# 10.设置root密码。
+输入两次密码，
+![](https://upload-images.jianshu.io/upload_images/11810589-4731c6aace77390d.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+如果密码比较简单，
+会弹出对话框告警弱密码，
+![](https://upload-images.jianshu.io/upload_images/11810589-7ea9b58f48f46d59.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击User anyway强制使用简单密码，
+不过一般建议设置复杂的安全密码。
+
+# 11.存储空间划分
+选择默认的Replace Existing Linux System(S)，
+如果对Linux目录用途有一定的理解，
+想要自己规划一下也可以选择其他项。
+![](https://upload-images.jianshu.io/upload_images/11810589-7b82cf65edaebbf4.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 12.软件包选择
+RedHat为了方便安装，将服务器分类，
+选择不同的分类就会安装不同的软件包组。
+如果安装盘自带软件符合需要，直接选择就可以。
+否则请选择"Customize now"。
+这里我选了Web Server，
+基本的软件都有，
+请选择合适自己的类型，
+否则要手动安装很多软件就麻烦了。
+![](https://upload-images.jianshu.io/upload_images/11810589-0510b37a317d201e.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 13.开始安装
+按照前面的配置进行自动安装，
+等待安装过程完成即可。
+![](https://upload-images.jianshu.io/upload_images/11810589-65283d10086111bd.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 14.安装成功
+恭喜安装完毕，
+需要重新启动，
+点击Reboot,
+记得卸载光盘加载的镜像，
+或者在BIOS里设置成从已经安装系统的硬盘启动。
+![](https://upload-images.jianshu.io/upload_images/11810589-f5bd0d487f18f0d1.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 15.登陆验证
+使用用户名密码可以成功登陆终端：
+![](https://upload-images.jianshu.io/upload_images/11810589-bc1bfa339055cbf8.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+使用ifconfig命令查看网络正常：
+![](https://upload-images.jianshu.io/upload_images/11810589-89a0fe6c343098a3.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 16.参考文章
+[安装RedHat6.5及其网络配置](https://blog.csdn.net/ghbfgb/article/details/77807189)

@@ -1,0 +1,16 @@
+### 1.登录root用户
+
+###  2.增加root用户对文件sudoers的写权限
+chmod u+w /etc/sudoers
+
+###  3.编辑sudoers，把用户mysql添加进去
+vi /etc/sudoers 
+
+找到如下行，并且在下面添加mysql的配置：
+  ```
+root    ALL=(ALL)       ALL
+mysql   ALL=(ALL)       ALL
+```
+
+###  4.去掉root用户对文件sudoers的写权限
+chmod u-w /etc/sudoers

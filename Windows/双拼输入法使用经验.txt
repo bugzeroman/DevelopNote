@@ -1,0 +1,79 @@
+## 双拼输入法使用自然码方案
+
+### 技巧总结：
+1.两个字母组成的字可以直接输入，和全拼输入法没有区别的； 
+2.记忆双拼输入法的键位，可以通过输入同一个字母两次，查看打出来的字来记忆,如下图； 
+3.声母除“zh,ch,sh”用“v,i,u”代替外，其它与标准拼音一样； 
+4.a,e没有韵母，直接打
+
+### 参考网址：
+双拼入门教程 - 知乎专栏
+https://zhuanlan.zhihu.com/p/22079226?refer=whatever
+教你一招：自然码双拼的诀窍！（包括学习及练习材料）dongchenyu_自然码吧_百度贴吧
+http://tieba.baidu.com/p/405769125
+
+### 键位排序：
+|字母  |拼音  |谐音  |
+| ------------- | ------------- | ----- |
+|qq |qiu 		|秋                               |
+|ww |wua,ia		|蛙鸭 ua,ia                       |
+|ee |e 			|额                               |
+|rr |ruan,er	|软儿                             |
+|tt	|tue	 	|乐团                             |
+|yy	|ying,uai	|应,歪                            |
+|uu	|shu		|书                               |
+|ii	|chi		|吃                               |
+|oo	|uo			|污哦，拖哦                       |
+|pp	|pun 		|囤票                             |
+|aa |a			|啊                               |
+|ss	|song 		|送 ong,iong                      |
+|dd	|duang		|狂顶 (k)uangd(ing)（汪）uang,iang |
+|ff	|fen		|分                               |
+|gg	|geng		|更                               |
+|hh	|hang		|行                               |
+|jj	|anj 		|安静                             |
+|kk	|kao 		|靠                               |
+|ll	|lai 		|来                               |
+|zz	|zei		|贼                               |
+|xx	|xie 		|谢                               |
+|cc	|ciao		|小草 (x)iaoc(ao)                 |
+|vv	|zhui		|坠                               |
+|bb	|bou 		|头部 (t)oub(i)                   |
+|nn	|nin 		|您                               |
+|mm	|mian		|免                               |
+
+
+### 字母排序：
+|字母  |拼音  |谐音  |
+| -- | ---- | -------------- |
+|aa  |a		|啊              |
+|bb  |bou 	|头部 (t)oub(i)  |
+|cc  |ciao	|小草 (x)iaoc(ao)|
+|dd  |duang |duang,iang      |
+|ee  |e 	|额              |
+|ff  |fen	|分              |
+|gg  |geng	|更              |
+|hh  |hang	|行              |
+|ii  |chi	|吃              |
+|jj  |anj 	|安静jan         |
+|kk  |kao 	|靠	             |
+|ll  |lai 	|来	             |
+|mm  |mian	|免	             |
+|nn  |nin 	|您	             |
+|oo  |uo	|污哦拖          |
+|pp  |pun 	|囤票            |
+|qq  |qiu 	|秋              |
+|rr  |ruan,er	|软儿	     |
+|ss  |song 	|送囧 ong,iong     |
+|tt  |tue	|乐团            |
+|uu  |shu	|书              |
+|vv  |zhui	|坠	             |
+|ww  |wua,ia|蛙鸭 ua,ia      |
+|xx  |xie 	|谢	             |
+|yy  |ying,uai	|应,歪       |
+|zz  |zei	|贼              |
+
+ae不变，头部小草duang，拖来靠您囤票，书最污，谢ying贼
+
+### 自然码方案键盘对照图：
+![自然码方案键盘对照图.jpg](https://upload-images.jianshu.io/upload_images/11810589-357fc9ad1b802ee8.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)

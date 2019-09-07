@@ -1,0 +1,46 @@
+# 目标：
+在自己的Windows桌面打开Linux的firefox浏览器
+# 工具：
+Windows: Xmanager的Xstart工具
+Linux:   xterm,firefox
+# 说明：
+使用Xstart远程连接Linux图形用户界面，
+在用到Linux图形用户界面环境进行一些操作（比如图形化案装Oracle数据库等等），
+都可以通过本方法实现。
+
+# 1.
+在远程Linux服务器上安装xterm：
+yum install xterm
+安装firefox浏览器
+yum install firefox
+
+# 2.
+打开本机Windows的Xstart工具,
+在弹出的对话框中填写相应的参数：
+
+```
+Host: 10.43.159.7
+Protocol: SSH
+Username： stormkrb
+Authentication:Password 然后在右边的Setup里面进一步填写密码
+Command:  /usr/bin/xterm -ls -display $DISPLAY
+```
+带界面的：
+```
+/usr/bin/gnome-session --display $DISPLAY
+```
+如果报错，查看Linux上面的xterm是否安装，xterm的安装路径是否正确。
+
+# 3.
+点击Run,会登陆到目标Linux的命令行控制台，
+在控制台中输入命令打开浏览器：
+firefox
+
+# 4.
+firefox浏览器就会在当前windows终端打开，
+但是进行的一系列操作都是基于Linux的，区别于Windows本机的浏览器。
+
+# 其他：
+为了测试下是否能出现图形用户界面，还可以用xclock命令，看是否能出现一个时钟，
+xclock安装命令yum install xorg-x11-apps
+另外使用tigervnc也可以达到类似的目的，使用root用户在Linux上面安装服务，配合windows上面的vncview客户端即可。

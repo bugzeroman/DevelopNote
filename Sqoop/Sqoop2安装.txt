@@ -1,0 +1,91 @@
+Sqoop2安装,基于版本sqoop-1.99.7,
+Sqoop2为单机安装，没有集群概念。
+Sqoop2安装依赖Hadoop环境，可以理解为一个Hadoop客户端，
+不需要启动Hadoop相关的服务。
+
+# 1.安装规划
+vi /etc/hosts
+10.43.159.9 zdh-9
+
+hdfs/zdh1234
+/home/hdfs/hadoop-2.7.1
+
+useradd -g hadoop -s /bin/bash -md /home/sqoop2 sqoop2
+sqoop2/zdh1234
+
+# 2.登陆sqoop2用户，获取并且解压安装包
+scp root@zdh-11:/home/sqoop/sqoop2/sqoop-1.99.7-bin-hadoop200.tar.gz .
+tar -zxvf sqoop-1.99.7-bin-hadoop200.tar.gz
+
+# 3.配置环境变量
+
+安装jdk，修改.bashrc文件，配置jdk目录:
+export JAVA_HOME=/usr/java/jdk1.8.0_151
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+
+配置sqoop2的环境变量：
+export SQOOP_HOME=/home/sqoop2/sqoop-1.99.7-bin-hadoop200
+export PATH=$PATH:$SQOOP_HOME/bin
+
+配置hadoop的环境变量：
+export HADOOP_HOME=/home/hdfs/hadoop-2.7.1
+export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
+
+# 4.修改hadoop配置文件
+登陆hadoop用户，修改core-site.xml文件，增加sqoop2用户的相关配置:
+```
+<property>
+  <name>hadoop.proxyuser.sqoop2.hosts</name>
+  <value>*</value>
+</property>
+<property>
+  <name>hadoop.proxyuser.sqoop2.groups</name>
+  <value>*</value>
+</property>
+```
+
+# 5.修改sqoop2配置文件
+
+修改sqoop.properties：
+```
+# Hadoop configuration directory
+org.apache.sqoop.submission.engine.mapreduce.configuration.directory=/home/hdfs/hadoop-2.7.1/etc/hadoop
+```
+
+全局替换LOGDIR日志保存目录：
+%s:@LOGDIR@:/home/sqoop2/sqoop-1.99.7-bin-hadoop200/logs:g
+
+全局替换BASEDIR sqoo2安装目录：
+%s:@BASEDIR@:/home/sqoop2/sqoop-1.99.7-bin-hadoop200:g
+
+
+配置文件sqoop_bootstrap.properties使用默认值即可，无需修改。
+
+# 6.初始化sqoop2元数据
+sqoop2-tool upgrade
+执行成功："Tool class org.apache.sqoop.tools.tool.UpgradeTool has finished correctly."
+
+sqoop2-tool verify
+执行成功："Tool class org.apache.sqoop.tools.tool.VerifyTool has finished correctly."
+
+# 7.启动sqoop2
+sqoop2-server start
+
+停止sqoop2:
+sqoop2-server stop
+
+# 8.验证
+jps查看进程:
+SqoopJettyServer
+
+浏览器访问URL，获取所有的connector:
+http://10.43.159.9:12000/sqoop/v1/connector/all
+
+客户端登陆：
+sqoop2-shell
+展示所有的connector:
+show connector
+
+# 9.参考文章
+http://sqoop.apache.org/docs/1.99.7/admin/Installation.html

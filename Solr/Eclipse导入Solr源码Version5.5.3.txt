@@ -1,0 +1,86 @@
+将Solr的5.5.3版本源码导入Eclipse，
+Solr源码需要使用ant构建后才能导入Eclipse。
+
+# 1.JDK安装
+Solr要求jdk1.7+；
+请参考[Windows下安装配置jdk](https://www.jianshu.com/p/042dbf46cace)
+
+# 2.ANT安装
+Solr要求ant1.8+；
+请参考[Windows下安装配置ant](https://www.jianshu.com/p/5f92ed2ae731)
+
+# 3.Solr源码下载
+使用如下地址或者自行去官网下载：
+http://mirror.bit.edu.cn/apache/lucene/solr/5.5.3/
+下载solr-5.5.3-src.tgz源码压缩包。
+
+# 4.编译Solr源码
+
+## 4.1.解压下载的solr-5.5.3-src.tgz包
+解压到目录E:\Code\Solr，
+看到的build.xml文件是基于ant构建的，
+相对的pom.xml是基于maven构建。
+
+## 4.2.拷贝ivy-2.3.0.jar到ant
+解压后的目录看到需要编译的文件中有一些是ivy的，
+需要借助ivy来下载需要的包，
+ivy有两种方式使用：
+第**1**种就是下载ivy-xxxx.jar复制到%ANT_HOME%/lib下面;
+第**2**种就是直接用ant ivy-bootstrap去下载。
+这里采用第**1**种方式，
+从ivy官网下载ivy-2.3.0.jar，
+将其放入到ant的lib目录：
+D:\Program Files\apache-ant-1.9.7\lib
+
+## 4.3.设置ant代理
+如果电脑无法直连外网下载，
+可以使用ant命令设置代理：
+set ANT_OPTS=-Dhttp.proxyHost=proxynj.com.cn -Dhttp.proxyPort=80
+
+## 4.4.使用ant命令编译Solr源码
+进入Windows的cmd命令行窗口,
+进入solr-5.5.3源码目录，
+执行如下命令： 
+ant eclipse
+
+请耐心等待，
+第一次构建的时候比较慢，
+构建成功出现如下日志：
+```
+eclipse:
+     [copy] Copying 1 file to E:\Code\Solr
+    [mkdir] Created dir: E:\Code\Solr\.settings
+     [copy] Copying 3 files to E:\Code\Solr\.settings
+     [xslt] Processing E:\Code\Solr\build.xml to E:\Code\Solr\
+.classpath
+     [xslt] Loading stylesheet E:\Code\Solr\dev-tools\eclipse\dot.class
+path.xsl
+     [echo]
+     [echo]       SUCCESS: You must right-click your project and choose Refresh.
+
+     [echo]                Your project must use a Java 7 JRE.
+     [echo]
+
+BUILD SUCCESSFUL
+Total time: 176 minutes 29 seconds
+```
+
+## 4.5.提示下载失败的问题
+如果总是提示下载失败，
+需要编辑solr\lucene\ivy-settings.xml，
+将其中https://oss.sonatype.org替换成可用的版本仓库地址，
+可以替换为http://nexus.server2，
+或者替换为http://10.43.33.202，
+再重新执行ant eclipse。
+
+# 5.Eclipse导入Solr工程
+上面使用ant编译构建成功后，
+可以看到多出了.classpath和.project等文件，
+把Solr源码当做普通的工程导入Eclipse即可。
+Eclipse -> File -> Import -> General -> Existing Projects into Workspace 
+Select root directory填写Solr源码的目录：
+E:\Code\Solr
+
+# 6.参考文章
+[solr源码导入eclipse](http://blog.csdn.net/vltic/article/details/19917377)
+

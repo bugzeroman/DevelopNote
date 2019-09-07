@@ -1,0 +1,158 @@
+Kafka集群安装，基于版本2.10，
+使用kafka_2.10-0.10.1.0.tgz安装包。
+
+# 1.安装规划
+Storm集群模式，安装到下面三台机器
+|IP            |Hostname |
+|--------------|---------|  
+|10.43.159.237 |zdh-237  |
+|10.43.159.238 |zdh-238  |
+|10.43.159.239 |zdh-239  |
+
+Zookeeper集群，已经安装好
+主机：zdh-237，zdh-238，zdh-239
+端口：2181
+用户：garrison/zdh1234
+
+# 2.安装用户
+kafka/zdh1234
+useradd -g hadoop -s /bin/bash -md /home/kafka kafka
+
+# 3.上传并且解压安装包
+上传安装包：
+ftp kafka_2.10-0.10.1.0.tgz
+解压安装包：
+tar -zxvf kafka_2.10-0.10.1.0.tgz
+配置环境变量和别名，方便操作：
+```
+export KAFKA_HOME=/home/kafka/kafka_2.10-0.10.1.0
+export PATH=$PATH:$KAFKA_HOME/bin
+alias conf='cd $KAFKA_HOME/config'
+alias logs='cd $KAFKA_HOME/logs'
+```
+
+创建本地数据存放的目录:
+mkdir /home/kafka/kafka_2.10-0.10.1.0/kafka-logs
+
+# 4.修改server.properties配置文件
+```
+broker.id=1
+log.dirs=/home/kafka/kafka_2.10-0.10.1.0/kafka-logs
+zookeeper.connect=zdh-237:2181,zdh-238:2181,zdh-239:2181
+```
+
+以下下配置项可以使用默认值：
+```
+port=9092
+host.name=zdh-237
+advertised.host.name=
+num.partitions=2
+log.retention.hours=168
+```
+
+参数说明：
+```
+# The id of the broker. This must be set to a unique integer for each broker.
+#整数，建议根据ip区分,这里我是使用zookeeper中的id来设置
+
+# The port the socket server listens on 
+# broker用于接收producer消息的端口
+
+# Hostname the broker will bind to. If not set, the server will bind to all interfaces
+# broker的hostname
+
+# Hostname the broker will advertise to producers and consumers. If not set, it uses the
+# value for "host.name" if configured.  Otherwise, it will use the value returned from
+# java.net.InetAddress.getCanonicalHostName().
+#这个是配置PRODUCER/CONSUMER连上来的时候使用的地址
+
+# A comma seperated list of directories under which to store log files
+#kafka存放消息文件的路径
+
+# The default number of log partitions per topic. More partitions allow greater
+# parallelism for consumption, but this will also result in more files across
+# the brokers.
+#topic的默认分区数
+
+# The minimum age of a log file to be eligible for deletion
+#kafka接收日志的存储目录(目前我们保存7天数据log.retention.hours=168)
+
+# Zookeeper connection string (see zookeeper docs for details).
+# This is a comma separated host:port pairs, each corresponding to a zk
+# server. e.g. "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002".
+# You can also append an optional chroot string to the urls to specify the
+# root directory for all kafka znodes.
+```
+
+# 5.拷贝Kafka到集群其他机器
+将zdh-237上的kafka复制到其他机器上
+```
+scp -r kafka_2.10-0.10.1.0 kafka@zdh-238:/home/kafka
+```
+需要修改server.properties配置文件，
+修改broker.id为其他整数,
+修改host.name为当前所在机器，
+参考示例：
+```
+broker.id=2
+host.name=zdh-238
+```
+
+# 6.启动Kafka
+```
+/home/kafka/kafka_2.10-0.10.1.0/bin/kafka-server-start.sh /home/kafka/kafka_2.10-0.10.1.0/config/server.properties &>/home/kafka/kafka_2.10-0.10.1.0/catalina.log &
+```
+
+# 7.验证安装
+## 7.1
+在zdh-237上创建一个testTopic主题
+#KAFKA有3个，replication-factor就填3个
+```
+kafka-topics.sh --create --topic testTopic --replication-factor 3 --partitions 2 --zookeeper zdh-237:2181
+```
+
+## 7.2
+在zdh-237上查看刚才创建的testTopic主题
+```
+kafka-topics.sh --list --zookeeper zdh-237:2181 
+```
+
+## 7.3
+在zdh-238上发送消息至kafka（模拟producer），发送消息"hello world"
+```
+kafka-console-producer.sh --broker-list zdh-237:9092 --sync --topic testTopic
+```
+然后输入hello wrold
+
+## 7.4
+在zdh-239上开启一个消费者（模拟consumer），可以看到刚才发送的消息"hello world"
+```
+kafka-console-consumer.sh --zookeeper zdh-237:2181 --topic testTopic --from-beginning
+```
+
+## 7.5
+删除掉一个Topic，这里我们测试创建一个idoall的主题，再删除掉
+```
+kafka-topics.sh --create --topic idoall --replication-factor 3 --partitions 2 --zookeeper zdh-237:2181       
+kafka-topics.sh --delete --topic idoall --zookeeper zdh-237:2181  
+```
+注意delete.topic.enable需要为true才能真正删除topic  
+```
+#Switch to enable topic deletion or not, default value is false
+delete.topic.enable=true
+```
+
+# 8.其他
+## 8.1.Kafka Debug方法
+在kafka-run-class.sh增加如下参数：
+```
+KAFKA_DEBUG=true
+DEBUG_SUSPEND_FLAG="y"
+```
+
+## 8.2.清除kafka数据
+执行如下命令：
+```
+rm -rf kafka-logs
+mkdir kafka-logs
+```

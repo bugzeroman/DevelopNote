@@ -1,0 +1,58 @@
+使用RangerAdmin安装solr,基于已有的solr环境安装，主要是在solr创建用于存储数据的CoreAdmin。
+
+# 1.解压安装
+在solr的安装机器上面，获取RangerAdmin并且解压，
+然后在的RangerAdmin安装目录，进入用于audit的solr安装目录
+cd /home/solr/ranger-0.7.0-SNAPSHOT-admin/contrib/solr_for_audit_setup
+
+# 2.修改install.properties
+使用上面已经安装好的solr用户，目录为/home/solr/solr-5.5.2
+参考文件中配置项的说明进行修改，修改如下：
+```
+SOLR_USER=solr
+SOLR_GROUP=hadoop
+SOLR_INSTALL=false
+SOLR_INSTALL_FOLDER=/home/solr/solr-5.5.2
+SOLR_RANGER_HOME=/home/solr/solr-5.5.2/ranger_audit_server
+SOLR_RANGER_PORT=8983
+SOLR_DEPLOYMENT=standalone
+SOLR_RANGER_DATA_FOLDER=/home/solr/solr-5.5.2/ranger_audit_server/data
+SOLR_LOG_FOLDER=/home/solr/solr-5.5.2/ranger_audits/logs
+```
+
+# 3.安装，需要使用root用户执行脚本
+./setup.sh
+
+# 4.使用说明
+/home/solr/solr-5.5.2/ranger_audit_server/install_notes.txt
+关闭原来的solr，使用如下的脚本：
+solr启动：
+/home/solr/solr-5.5.2/ranger_audit_server/scripts/start_solr.sh
+solr停止：
+/home/solr/solr-5.5.2/ranger_audit_server/scripts/stop_solr.sh
+
+# 5.查看ranger_audits
+登陆solr的web界面，可以看到CoreAmdmin已经创建ranger_audits
+http://10.43.159.9:8983/
+
+# 6.RangerAdmin配置solr审计日志
+在RangerAdmin的install.properties配置如下：
+```
+audit_store=solr
+audit_solr_urls=http://10.43.159.9:8983/solr/ranger_audits
+```
+之后使用root执行setup.sh安装RangerAdmin即可。
+
+# 7.安装后改变audit数据库方法
+conf/ranger-admin-site.xml修改如下配置项：
+```
+<property>
+  <name>ranger.audit.solr.urls</name>
+  <value>http://10.43.159.9:8983/solr/ranger_audits</value>
+  <description />
+</property>
+```
+
+# 8.其他：
+## 安装参考：
+https://cwiki.apache.org/confluence/display/RANGER/Install+and+Configure+Solr+for+Ranger+Audits+-+Apache+Ranger+0.5

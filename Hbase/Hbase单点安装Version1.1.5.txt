@@ -1,0 +1,85 @@
+Hbase单点安装，基于版本1.1.5，
+使用hbase-1.1.5.tar.gz安装包。
+
+# 1.安装说明
+使用Hbase自带zookeeper和本地文件目录存储数据
+
+# 2.安装规划
+|角色规划        |IP/机器名   |安装软件    |运行进程 |
+|----------------|------------|------------|---------|
+|hmaster         |zdh-7       |hbase       |HMaster |
+|regionServer    |zdh-7       |hbase       |HRegionServer |	
+
+# 3.安装用户
+hbasesingle/zdh1234
+useradd -g hadoop -s /bin/bash -md /home/hbasesingle hbasesingle
+
+# 4.配置hosts
+10.43.159.7     zdh-7
+
+# 5.下载解压Hbase安装包
+tar -zxvf hbase-1.1.5.tar.gz 
+
+# 6.配置环境变量
+安装并且配置JDK
+```
+export JAVA_HOME=/usr/java/jdk1.7.0_80
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+```
+
+配置Hbase环境变量和别名，方便操作
+```
+export HBASE_HOME=/home/hbasesingle/hbase-1.1.5
+export PATH=$PATH:$HBASE_HOME/bin
+alias conf='cd $HBASE_HOME/conf'
+alias logs='cd $HBASE_HOME/logs'
+```
+
+# 7.修改conf/hbase-site.xml文件
+配置hbase.rootdir，确定HBase将数据存储的目录
+```
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+  <property>
+    <name>hbase.rootdir</name>
+    <value>file:///home/hbasesingle/hbase-1.1.5/data</value>
+  </property>
+</configuration>
+```
+
+# 8.启动 HBase
+./bin/start-hbase.sh
+使用命令jps可以看到进程HMaster
+停止HBase
+./bin/stop-hbase.sh
+
+# 9.用shell连接HBase
+./bin/hbase shell
+退出shell连接
+exit
+help查看帮助命令
+
+# 10.执行测试命令
+创建一个名为test的表，这个表只有一个列族为cf。
+create 'test', 'cf'
+
+列出所有的表来检查创建情况
+list
+list 'test'
+
+然后插入三条值
+put 'test', 'row1', 'cf:a', 'value1'
+put 'test', 'row2', 'cf:b', 'value2'
+put 'test', 'row3', 'cf:c', 'value3'
+
+Scan这个表，浏览所有记录
+scan 'test'
+
+Get一行记录
+get 'test', 'row1'
+
+先disable再drop这张表
+disable 'test'
+drop 'test'

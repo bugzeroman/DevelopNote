@@ -1,0 +1,30 @@
+# 1.简介
+FastStone Capture(FSCapture)是经典的屏幕截图软件，
+可以捕捉全屏图像、活动窗口、任意指定截图形状，
+而且还有图像编辑和屏幕录制功能，
+还能支持屏幕放大镜和屏幕取色等功能。
+![](https://upload-images.jianshu.io/upload_images/11810589-c9b103cb1a6164df.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 2.推荐用法
+
+## 2.1.截图
+包括了全屏截取，当前活动窗口截取，截取选定区域，
+多边形截取和截取滚动页面等，基本上常用的都有了。
+
+## 2.2.滚动截图
+重点介绍一下滚动截图功能，
+为了这个功能安装过各种截屏软件，
+现在终于可以一键截图完整的网页了。
+用法很简单，点击一下滚动截图，
+然后再点击一下需要截图的网页，
+页面就会自动往下滚动，
+滚动到页面底部可以自动生成完整的截图，
+截图过程中也可以使用Esc来手动停止。
+
+## 2.3.更多用法
+![](https://upload-images.jianshu.io/upload_images/11810589-547c5afe2eaa4205.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 3.参考
+最新版下载地址：
+[FastStone Capture绿色版9.0官方版](http://www.mydown.com/soft/402/473304402.shtml)
+

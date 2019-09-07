@@ -1,0 +1,73 @@
+Eclipse远程调试Java代码的三种方法，
+第**1**种方法是用来调试已经启动的Java程序，Eclipse可以随时连接到远程Java程序进行调试，
+第**2**种方法可以调试Java程序启动过程，但是Eclipse不能随时连接到远程Java程序进行调试，
+第**3**种方法可以同时具备上面两种的优点，在调试Java程序启动过程后，
+即使断开后Eclipse还是可以随时连接到远程Java程序进行调试。
+在实际使用过程，一般使用第1种调试方法，
+在需要调试Java程序启动过程的时候，才会使用第3种方法，
+第3种和第1种方法的区别只是在于suspend=y/n，
+第2种方法一般很少使用。
+
+# 1.Java程序开启远程Debug
+在程序的JVM启动参数加入如下Debug参数：
+-Xdebug -Xrunjdwp:transport=dt_socket,address=1088,server=y,suspend=n
+参数说明：
+-Xdebug         启用调试
+-Xrunjdwp       加载JDWP的JPDA参考执行实例
+transport       用于在调试程序和JVM使用的进程之间通讯
+dt_socket       套接字传输
+address=1088    调试服务器的端口号，客户端用来连接服务器的端口号
+server=y/n      JVM是否需要作为调试服务器执行
+suspend=y/n     是否在调试客户端建立连接之后启动JVM 。
+
+# 2.Eclipse远程调试Java代码的前2种方法
+下面的图表示的是Eclipse调试的两种类型，
+图片下半部分是第1种Socket Attach类型，表示远程程序正常运行，允许Eclipse调试器随时连接到JVM，
+图片上半部分是第2种Socket Listen类型，表示Eclispe调试器先启动监听，JVM启动时主动连接调试器。
+![EclipseDebugType](https://upload-images.jianshu.io/upload_images/11810589-06e47ce66bed8c39.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 2.1.第1种Socket Attach调试方法
+远程JVM的Debug参数配置:
+-Xdebug -Xrunjdwp:transport=dt_socket,address=1088,server=y,suspend=n
+注意suspend=n，表示立即启动JVM，不等待调试客户端建立连接。
+Eclipse调试器配置：
+Eclipse -> Run -> Debug Configurations...  -> Remote Java Application -> 右键点击New
+打开一个默认名为New_configuration的调试配置界面，如下：
+![SocketAttach](https://upload-images.jianshu.io/upload_images/11810589-35aebc91e2a6c636.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+Connection Type: Socket Attach
+Host: localhost (远程Java程序所在的主机IP)
+Port: 1088 (远程Java程序的调试端口)
+点击Debug即可连接到已经启动的远程Java程序进行调试，
+但是不能调试Java程序启动过程。
+
+## 2.2.第2种Socket Listen调试方法
+远程JVM的Debug参数配置:
+-agentlib:jdwp=transport=dt_socket,suspend=y,address=192.168.0.1:1088
+注意address需要填写Eclipse调试器所在的IP地址和Port端口。
+Eclipse -> Run -> Debug Configurations...  -> Remote Java Application -> 右键点击New
+打开一个默认名为New_configuration的调试配置界面，如下：
+![SocketListen](https://upload-images.jianshu.io/upload_images/11810589-63fedaa9155d51d0.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+Connection Type: Socket Listen
+Port: 1088 (远程调试端口)
+点击Debug先启动Eclipse监听，
+然后启动远程JVM程序，会主动Eclipse调试器进行调试，
+这种方法可以调试Java程序启动过程，
+但是不能随时连接到远程java程序进行调试。
+
+# 3.第3种调试方法
+第3种调试方法和第1中调试方法类似，
+区别在于远程JVM的Debug参数中suspend=y:
+-Xdebug -Xrunjdwp:transport=dt_socket,address=1088,server=y,suspend=y
+具体流程是先启动远程的Java程序，
+但此时JVM不会真正启动，会等待调试客户端建立连接之后再启动JVM，
+然后参考第一种方法启动Eclipse的Socket Attach类型调试器，
+此时JVM会真正的启动，而且已经连接上Eclipse的调试器，
+可以调试Java程序启动过程，而且即使断开后，
+Eclipse还是可以随时连接到远程Java程序进行调试，
+缺点在于必须启动Eclipse调试器监听，
+否则会导致JVM程序无法启动一直在等待。
+
+# 4.参考文章
+[Eclipse远程调试Java的一种方法](http://john521.iteye.com/blog/1879805)

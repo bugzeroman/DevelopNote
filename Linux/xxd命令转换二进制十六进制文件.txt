@@ -1,0 +1,49 @@
+Linux下的xxd命令,可以把文件在二进制和十六进制之间互相转换。
+
+# 1.准备需要转换的二进制文件
+这个二进制文件可以是任意格式的，
+示例中我们创建一个txt格式的二进制文件，
+vi demo.txt
+```
+Hello XXD
+```
+
+# 2.把二进制文件转换为十六进制
+xxd demo.txt > demo16.txt
+
+# 3.查看生成的十六进制文件
+生成的十六进制文件可以使用vi打开查看
+vi demo16.txt
+```
+0000000: 4865 6c6c 6f20 5858 440a                 Hello XXD.
+```
+
+# 4.创建需要还原的二进制文件
+可以直接使用上面的demo16.txt进行还原，
+我们这边新建一个文件，把上面的十六进制拷贝过来，
+并且去掉后面的"Hello XXD."提示字符，这是不需要的部分，
+vi demo16revert.txt
+```
+0000000: 4865 6c6c 6f20 5858 440a
+```
+
+# 5.把十六进制文件转换为二进制
+xxd -r demo16revert.txt demorevert.txt
+
+# 6.查看还原后的二进制文件
+vi demorevert.txt
+```
+Hello XXD
+```
+
+# 7.说明
+进行转换的二进制文件可以是任意类型的文件，
+可以是jar，sh等等任意的二进制文件，
+转换成的十六进制文件可以用来满足一些系统的要求，
+也可以用来在系统间方便的跨网络传递文件，
+只要能进行复制粘贴的操作即可。
+
+
+# 8.参考文章
+[xxd命令](https://blog.csdn.net/test_soy/article/details/48182157)
+[linux 命令 xxd linux下查看二进制文件](https://blog.csdn.net/u011980566/article/details/51567557)

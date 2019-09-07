@@ -1,0 +1,48 @@
+查看帮助
+hadoop fs -help
+
+列出文件系统由哪些块构成
+hadoop fsck / -files -blocks
+
+查看磁盘
+hadoop fs -df -h /
+
+创建目录
+hadoop fs -mkdir user
+列出根目录
+hadoop fs -ls /
+列出所有文件
+hadoop fs -ls . 
+递归查看根目录
+hadoop fs -lsr /（过时的用法）
+hadoop fs -ls -R /
+
+从本地文件系统复制一个文件到HDFS
+hadoop fs -copyFromLocal test.txt hdfs://10.43.156.193:9080/user
+hadoop fs -copyFromLocal test2.txt /user(省略前缀，使用默认文件系统hdfs://10.43.156.193:9080)
+从HDFS复制一个文件到本地文件系统
+hadoop fs -copyToLocal /user/test2.txt test2.copy.txt
+md5 /user/test2.txt test2.copy.txt
+
+查看文件
+hadoop fs -cat /user/test2.txt
+删除文件
+hadoop fs -rm /user/test2.txt
+删除文件删除文件夹
+hadoop fs -rm -R /user/test
+
+本地模式验证
+```
+mkdir input
+cp etc/hadoop/*.xml input
+bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar grep input output 'dfs[a-z.]+'
+cat output/*
+hadoop fs -mkdir input
+hadoop fs -put input/wordcount input/
+hadoop fs -get input/wordcount input/
+hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar wordcount input/wordcount /user/wordresult
+hadoop fs -text /user/wordresult/part-r-00000
+```
+
+查看namenodes节点
+hdfs getconf -namenodes

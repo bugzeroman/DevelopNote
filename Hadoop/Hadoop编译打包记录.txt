@@ -1,0 +1,58 @@
+Hadoop编译打包，基于2.7.2版本的源码。
+
+# 打包过程中需要使用到的工具
+java -version
+mvn -version
+ant -version
+type protoc
+type cmake
+
+# Hadoop 2.7.2源码下载地址 
+http://apache.fayea.com/hadoop/common/hadoop-2.7.2/hadoop-2.7.2-src.tar.gz
+
+# 1.开始打包，解决各种报错
+
+打包命令：
+mvn package -Pdist,native -DskipTests -Dtar  
+如果遇到问题先clean一遍 ：
+mvn clean install -DskipTests
+
+# 2.安装各种缺失等工具
+命令查看protobuf是否缺失
+type protobuf
+
+安装protobuf各个版本的编译代码，从protobuf-2.4.1到protobuf-3.0.0-Release之间的20个版本，
+在Mac上protobuf-2.6.1、protobuf-3.0.0-alpha-1、protobuf-3.0.0-beta-2、protobuf-3.0.0测试全部成功！
+解决了从GitHub上下载安装执行./autogen.sh失败的问题！
+
+su切换到root用户下执行，或者使用sudo
+./configure 
+make 
+make check 
+make install 
+检验安装
+protoc --version
+
+安装cmake
+sudo yum install cmake
+type cmake
+
+# 3.修改hadoop下载的配置	
+由于无法从外网下载tomcat安装包，所以需要在内网坏境提供安装包的下载，
+详细步骤请参考：
+[使用tomcat搭建HTTP文件下载服务器](https://www.jianshu.com/p/d7239900dc84)
+然后将内网的地址替换下面pom中的地址：
+修改/home/ling/hadoop/hadoop-2.7.2-src/hadoop-common-project/hadoop-kms目录下面的pom.xml文件
+```
+---http://archive.apache.org/dist/tomcat/tomcat-6/v${tomcat.version}/bin/apache-tomcat-${tomcat.version}.tar.gz
++++http://10.43.159.41:8083/tomcat/apache-tomcat-${tomcat.version}.tar.gz
+```
+
+修改/home/ling/hadoop/hadoop-2.7.2-src/hadoop-hdfs-project/hadoop-hdfs-httpfs 目录下面的pom.xml
+```
+---<tomcat.download.url>http://archive.apache.org/dist/tomcat/tomcat-6/v${tomcat.version}/bin/apache-tomcat-${tomcat.version}.tar.gz</tomcat.download.url>
++++<tomcat.download.url>http://10.43.159.41:8083/tomcat/apache-tomcat-${tomcat.version}.tar.gz</tomcat.download.url>
+```
+#4. 打包成功
+在目录~/hadoop-2.4.0-src/hadoop-dist/target下有打出的安装包文件：
+hadoop-2.7.2.tar.gz

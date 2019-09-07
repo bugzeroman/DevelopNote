@@ -1,0 +1,100 @@
+配置yum源有2种方法，一种是离线yum源，另外一种是在线yum源。
+
+# 一、离线yum源，基于安装光盘提供的安装仓库。
+
+建立一个属于仓库文件夹
+mkdir /media/zidong
+cd /media/
+挂载光盘
+mount /dev/cdrom /media/zidong/
+然后可以通过/media/zidong/来访问光盘
+cd /media/zidong/Packages/
+把createrepo拷贝到安装路径下
+cp createrepo-0.9.9-18.el6.noarch.rpm /home/install
+安装架设源软件包
+cd /home/install/
+rpm -ivh createrepo-0.9.9-18.el6.noarch.rpm
+cd /media/
+createrepo .
+cd /etc/yum.repos.d/
+mv rhel-source.repo cc.repo
+修改 cc.repo文件，添加如下：
+```
+[cc]      
+name=cc
+baseurl=file:///media
+enabled=1
+gpgcheck=0
+```
+修改后保存，然后就可以使用yum安装任意RPM（前提是光盘镜像中已经有的）
+yum install gcc*
+
+查看gcc是否安装
+type gcc
+gcc is /usr/bin/gcc
+
+# 其他：
+这里说一下光盘 /dev/cdrom 怎么来的:
+ls -l /dev | grep cdrom
+/dev/sr0是光驱的设备名，/dev/cdrom代表光驱
+cdrom是sr0的软链接.你ll /dev/cdrom和ll /dev/sr0看看显示
+
+使用离线的yum源安装，如果机器重启过需要重新挂载镜像:
+mount /dev/cdrom /media/zidong/
+如果找不到镜像，需要先在VMWareClient里面为虚拟机连接CD/DVD设备，配置为安装盘的ios,
+或者加挂载命令添加到启动时自动挂载脚本中（另详）
+
+# 参考文档：
+Linux架设YUM源实现RPM包的自动化安装摆脱依赖性
+http://wiki.zte.com.cn/pages/viewpage.action?pageId=33847814
+
+# 二、在线yum源，基于zte提供的yum源。
+进入如下目录：cd /etc/yum.repos.d/
+
+新建配置文件：
+vi /etc/yum.repos.d/rhel-debuginfo.repo
+配置文件信息如下：
+```
+[base]
+name=CentOS-$releasever - Base
+baseurl=http://mirrors.zte.com.cn/centos/6/os/$basearch/
+gpgcheck=1
+gpgkey=http://mirrors.zte.com.cn/centos/RPM-GPG-KEY-CentOS-6
+#released updates
+[updates]
+name=CentOS-$releasever - Updates
+baseurl=http://mirrors.zte.com.cn/centos/6/updates/$basearch/
+gpgcheck=1
+gpgkey=http://mirrors.zte.com.cn/centos/RPM-GPG-KEY-CentOS-6
+#packages used/produced in the build but not released
+#[addons]
+#name=CentOS-$releasever - Addons
+#baseurl=http://mirrors.zte.com.cn/centos/$releasever/addons/$basearch/
+#gpgcheck=1
+#gpgkey=http://mirrors.zte.com.cn/centos/RPM-GPG-KEY-CentOS-6
+#additional packages that may be useful
+[extras]
+name=CentOS-$releasever - Extras
+baseurl=http://mirrors.zte.com.cn/centos/6/extras/$basearch/
+gpgcheck=1
+gpgkey=http://mirrors.zte.com.cn/centos/RPM-GPG-KEY-CentOS-6
+#additional packages that extend functionality of existing packages
+[centosplus]
+name=CentOS-$releasever - Plus
+baseurl=http://mirrors.zte.com.cn/centos/6/centosplus/$basearch/
+gpgcheck=1
+enabled=0
+```
+备份其他的.repo文件：
+mv old.repo old.repo_bak
+执行清理动作：
+yum clean all
+开始使用yum：
+yum list firefox
+
+# 参考文档：
+如何利用zte yum源安装软件
+http://wiki.zte.com.cn/pages/viewpage.action?pageId=36555878
+在hosts里面添加域名实际的IP，实际IP可以通过登陆网页查看
+vi /etc/hosts
+10.31.48.30 mirrors.zte.com.cn

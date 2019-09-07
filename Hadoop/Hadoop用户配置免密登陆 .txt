@@ -1,0 +1,56 @@
+Hadoop用户配置免密登陆,
+参考其他免密配置方法自己总结的更简洁的步骤。
+要实现A免密登陆B,需要把A生成的公钥放到B的对应目录下，
+要实现ABC之间免密登陆，把3者的公钥汇总到一个文件中，
+然后分发到3个用户的对应目录下，即可实现互相免密。
+
+# 目标：
+实现zdh-7,zdh-9,zdh-11上面的hdfs用户之间免密登陆
+
+# 方法：
+## 1.实现hdfs@zdh-7本地免密登陆
+在zdh-7的hdfs用户下执行：
+生成密钥和公钥
+ssh-keygen -t dsa -P '' -f ~/.ssh/id_dsa
+将公钥拷贝到authorized_keys中
+ssh-copy-id -i ~/.ssh/id_dsa.pub hdfs@zdh-7
+该命令等价于：
+cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys
+
+验证本地免密登陆
+ssh hdfs@zdh-7
+ssh localhost
+
+## 2.实现hdfs@zdh-9免密登陆hdfs@zdh-7
+在zdh-9的hdfs用户下执行：
+生成密钥和公钥
+ssh-keygen -t dsa -P '' -f ~/.ssh/id_dsa
+把hdfs@zdh-9的公钥放到hdfs@zdh-7的authorized_keys中，
+ssh-copy-id -i ~/.ssh/id_dsa.pub hdfs@zdh-7
+验证
+ssh hdfs@zdh-7
+
+实现hdfs@zdh-11免密登陆hdfs@zdh-7,同上。
+
+## 3.分发authorized_keys文件
+将zdh-7的hdfs用户的authorized_keys的拷贝到zhd-9相应目录
+scp ~/.ssh/authorized_keys hdfs@zdh-9:~/.ssh/
+
+然后执行如下命令验证hdfs@zdh-7到hdfs@zdh-9免密登陆
+ssh hdfs@zdh-9
+
+分发authorized_keys文件到hdfs@zdh-11同上操作。
+
+## 4.分发known_hosts文件
+将zdh-7的hdfs用户的known_hosts的拷贝到zhd-9，zhd-11相应目录
+scp ~/.ssh/known_hosts hdfs@zdh-9:~/.ssh/
+至此已经实现三台机器上hdfs用户之间免密登陆。
+可以在三台机器上任意登陆其他hdfs用户：
+ssh hdfs@zdh-7
+ssh hdfs@zdh-9
+ssh hdfs@zdh-11
+
+## 5.存在的问题
+known_hosts中的localhost信息是hdfs@zdh-7的，
+在hdfs@zdh-9上面执行ssh localhost会报错，
+删除known_hosts中的localhost，然后重新执行即可。

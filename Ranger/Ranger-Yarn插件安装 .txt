@@ -1,0 +1,83 @@
+Ranger-Yarn插件ranger-0.6.0-yarn-plugin安装到Yarn的所有ResourceManager节点，
+其他的NodeManager节点不需要安装。
+
+登陆hdfs安装的用户，garrison/zdh1234(用户组hadoop),获取安装包解压安装
+scp /home/backup/ranger/ranger-0.6.0-yarn-plugin.tar.gz .
+tar –zxvf ranger-0.6.0-yarn-plugin.tar.gz
+vi install.properties
+修改的参数如下：
+```
+POLICY_MGR_URL=http://10.43.159.245:6080
+SQL_CONNECTOR_JAR=/usr/share/java/mysql-connector-java.jar
+REPOSITORY_NAME=yarndev
+CUSTOM_USER=garrison
+CUSTOM_GROUP=hadoop
+```
+安装Ranger Yarn Plugin，注意: ./enable-yarn-plugin.sh script should be run as root.：
+./enable-yarn-plugin.sh
+创建完成后，需要重新启动yarn.
+
+将zdh-245的包考到zdh-240的garrison里面
+scp -r garrison@zdh-245:/home/garrison/ranger-0.6.0-yarn-plugin .
+用root执行安装脚本，并且重新启动yarn.
+
+Ranger-Admin里注册hdfs plugin的服务
+YARN新建Service，修改如下
+```
+Service Name = yarnpdev
+UserName = garrison
+Password = zdh1234
+YARN REST URL = http://10.43.159.240:8188
+```
+然后点击TestConnection，成功即可保存。
+
+关闭all-queue策略，
+新建root.default策略,给mysql用户提交队列的权限。
+使用mysql用户执行mapreduce任务,给mysql访问hdfs相应目录的权限：
+```
+export JAVA_HOME=/usr/share/java/jdk1.7.0_80
+/home/garrison/hadoop-2.7.1/bin/hadoop jar /home/garrison/hadoop-2.7.1/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar wordcount -Dmapreduce.job.queuename=default hdfs://gagcluster/usr/wordcout.txt /usr/wordresult_002
+/home/garrison/hadoop-2.7.1/bin/hadoop fs -text /usr/wordresult_002/part-r-00000
+```
+没有权限提交作业会报错：
+User usersync cannot submit applications to queue root.default
+
+Yarn队列权限支持通过capacity schedule queues实现
+yarn-site.xml配置文件中加入配置项：
+```
+<property>
+    <name>yarn.resourcemanager.scheduler.class</name>    
+    <value>org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler</value>
+</property>
+```
+capacity-scheduler.xml配置如下，只允许garrison用户提交作业：
+```
+<property>
+  <name>yarn.scheduler.capacity.root.acl_submit_applications</name>
+   <value>garrison</value>
+   <description>
+     The ACL of who can submit jobs to the root queue.
+   </description>
+ </property>
+ <property>
+  <name>yarn.scheduler.capacity.root.acl_administer_queue</name>
+  <value>garrison</value>
+  <description>
+    The ACL of who can administer jobs on the default queue.
+  </description>
+</property>
+<property>
+  <name>yarn.scheduler.capacity.root.default.acl_submit_applications</name>
+  <value>garrison</value>
+  <description>
+    The ACL of who can submit jobs to the default queue.
+  </description>
+</property>
+<property>
+  <name>yarn.scheduler.capacity.root.default.acl_administer_queue</name>
+  <value>garrison</value>
+  <description>
+    The ACL of who can administer jobs on the default queue.
+  </description>
+</property>
+```

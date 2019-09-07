@@ -1,0 +1,48 @@
+Elasticsearch安装X-Pack插件，
+基于已经安装好的6.2.2版本的Elasticsearch，
+安装6.2.2版本的X-Pack插件。
+
+# 1.下载x-pack的zip包到本地
+https://artifacts.elastic.co/downloads/packs/x-pack/x-pack-6.2.2.zip
+
+# 2.离线安装x-pack
+将x-pack-6.2.3.zip上传到Elasticsearch所在服务器，
+使用如下命令安装插件，注意指定x-pack的安装路径：
+bin/elasticsearch-plugin install file:///home/elasticsearch/x-pack-6.2.2.zip
+
+期间需要输入y回车确认，最后提示安装成功。
+
+# 3.重启Elasticsearch服务，使插件生效
+后台启动elasticsearch服务：
+bin/elasticsearch -d
+
+停止elasticsearch服务：
+grep找到elasticsearch对应的进程，kill掉即可
+
+# 4.自动生成默认密码
+bin/x-pack/setup-passwords auto
+注意这个命令你只能执行一次，之后就不能执行了，
+后面快进入Kibana -> Management -> Users UI页面修改密码。
+
+Changed password for user kibana
+PASSWORD kibana = CeoxAZHhQ17Hm9tyux33
+Changed password for user logstash_system
+PASSWORD logstash_system = 6PQdxlmylQbVEQ728D7Y
+Changed password for user elastic
+PASSWORD elastic = ce0YpqhLZykDWGdnjvlP
+
+也可以使用如下命令设置指定的密码：
+bin/x-pack/setup-passwords interactive
+
+# 5.浏览器输入Elasticsearch服务地址
+http://10.43.159.7:9200/
+发现需要输入用户名密码才能登陆
+elastic/ce0YpqhLZykDWGdnjvlP
+
+# 6.登陆kibana图形化界面查看集群
+http://10.43.159.7:5601/
+使用kibana/CeoxAZHhQ17Hm9tyux33登陆。
+注意需要另外安装Kinaba，请参考另一篇文章《Kinaba可视化管理ElasticSearch平台安装》。
+
+# 7.卸载x-pack插件
+bin/elasticsearch-plugin remove x-pack

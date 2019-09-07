@@ -1,0 +1,36 @@
+# 目标：
+在自己的Windows桌面打开运行在Linux上的firefox浏览器，
+使用MobaXterm终端工具在命令行直接打开图像化界面。
+
+# 工具：
+Windows: MobaXterm
+Linux:   firefox
+
+# 说明：
+使用Xstart远程连接Linux图形用户界面，
+在用到Linux图形用户界面环境进行一些操作
+（比如登陆firefox,图形化案装Oracl等等界面操作），
+都可以通过本方法实现。
+
+# 1.
+在远程Linux服务器上安装firefox：
+yum install firefox
+
+# 2.
+打开本机Windows的MobaXterm工具,
+并且输入IP登陆到目标Linux服务器，
+在控制台中输入命令打开浏览器：
+firefox
+
+# 3.
+firefox浏览器就会在当前Windows终端打开，
+但是进行的一系列操作都是基于Linux的，
+而不是Windows本机的浏览器。
+
+# MobaXterm介绍
+MobaXterm是远程计算的终极工具箱。在一个单独的Windows应用程序中，它为程序员、网站管理员、it管理员和几乎所有需要以更简单的方式处理远程工作的用户提供了大量的功能。
+Mobaxterm为用户提供了多标签和多终端分屏选项，内置sftp文件传输以及xerver，让用户可以远程运行X窗口程序，ssh连接后会自动将远程目录展示在ssh面版中，方便用户上传下载文件。
+MobaXterm提供了所有重要的远程网络工具、协议(SSH、X11、RDP、VNC、FTP、MOSH、…)和Unix命令(bash、ls、cat、sed、grep、awk、rsync、…)到Windows桌面。RDP类型的会话可以直接连接windows远程桌面，记住密码，比windows自带的mstsc要方便不少。
+
+[MobaXterm官方网站](https://mobaxterm.mobatek.net/)
+[Windows全能终端神器——MobaXterm](https://www.isharebest.com/mobaxterm.htm)

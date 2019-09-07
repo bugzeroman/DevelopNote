@@ -1,0 +1,132 @@
+开启和验证MySQL支持IPv6的方法，
+此处使用的MySQL版本为mysql-5.5.35-linux2.6-x86_64。
+
+# 1.验证操作系统支持IPv6，此处是Linux操作系统
+ping6 ::1
+
+# 2.配置MySQL支持IPv6连接
+在MySQL启动时绑定地址，在服务启动时使用如下参数--bind-address=addr配置，
+其中addr可以是IPv4或者IPv6地址，或者主机名hostname。
+修改my.cnf配置文件，在[mysqld]选项下增加bind-address = ::配置，
+把bind-address配置成::可以保证同时支持IPv4和IPv6的TCP/IP的连接。
+```
+[mysqld]
+bind-address = ::
+```
+
+重启mysql使配置生效：
+/etc/init.d/mysqld restart
+
+# 3.创建测试用户
+使用IPv4先登陆mysql,
+执行命令CREATE USER 'ipv6test'@'::1' IDENTIFIED BY '123456';
+
+# 4.给ipv6test用户增加执行权限
+执行命令GRANT ALL PRIVILEGES ON *.* TO 'ipv6test'@'::1' IDENTIFIED BY '123456' WITH GRANT OPTION;
+
+# 5.验证通过::1本地连接mysql数据库
+输入命令mysql -h ::1 -uipv6test -p123456
+
+# 6.新增"root@%"就可任意ip访问,注意%通配,
+和IPv4时没有区别，如果已经配置了"root@%"用户，直接使用IPv6地址即可访问。
+grant all on *.* to root@'%' identified by 'zdh1234' with grant option;
+mysql -h 2001:db8:1:0:20c:29ff:fe96:8b55 -uroot -pzdh1234
+
+# 7.使用netstat查看3306端口：
+netstat -an | grep 3306 
+
+0.0.0.0:3306
+表示监听端口绑定IPv4，只支持IPv4地址连接
+
+:::3306
+表示监听端口绑定IPv4和IPv6，支持IPv4和IPv6地址连接
+
+# 8.使用jdbc连接mysql的URL
+```
+// IPv4连接URL
+String jdbcIpv4Url_1 = "jdbc:mysql://10.43.159.11:3306/databaseName";  
+String jdbcIpv4Url_2 = "jdbc:mysql://address=(protocol=tcp)(host=10.43.159.11)(port=3306)/databaseName";  
+// IPv6连接URL
+String jdbcIpv6Url = "jdbc:mysql://address=(protocol=tcp)(host=2001:db8:1:0:20c:29ff:fe96:8b55)(port=3306)/database";  
+// hostname连接URL
+String hostNmaeUrl_1 = "jdbc:mysql://zdh-11:3306/databaseName";  
+String hostNmaeUrl_2 = "jdbc:mysql://address=(protocol=tcp)(host=zdh-11)(port=3306)/databaseName";  
+```
+注意使用IPv6地址时，必须使用address=(key=value)这种语法格式，
+同时上面的主机名zhd-11可以对应IPv4地址也可以对应IPv6地址，
+所以为了同时兼容IPv4，IPv6和hostname的情况，建议统一使用address=(key=value)这种语法格式连接MySQL。
+
+注意下面的连接字符串可能过长：
+address=(protocol=tcp)(host=2001:db8:1:0:20c:29ff:fe96:8b55)(port=3306)
+会有如下报错：
+>SQLException : SQL state: HY000 java.sql.SQLException: String 'address=(protocol=tcp)(host=2001:db8:1:0:20c:29ff:fe96:8b55)(port=3306' is too long for host name (should be no longer than 60) ErrorCode: 1470
+
+可以使用简写版本，默认端口为3306：
+address=(protocol=tcp)(host=2001:db8:1:0:20c:29ff:fe96:8b55),
+或者把2001:db8:1:0:20c:29ff:fe96:8b55变为主机名hostname再填写,
+或者尝试升级mysql版本提供更长的字符支持。
+
+# 9.MySQL Connector 5.1和8.0版本的区别
+使用MySQL Connector 5.1驱动，会发生步骤8中的问题;
+使用MySQL Connector 8.0驱动, 对IPv6有了更好的支持，
+可以使用如下格式语法避免问题：
+```
+jdbc:mysql://[2001:db8:1:0:20c:29ff:fe96:8b55]:3306/databaseName
+jdbc:mysql://2001:db8:1:0:20c:29ff:fe96:8b55:3306/databaseName
+jdbc:mysql://[2001:db8:1:0:20c:29ff:fe96:8b55]/databaseName
+```
+下面这种语法格式是会报错的，不能使用：
+```
+jdbc:mysql://2001:db8:1:0:20c:29ff:fe96:8b55/databaseName
+```
+
+# 10.使用主机名hostname连接MySQL
+使用root用户添加IPv6地址对应的主机名映射
+vi /etc/hosts
+2001:db8:1:0:20c:29ff:fe96:8b55 zdh-11-IPv6
+测试主机名能否ping通
+ping6 zdh-11-IPv6
+然后可以使用如下两种格式连接MySQL：
+```
+jdbc:mysql://zdh-11-IPv6:3306/databaseName
+jdbc:mysql://address=(protocol=tcp)(host=zdh-11-IPv6)(port=3306)/databaseName
+```
+
+另外提一下,主机名对应的如果是IPv4地址，
+上面两种格式也是通用的，如下:
+10.43.159.11 zdh-11-IPv4
+```
+jdbc:mysql://zdh-11-IPv4:3306/databaseName
+jdbc:mysql://address=(protocol=tcp)(host=zdh-11-IPv4)(port=3306)/databaseName
+```
+
+# 11.使用jdbc连接mysql的URL总结
+## 11.1使用MySQL Connector 5.1驱动去连接MySQL
+对应IPv4,IPv6和hostname都需要兼容的情况，推荐使用如下语法格式连接：
+```
+jdbc:mysql://address=(protocol=tcp)(host=10.43.159.11)(port=3306)/databaseName
+jdbc:mysql://address=(protocol=tcp)(host=2001:db8:1:0:20c:29ff:fe96:8b55)(port=3306)/databaseName
+jdbc:mysql://address=(protocol=tcp)(host=zdh-11)(port=3306)/databaseName
+```
+上面的主机名zhd-11可以对应IPv4地址也可以对应IPv6地址。
+
+## 11.2 使用MySQL Connector 8.0驱动去连接MySQL
+对应IPv4,IPv6和hostname都需要兼容的情况，推荐使用如下语法格式连接：
+```
+jdbc:mysql://10.43.159.11:3306/databaseName
+jdbc:mysql://[2001:db8:1:0:20c:29ff:fe96:8b55]:3306/databaseName
+jdbc:mysql://zdh-11:3306/databaseName
+```
+上面的主机名zhd-11可以对应IPv4地址也可以对应IPv6地址。
+需要注意的是在8.0中address=(key=value)这种语法格式仍然是支持的。
+
+# 12.参考文档：
+[5.1驱动对于IPv6的支持官方说明文档](https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-jdbc-url-format.html)
+
+[8.0驱动对于IPv6的支持官方说明文档](https://dev.mysql.com/doc/connector-j/5.1/en/connector-j-reference-url-format.html)
+
+[MySQL Connector/J 8.0 Download](https://dev.mysql.com/downloads/file/?id=479585)
+
+[MySQL 5.5 Reference Manual / IPv6 Support](https://dev.mysql.com/doc/refman/5.5/en/ipv6-support.html)
+
+[linux环境下配置mysql5.6支持IPV6连接的方法](https://www.jb51.net/article/133019.htm)

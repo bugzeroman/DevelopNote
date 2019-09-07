@@ -1,0 +1,29 @@
+以Ranger项目为例，说明开源社区Review代码详细步骤。
+
+# 1.寻找合适的issue进行review
+首先自己需要是某个开源项目的committer,
+要有合入代码的权限。
+
+# 2.review代码
+从reviews下载patch,验证patch和功能
+
+# 3.反馈验证结果
+如果有问题，需要反馈给作者修改；
+如果没有问题，则可以ship it。
+
+# 4.等待社区其他人反馈后再合入
+等待至少24小时之后，如果其他人没有意见，
+则可以将合入的patch推送到开源Ranger远程仓库。
+
+# 5.评论issue
+在相应的issue下面提交代码合并记录。
+
+# 6.关闭review请求
+提醒review创建者关闭review。
+
+# 7.关闭issue
+提醒issue创建者关闭issue。
+
+# 8.参考
+issue地址： https://issues.apache.org/jira
+review地址：https://reviews.apache.org

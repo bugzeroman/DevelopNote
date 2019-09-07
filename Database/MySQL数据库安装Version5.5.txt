@@ -1,0 +1,98 @@
+# 1.新建mysql用户
+useradd -g hadoop -s /bin/bash -md /home/mysql mysql
+创建.bash_profile,加载.bashrc
+
+# 2.检查并且卸载系统自带的mysql
+在root用户下面执行
+rpm -qa | grep -i mysql
+libmysqlclient_r15-5.0.96-0.6.1
+libqt4-sql-mysql-4.6.3-5.25.4
+
+rpm -e libmysqlclient_r15-5.0.96-0.6.1 --nodeps
+rpm -e libqt4-sql-mysql-4.6.3-5.25.4 --nodeps
+
+强制卸载
+rpm -e --nodeps mysql-libs-5.1.69-1.el6_4.x86_64
+
+# 3.解压安装mysql
+tar -zxvf mysql-5.5.35-linux2.6-x86_64.tar.gz 
+注意basedir必须是mysql上面的解压目录(root用户需要指定mysql)
+./scripts/mysql_install_db --user=mysql --basedir=/home/mysql/mysql-5.5.35-linux2.6-x86_64 --datadir=/home/mysql/data
+
+用root用户复制配置文件：
+cp -a ./support-files/my-large.cnf /etc/my.cnf
+cp -a ./support-files/mysql.server /etc/init.d/mysqld
+/etc/init.d/mysqld文件修改配置，
+里面的路径为上面安装时指定的路径如下：
+basedir='/home/mysql/mysql-5.5.35-linux2.6-x86_64'
+datadir='/home/mysql/data'
+
+# 4.启动mysql
+/etc/init.d/mysqld start
+/etc/init.d/mysqld status
+增加环境变量，方便使用命令：
+export MYSQL_HOME=/home/mysql/mysql-5.5.35-linux2.6-x86_64
+export PATH=$PATH:$MYSQL_HOME/bin
+
+# 5.登陆mysql
+初始root是没有密码的，下面修改密码
+mysqladmin -uroot password zdh1234
+修改成功后重新登陆：
+mysql -uroot -pzdh1234
+
+添加远程访问权限
+use mysql; 
+新增一条权限记录
+grant all on *.* to root@'%' identified by 'zdh1234' with grant option;
+select host, user from user;
+重启生效
+/etc/init.d/mysqld restart
+远程链接默认端口：3306
+
+使用root用户配置Linux开机MySQL自动启动
+将mysql设为linux服务
+chkconfig --add mysqld
+查看mysql是否在相应的级别打开自启动
+chkconfig --list mysqld
+chkconfig --list | grep -i mysql (不清楚mysl的服务名时可以使用)
+如果未启动，则打开自启动
+chkconfig --level 345 mysql on
+
+# 6.重装mysql
+
+停止mysql进程，stop或者kill
+删除以下两个目录
+data
+mysql-5.5.35-linux2.6-x86_64
+
+# 7.解决无法创建函数的问题
+临时：
+SET GLOBAL log_bin_trust_function_creators = 1;
+SELECT @@global.log_bin_trust_function_creators;
+永久解决，修改my.cnf文件的[mysqld]并且重启mysql
+# The MySQL server
+[mysqld]
+log_bin_trust_function_creators = 1
+
+# 8.MySQL数据库信息
+Unix:mysql/zdh1234
+mysql:root/zdh1234
+Link: zdh-245:3306
+
+# 9.修改root用户的密码
+首先停止mysql
+/etc/init.d/mysqld stop
+然后安全模式启动
+./bin/mysqld_safe --skip-grant-tables &
+然后使用root无密码登陆
+mysql -uroot
+后台修改root密码
+update mysql.user set password=PASSWORD('zdh1234') where User='root';
+flush privileges;
+
+# 10.mysql重启无法删除文件报错
+rm: 无法删除"/var/lock/subsys/mysql": 权限不够
+不要使用mysql用户重启，使用root用户重启即可解决。
+原因是mysql设置为开机启动，开机是使用了root用户启动，
+所以stop的时候也要使用root停止。
+

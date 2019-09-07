@@ -1,0 +1,147 @@
+Storm集群安装，基于版本1.0.1，
+使用apache-storm-1.0.1.tar.gz安装包。
+
+# 1.安装规划
+|角色规划   |IP/机器名  |安装软件   |运行进程     |
+|-----------|-----------|-----------|-------------|
+|nimbus     |zdh-237    |storm      |core,nimbus  |
+|supervisor |zdh-238    |storm      |supervisor,worker,LogWriter |
+|supervisor |zdh-239    |storm      |supervisor,worker,LogWriter |
+
+# 2.安装用户
+storm/zdh1234
+useradd -g hadoop -s /bin/bash -md /home/storm storm
+
+# 3.安装依赖
+1.JDK
+2.Python
+3.Zookeeper
+
+# 4.主机名配置
+```
+vi /etc/hosts
+10.43.159.237 zdh-237
+10.43.159.238 zdh-238
+10.43.159.239 zdh-239
+```
+
+# 5.JDK安装
+可以使用root用户安装的公共jdk，要求JDK 6+，
+为Storm用户下配置jdk环境变量
+```
+export JAVA_HOME=/usr/java/jdk
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar 
+```
+
+# 6.Python安装
+确定系统自带的Python版本，如果是2.6.6+可以不用再安装。
+python -V  
+
+# 7.Zookeeper安装
+请参考[Zookeeper集群安装Version3.5.1](https://www.jianshu.com/p/b3ff87d511dd)
+这里使用的Zookeeper集群信息:
+zdh-237，zdh-238，zdh-239
+服务端口为默认的2181。
+
+# 8.Storm安装
+请自行从官网获取安装包：
+apache-storm-1.0.1.tar.gz
+将安装包拷贝到zdh-237的storm用户下
+scp root@10.43.159.41:/home/ling/storm/apache-storm-1.0.1.tar.gz .
+解压安装包：
+tar -zxvf apache-storm-1.0.1.tar.gz
+配置环境变量：
+```
+export STORM_HOME=/home/storm/apache-storm-1.0.1
+export PATH=$PATH:$STORM_HOME/bin
+```
+创建本地数据存放的目录:
+mkdir /home/storm/apache-storm-1.0.1/data
+
+# 9.修改storm.yaml文件
+```
+vi conf/storm.yaml
+storm.zookeeper.servers:
+    - "zdh-237"
+    - "zdh-238"
+    - "zdh-239"
+storm.zookeeper.port: 2181
+storm.local.dir: "/home/storm/apache-storm-1.0.1/data"
+nimbus.seeds: ["zdh-237", "zdh-238", "zdh-239"]
+ui.port: 18080
+supervisor.slots.ports:
+- 6700
+- 6701
+- 6702
+- 6703
+```
+
+# 10.拷贝Storm到集群其他机器
+zdh-237的stom复制到zdh-238，zdh-239节点的storm用户下:
+scp -r storm@zdh-237:/home/storm/apache-storm-1.0.1 .
+或者仅仅拷贝配置文件
+scp storm@zdh-237:/home/storm/apache-storm-1.0.1/conf/storm.yaml .
+
+# 11.启动Storm
+启动之前请确保ZooKeeper已正常启动
+
+## 11.1.nimbus节点启动(无日志)
+bin/storm nimbus >/dev/null 2>&1 &  
+bin/storm ui >/dev/null 2>&1 & 
+supervisor节点启动：
+bin/storm supervisor >/dev/null 2>&1 &   
+
+## 11.2.nimbus节点启动(保存日志)：  
+storm nimbus >nimbusInit.log 2>&1 &  
+storm ui >uiCoreInit.log 2>&1 & 
+supervisor节点启动：
+storm supervisor > superInit.log 2>&1 & 
+
+## 11.3.Storm启动后相关进程
+nimbus启动后相应会产生如下进程：
+core（对应Storm UI）
+nimbus
+
+supervisor启动后相应会产生如下进程:
+supervisor
+提交storm任务后还会生成:
+worker,LogWriter
+
+## 11.4.Storm重启
+Storm没有提高停止节点的命令，
+需要先使用jps或者ps找到Storm所有进程，
+再kill掉相应进程，重新启动。
+
+# 12.运行自带测试用例
+cd /home/storm/apache-storm-1.0.1/examples/storm-starter/
+storm jar storm-starter-topologies-1.0.1.jar storm.starter.StatefulWindowingTopology wordcount
+storm jar storm-starter-topologies-1.0.1.jar storm.starter.StatefulTopology StatefulTopologyNew3
+
+停止拓扑任务wordcount:
+storm deactivate wordcount
+
+查看Storm后台管理界面：
+10.43.159.237:18080
+
+查看Storm版本:
+storm version
+
+# 13.Storm OOM 内存溢出问题
+需要设置的内存参数，以及增大任务的并行度，spout的获取数据速度。
+nimbus.childopts: "-Xmx1024m"
+supervisor.childopts: "-Xmx1024m"
+worker.childopts: "-Xmx1024m"
+
+# 14.无法识别主机
+提交storm任务时，其他节点supervisor节点无法下载jar包，不能执行任务：
+message org.apache.storm.thrift.transport.TTransportException: java.net.UnknownHostException: zdh-237.site
+无法识别zdh-237.site主机,删除zdh-237.site的配置
+10.43.159.237 zdh-237.site zdh-237
+
+# 15.日志查看配置
+在任务中打印的日志需要修改下面的log4j配置，才能看到结果
+-Dlog4j.configurationFile=/home/storm/apache-storm-1.0.1/log4j2/worker.xml
+日志查看：
+/home/storm/apache-storm-1.0.1/data/workers/2d60e758-3733-481a-a0b1-2e1e054127d8/artifacts/worker.log
+-Dlog4j.configurationFile=/home/storm/apache-storm-1.0.1/log4j2/cluster.xml

@@ -1,0 +1,33 @@
+各种自己用到的Notepad++相关的功能和技巧总结。
+
+### 1.Base64编解码
+编码：
+插件(P) -> MIME Tools -> Base64 Encode
+
+解码：
+插件(P) -> MIME Tools -> Base64 Decode
+
+### 2.HTML元字符转义
+TextFX -> TextFX Convert -> Encode HTML(&<>")
+
+### 3.HTML文本格式化
+TextFX -> TextFX HTML Tidy -> Tidy(most recent HTMLTIDY.CFG)
+
+### 4.多行合并为一行
+编辑(E) -> 执行行 -> 合并行
+
+### 5.列编辑
+按住Alt键+鼠标左键，可以选择列进行编辑
+
+### 6.自动换行
+视图(V) -> 自动换行
+
+### 7.显示所有字符
+视图(V) -> 显示符号 -> 显示所有字符
+显示各种空白字符和不可见的控制字符
+
+### 8.设置背景色为绿豆沙
+设置(T) -> 语言格式设置... -> 语言:Global Styles -> 格式名称:Global override -> 色彩格式 -> 背景色
+添加自定义颜色：
+色调(E):84, 饱和度(S):94, 亮度(L):205
+勾选使用全局背景色，保存即可。

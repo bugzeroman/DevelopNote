@@ -1,0 +1,19 @@
+tcpdump命令需要使用root执行
+
+# 1.
+查看网卡命令
+ifconfig
+
+# 2.
+监视编址到指定端口的TCP或UDP数据包，那么执行以下命令：
+tcpdump -i eth0 host 10.43.159.11 and port 8983
+
+输出信息到文件
+tcpdump -i eth0 host 10.43.159.11 and port 8983 -w info.cap
+
+输出更详细信息到文件
+tcpdump -i eth0 -vv host 10.43.159.7 and port 8983 -w hdfsAudit1.cap
+
+# 3.
+使用-s0就可以按包长，截取完整数据
+tcpdump -i eth0 -vv -s0 host 10.43.159.7 and port 8983 -w hdfsAudit1.cap

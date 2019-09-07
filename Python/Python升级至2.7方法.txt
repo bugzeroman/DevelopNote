@@ -1,0 +1,41 @@
+在Linux下Python升级至2.7的详细步骤方法，
+此处的升级，使用的是全新安装新版本，替换旧版本的方法，
+同时新旧版本可以共存，将默认python指向最新2.7版本即可。
+
+# 1.下载Python-2.7安装包
+wget http://www.python.org/ftp/python/2.7.3/Python-2.7.3.tgz
+
+解压缩安装包
+tar -zxvf Python-2.7.3.tgz
+
+进入解压缩后的文件夹
+cd Python-2.7.3
+
+# 2.编译安装Python
+在编译前先在/usr/local建一个文件夹python27，
+作为Python的安装路径，以免覆盖老的版本
+mkdir /usr/local/python27
+
+在解压缩后的目录下编译安装
+./configure --prefix=/usr/local/python27
+
+make
+
+make install
+
+# 3.创建默认链接
+此时没有覆盖老版本，将原来链接改为别的名字　　
+mv /usr/bin/python /usr/bin/python2.6
+
+再建立新版本python的链接　　
+ln -s /usr/local/python27/bin/python2.7  /usr/bin/python
+
+# 4.查看python版本
+python --version
+
+# 5.配置yum启动路径
+因为yum不兼容Python 2.7，但是我们已经把Python2.6升级到了Python2.7，
+所以yum不能正常工作，我们需要修改yum使用的Python版本,
+vi /usr/bin/yum
+将头部#!/usr/bin/python 
+改成#!/usr/bin/python2.6

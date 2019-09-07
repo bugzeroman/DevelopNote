@@ -1,0 +1,37 @@
+一些Oracle数据库用法的小总结
+
+# 1.使用insert into创建新表
+insert into destdb.sub_contract (userid,contractid) select msisdn,product
+from month_payinfo partition (partitionname)
+
+# 2.select 字段中使用条件分支
+(case when (status=7)
+then 9
+else status
+end) as status
+
+# 3.判断字段为空时设置默认值
+nvl(subdate,20100101) as subdate
+
+# 4.存在索引的表大量的数据割接方法
+先删除主键约束，再删除索引
+alter table sub_contract drop constraint pk_sub_contract;
+drop index pk_sub_contract;
+数据割接完后，先并发无日志增加索引，再创建主键约束
+create unique index pk_sub_contract on sub_contract(userid,contractid) local parallel 64 tablespace sub01_idx nologging;
+alter index pk_sub_contract noparallel;
+alter index pk_sub_contract logging;
+alter table  sub_contract add constraint pk_sub_contract primary key (userid,contractid) using index pk_sub_contract;
+dbms_output.put_line('sqlcode:' || to_char(sqlcode) || ',sqlerrm:' || sqlerrm);
+
+# 5.特殊字符处理
+通过||拼接特殊字符&
+或者set define off
+
+# 6.检查存储过程等sql语句影响的数据行数
+sql%rowcount insert into影响的行数
+sqlplus / as sysdba
+sqlplus yw/yw@ip:1521/ora @install.sql
+
+# 7.绑定变量
+execute immediate'select count(1) from sub_contract where userid=:1 and contractid=:2' into v_temp using var.userid,var.contractid;

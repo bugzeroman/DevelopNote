@@ -1,0 +1,96 @@
+在Kibana上面配置权限，验证对Elasticsearch权限控制,
+主要步骤如下：
+1.创建角色
+2.创建用户，并且赋予用户角色
+3.用户登陆，验证没有权限
+4.赋予角色权限
+5.用户登陆，验证拥有权限
+
+具体测试步骤：
+
+# 1.创建用户yuewn
+Kibana -> Managemet -> Users -> Create User
+yuwen/zdh1234
+先不给用户配置角色
+
+# 2.开启X-Pack插件的Elasticsearch查询集群健康
+
+不携带用户名和密码会报错
+```
+curl -XGET 'localhost:9200/_cat/health?v&pretty'
+```
+携带用户名和密码查询OK
+```
+curl -u elastic:ce0YpqhLZykDWGdnjvlP -XGET 'localhost:9200/_cat/health?v&pretty'
+```
+# 3.使用超级用户elastic列出所有索引,成功
+```
+curl -u elastic:ce0YpqhLZykDWGdnjvlP -XGET 'localhost:9200/_cat/indices?v&pretty'
+```
+使用普通用户yuwen列出所有索引，会报错
+```
+curl -u yuwen:zdh1234 -XGET 'localhost:9200/_cat/indices?v&pretty'
+```
+报错如下：
+```
+{
+  "error" : {
+    "root_cause" : [
+      {
+        "type" : "security_exception",
+        "reason" : "action [cluster:monitor/state] is unauthorized for user [yuwen]"
+      }
+    ],
+    "type" : "security_exception",
+    "reason" : "action [cluster:monitor/state] is unauthorized for user [yuwen]"
+  },
+  "status" : 403
+}
+```
+# 4.赋予普通用户yuwen超级角色的权限
+普通用户yuwen列出所有索引，成功
+```
+curl -u yuwen:zdh1234 -XGET 'localhost:9200/_cat/indices?v&pretty'
+```
+成功结果如下：
+```
+health status index                           uuid                   pri rep docs.count docs.deleted store.size pri.store.size
+......
+yellow open   megacorp                        uTEXgdwGTDGmwSKJVNtvrA   5   1          3            0     17.5kb         17.5kb
+......
+```
+# 5.elasticsearch打开debug日志
+/home/elasticsearch/elasticsearch-6.2.2/config/log4j2.properties
+/x-pack/log4j2.properties
+
+elasticsearch_log4j2.properties
+```
+# log action execution errors for easier debugging
+logger.action.name = org.elasticsearch.action
+logger.action.level = debug
+logger.action.ref = rolling
+logger.action.additivity = false
+
+
+rootLogger.level = info
+rootLogger.appenderRef.console.ref = console
+rootLogger.appenderRef.rolling.ref = rolling
+```
+
+x-pack_log4j2.properties
+```
+logger.xpack_security_audit_logfile.name = org.elasticsearch.xpack
+logger.xpack_security_audit_logfile.level = debug
+logger.xpack_security_audit_logfile.appenderRef.audit_rolling.ref = audit_rolling
+logger.xpack_security_audit_logfile.additivity = false
+
+appender.audit_rolling.layout.pattern = [%d{ISO8601}][%-5p][%-25c{1.}] %marker%.-10000m%n
+```
+# 6.进一步测试，设置如下的用户进行测试：
+1.用户yuwen有超级用户的权限
+2.用户yuwen1不存在
+3.用户zhangqian存在，但没有任何权限
+```
+curl -u zhangqian:zdh1234 -XGET 'localhost:9200/_cat/indices?v&pretty'
+curl -u yuwen:zdh1234 -XGET 'localhost:9200/_cat/indices?v&pretty'
+```

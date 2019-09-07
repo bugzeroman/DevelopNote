@@ -1,0 +1,30 @@
+以Ranger项目为例，说明在开源社区需要使用的各种账号，及其作用。
+
+# 1.Jira Issue 
+创建issue
+https://issues.apache.org/jira
+yuwen/zdh1234
+
+# 2.Review Board 
+创建review request,进行代码review
+https://reviews.apache.org
+yuwen/zdh1234
+
+# 3.Git Push账号
+拥有该账号，即代表成为项目的committer，
+可以向远程提交代码，
+（注意需要使用https://git-wip-us.apache.org/repos/asf/ranger.git提交）
+https://id.apache.org
+yuwen/zdh1234
+
+# 4.apache邮箱
+可以用来收发开源社区相关的邮件，
+一般也不使用，使用自己常用的邮箱订阅开源社区的邮件即可。
+https://lists.apache.org/
+yuwen/zdh1234
+
+# 5.github账号
+查看Ranger的开源镜像，
+一般不使用，下载开源的代码一般不需要账号。
+https://github.com
+yuwen/zdh1234

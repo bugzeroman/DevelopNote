@@ -1,0 +1,55 @@
+将Zookeeper源码导入Eclipse，
+Zookeeper源码需要使用ant构建后才能导入Eclipse，
+和Solr的源码一样也是使用ant构建的，
+大部分可以参考[Eclipse导入Solr源码Version5.5.3](https://www.jianshu.com/p/68983a1680e1)，
+下面写一下比较重要的地方。
+
+# 1.Zookeeper源码下载
+使用如下地址：
+https://github.com/apache/zookeeper
+本文使用的是2017年11月3号拉取的master版本。
+
+# 2.编译Zookeeper源码
+Zookeeper源码需要使用如下命令来转换成eclipse工程：
+ant eclipse
+
+# 3.解决ant下载问题
+由于网络和代理等各种原因可能导致依赖的包无法下载。
+
+# 3.1.替换原地址
+修改zookeeper中的build.xml的下载包地址，
+将如下地址换成国内镜像或者是内网仓库地址：
+```
+<get src="http://ufpr.dl.sourceforge.net/project/ant-eclipse/ant-eclipse/1.0/ant-eclipse-1.0.bin.tar.bz2"
+      dest="${src.dir}/java/ant-eclipse-1.0.bin.tar.bz2" usetimestamp="false" />
+```
+或者自己从其他渠道获得依赖包后，
+放到自己搭建的下载服务器上面，
+请参考[使用tomcat搭建HTTP文件下载服务器](https://www.jianshu.com/p/d7239900dc84)，
+然后将地址修改为自己的服务URL：
+
+# 3.2.手动下载后放入相应目录
+删掉build.xml的下载步骤，
+编译过程中会跳过下载，
+需要自己从其他渠道获得依赖包后，
+然后手动放入相应目录：
+```
+<get src="http://ufpr.dl.sourceforge.net/project/ant-eclipse/ant-eclipse/1.0/ant-eclipse-1.0.bin.tar.bz2"
+      dest="${src.dir}/java/ant-eclipse-1.0.bin.tar.bz2" usetimestamp="false" />
+<property name="ivy.url"
+      value="https://repo1.maven.org/maven2/org/apache/ivy/ivy" />
+```
+
+# 4.修改ivysettings.xml的maven仓库地址
+将如下地址换成国内镜像或者是内网仓库地址，
+保证编译过程中可以下载到需要的依赖包：
+```
+<property name="repo.maven.org"
+    value="http://10.43.159.10:8082/nexus/content/groups/public/" override="false"/>
+```
+
+# 5.Eclipse导入Zookeeper工程
+上面ant编译构建成功后，
+可以看到多出了.classpath和.project等文件，
+把Zookeeper源码当做普通的工程导入Eclipse即可。
+Eclipse -> File -> Import -> General -> Existing Projects into Workspace 

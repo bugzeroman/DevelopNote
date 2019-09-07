@@ -1,0 +1,77 @@
+对Storm的DRPC进行权限控制，
+并且设计相应的测试验证。
+
+# 1.集群安装
+请参考[Storm集群安装Version1.0.1](https://www.jianshu.com/p/fc5b56287be4)
+
+# 2.使用DRPC功能
+请参考[Storm集群使用DRPC功能Version1.0.1](https://www.jianshu.com/p/b683fe0a4383)
+预置如下数据：
+在Strom集群上面启动DRPC进程，
+并且提交了DRPC的topology，
+方法名称为exclamation。
+
+# 3.开启DRPC的权限控制
+在**storm.yaml**文件中开启DRPC的权限控制：
+```
+drpc.authorizer: "org.apache.storm.security.auth.authorizer.DRPCSimpleACLAuthorizer"
+drpc.authorizer.acl.filename: "drpc-auth-acl.yaml"
+drpc.authorizer.acl.strict: true
+```
+
+在conf目录下新建**drpc-auth-acl.yaml**文件，
+配置内容如下：
+```
+drpc.authorizer.acl:
+  "exclamation":
+    "client.users":
+      - "alice"
+      - "kafka"
+    "invocation.user": "stormna"
+```
+说明，配置用户kafka和alice可以通过客户端调用drpc的方法exclamation，
+client.users指定的用户可以执行的操作为operation:execute，
+invocation.user可以执行的操作operation:failRequest,fetchRequest,result，
+当drpc.authorizer.acl.strict为false时，
+意为permissive宽容，
+即没有配置权限控制的方法可以被任意用户执行，
+而在配置文件中指定了控制权限的方法还需要匹配才能执行。
+当drpc.authorizer.acl.strict为ture时，
+只有在配置文件中的用户才能执行，
+不在则拒绝，即为严格的白名单。
+
+# 4.重启Storm集群
+配置完成后重新启动storm集群，包括nimbus，drpc，
+登陆Storm UI管理台可以看到新的配置项已经生效。
+
+# 5.客户端验证
+使用DRPCClientTest.java类中对于exclamation的客户端调用代码，
+具体代码请参考[Storm集群使用DRPC功能Version1.0.1](https://www.jianshu.com/p/b683fe0a4383)的第7章节，
+打成名称为drpctest.jar的jar包，
+然后上传到Linux的storm用户下面，
+执行如下测试命令：
+java -jar drpctest.jar hi
+未授权用户会抛出异常：
+```
+Exception in thread "main" AuthorizationException(msg:DRPC request 'execute' for 'unknown' user is not authorized)
+	at org.apache.storm.generated.DistributedRPC$execute_result$execute_resultStandardScheme.read(DistributedRPC.java:1231)
+	at org.apache.storm.generated.DistributedRPC$execute_result$execute_resultStandardScheme.read(DistributedRPC.java:1200)
+	at org.apache.storm.generated.DistributedRPC$execute_result.read(DistributedRPC.java:1134)
+	at org.apache.storm.thrift.TServiceClient.receiveBase(TServiceClient.java:86)
+	at org.apache.storm.generated.DistributedRPC$Client.recv_execute(DistributedRPC.java:106)
+	at org.apache.storm.generated.DistributedRPC$Client.execute(DistributedRPC.java:92)
+	at org.apache.storm.utils.DRPCClient.execute(DRPCClient.java:60)
+	at test.zte.storm.drpc.DRPCClientTest.main(DRPCClientTest.java:28)
+```
+
+登陆到kafka用户，
+执行同样的测试命令：
+java -jar drpctest.jar hi
+正常返回结果:
+```
+input:hi, result:hi!
+```
+
+用户kafka执行成功，而storm执行失败，
+是因为我们在drpc-auth-acl.yaml给kafka配置了权限，
+而没有给storm用户权限。

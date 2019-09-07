@@ -1,0 +1,129 @@
+Kylin安装，基于版本1.6.0，Kylin只有单机没有集群，
+使用apache-kylin-1.6.0-hbase1.x-bin.tar.gz安装包。
+
+# 1.安装规划
+|角色规划 |IP/机器名 |安装软件 |运行进程 |
+|---------|----------|---------|---------|
+|Kylin    |zdh-9     |Kylin    |Kylin    |
+
+# 2.安装依赖
+Hadoop: 2.4+
+Hive: 0.13+
+HBase: 0.98+, 1.x
+JDK: 1.7+ 
+
+# 3.当前安装依赖的环境
+Hadoop: hdfs/zdh1234    集群:zdh-7,zdh-9,zdh-11   版本:hadoop-2.7.1
+Hive:   hive/zdh1234    单机:zdh-9                版本:hive-2.1.0   
+Hbase:  hbase/zdh1234   集群:zdh-7,zdh-9,zdh-11   版本:hbase-1.1.5
+Jdk:    root/zdh1234    单机:zdh-9                版本:jdk1.7.0_80
+说明:Hive使用Mysql存放元数据
+
+# 4.安装用户
+kylin/zdh1234
+useradd -g hadoop -s /bin/bash -md /home/kylin kylin
+
+# 5.获取并且解压安装包
+[Kylin Download](http://kylin.apache.org/download/)
+tar -zxvf apache-kylin-1.6.0-hbase1.x-bin.tar.gz
+
+# 6.设置Kylin的环境变量
+```
+export JAVA_HOME=/usr/java/jdk1.7.0_80
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar 
+
+export KYLIN_HOME=/home/kylin/apache-kylin-1.6.0-hbase1.x-bin
+export PATH=$PATH:$KYLIN_HOME/bin
+
+export HADOOP_HOME=/home/hdfs/hadoop-2.7.1
+export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH
+
+export HBASE_HOME=/home/hbase/hbase-1.1.5
+export PATH=$PATH:$HBASE_HOME/bin
+
+export HIVE_HOME=/home/hive/apache-hive-2.1.0-bin
+export HIVE_CONF=$HIVE_HOME/conf
+export HCAT_HOME=$HIVE_HOME/hcatalog
+export PATH=$PATH:$HIVE_HOME/bin
+```
+
+# 7.检查安装环境
+执行如下命令，查看是否满足Kylin的安装依赖:
+check-env.sh
+kylin需要对hdfs,hbase,hive的执行权限，
+如果没有，需要新增权限,包括下面的子目录：
+```
+chmod -R g+rwx hive/
+drwx------.  4 kylin  hadoop     4096 4月  12 15:03 kylin
+drwxr-x---.  5 hbase  hadoop     4096 4月  12 13:37 hbase
+drwxr-x---.  9 hdfs   hadoop     4096 4月  12 13:36 hdfs
+drwxr-xr-x.  5 hive   hadoop     4096 4月  12 14:51 hive
+```
+特别的，kylin对于hive目录还需要写权限。
+
+# 8.启动Kylin
+kylin.sh start
+停止kylin
+kylin.sh stop
+
+# 9.登陆Kylin的Web页面
+http://zdh-9:7070/kylin
+用户名密码 ADMIN/KYLIN
+
+# 10.使用Kylin自带cube示例验证
+## 10.1
+执行sample.sh，并且重启kylin。
+## 10.2
+登陆web页面，选中learn_kylin工程，
+构建cube，选中Models的kylin_sales_cube, 点击Actions -> Build
+在monitor页面下查看构建进度，达到100%即可。
+## 10.3
+在Insight页面下执行sql查询：
+```
+select part_dt, sum(price) as total_selled, count(distinct seller_id) as sellers from kylin_sales group by part_dt order by part_dt
+```
+可以在hive里面执行上面的sql，比较查询花费的时间。
+
+# 11.问题解决
+## 11.1.无法访问Hadoop JobHistory
+```
+java.io.IOException: java.net.ConnectException: Call From master/192.168.182.100 to 0.0.0.0:10020 failed on connection exception: java.net.ConnectException: Connection refused; For more details see:  http://wiki.apache.org/hadoop/ConnectionRefused
+```
+
+在zdh-9上面的hdfs用户下配置Hadoop jobhistory启动即可
+
+## 11.2.安全检查失败
+```
+org.apache.hadoop.hbase.DoNotRetryIOException: org.apache.hadoop.hbase.DoNotRetryIOException: java.net.UnknownHostException: gagcluster Set hbase.table.sanity.checks to false at conf or table descriptor if you want to bypass sanity checks
+```
+修改hbase-site.xml文件中的配置项
+hbase.table.sanity.checks的值为false：
+```
+<property>
+        <name>hbase.table.sanity.checks</name>
+        <value>false</value>
+</property>
+```
+将hadoop的配置文件core-site.xml和hdfs-site.xml拷贝到hbase的conf目录下启动正常
+
+## 11.3.hbase拷贝报错
+```
+Caused by: java.lang.IllegalArgumentException: Wrong FS: hdfs://gagcluster/kylin/kylin_metadata/kylin-ec90975d-2af0-4d06-a8c5-8d31b80b77a9/kylin_sales_cube/hfile/F2/7c91c1e5e24547bcbe2a8791c7b96861, expected: hdfs://10.43.159.7:9000
+```
+修改hbase-site.xml的配置项如下：
+```
+<property>
+    <name>hbase.rootdir</name>
+    <value>hdfs://gagcluster/hbase</value>
+</property>
+```
+## 11.4.Kylin无法启动
+报错，一些表找不到
+然后发现hbase启动异常
+使用habse shell命令list表，失败
+发现hbase有异常日志，有一个节点由于时间不同步无法启动，
+把集群时间同步之后在重新启动即可。
+
+# 12.参考文章
+[Kylin Installation Guide](http://kylin.apache.org/docs23/install/index.html)

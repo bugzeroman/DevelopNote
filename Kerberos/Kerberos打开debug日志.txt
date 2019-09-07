@@ -1,0 +1,9 @@
+在JVM的启动参数中加入如下配置，打开kerberos的debug开关：
+-Dsun.security.krb5.debug=true
+JVM启动后，kerberos的相关日志会打印到控制台中，
+因为java中kerberos的日志是使用system.println打印的。
+
+下面以hadoop开启kerberos的debug日志举例：
+/hadoop-2.7.1/libexec/hadoop-config.sh 配置文件中加入如下内容：
+HADOOP_OPTS="$HADOOP_OPTS -Dsun.security.krb5.debug=true"
+Debug information is written to console. 

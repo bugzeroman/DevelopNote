@@ -1,0 +1,22 @@
+# 1.解决Unable to load native-hadoop library for your platform告警
+
+安装Hadoop启动之后总有警告：Unable to load native-hadoop library for your platform... using builtin-Java classes where applicable
+环境：Red Hat 6.4 64位，jdk1.7 64位
+
+首先找到对应自己hadoop版本的64位的lib包，可以自己手动去编译，但比较麻烦，也可以去网上找，好多都有已经编译好了的。
+将准备好的64位的lib包解压到已经安装好的hadoop的lib目录下：
+
+[hadoop@hadoopTest ~]$ tar -xvf hadoop-native-64-2.4.1.tar -C hadoop-2.4.1/lib
+注意，是lib目录，而不是lib下的native目录下，这个问题整了我好久。
+
+然后增加环境变量：
+
+[hadoop@hadoopTest hadoop-2.4.1]$ vi ~/.bash_profile
+增加下面的内容：
+```
+export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
+export HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib"
+```
+让环境变量生效：
+[hadoop@hadoopTest hadoop-2.4.1]$ source ~/.bash_profile
+启动hadoop，发现警告消除了，成功。

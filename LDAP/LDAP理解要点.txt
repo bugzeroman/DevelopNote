@@ -1,0 +1,41 @@
+# 1.介绍
+LDAP(Lightweight Directory Access Protocol)是"轻量级目录访问协议"，
+是一个用于访问"目录服务器"(Directory Servers)的协议。
+这里所谓的"目录"是指一种按照树状结构存储信息的数据库。
+
+# 2.DN唯一标识名
+目录这个概念和硬盘上的目录结构类似，
+不过LDAP的**根目录**必须是**The world**，
+**一级**子目录必须是国家（countries）。
+**二级**子目录通常包含有公司(companies)、组织(organisations)、地点(places)等等……
+**三级**子目录通常会包含人员(people)、设备(equipment)、文档(documents)等等……
+当你引用硬盘上的文件时，通常是这样的：
+```
+/usr/local/myapp/docs
+```
+正斜杠**/**在这里表示级别分界线，并且从左向右阅读。
+而在LDAP中则通过"distinguished name"(简称"dn")来表示文件，
+通常像下面这样：
+```
+cn=John Smith,ou=Accounts,o=My Company,c=US
+```
+逗号**,**在这里表示级别分界线，并且从右向左阅读。
+上述dn可以理解为：
+```
+   country = US
+   organization = My Company
+   organizationalUnit = Accounts
+   commonName = John Smith
+```
+
+# 3.功能特性
+目录是为频繁查询但不频繁更新而设计的一个特殊的数据库。
+不像其它常规数据库，它们不包含事件支持或回滚功能。
+目录很容易复用以提供可用性和可靠性。
+当目录被复用，允许临时的不一致直到得到最终同步。
+
+目录是一个为查询、浏览和搜索而优化的专业分布式数据库，
+它呈树状结构组织数据，就好象Linux/Unix系统中的文件目录一样。
+目录数据库和关系数据库不同，它有优异的读性能，但写性能差，
+并且没有事务处理、回滚等复杂功能，不适于存储修改频繁的数据。
+所以目录天生是用来查询的，就好象它的名字一样。

@@ -1,0 +1,328 @@
+找出符合描述的命令，适合不知道命令的情况
+apropos "list director*"
+
+使用root用户创建新用户
+useradd -g group -s /usr/bin/csh -md /home/yuwen yuwen
+useradd -g hadoop -s /bin/bash -md /home/mysql mysql
+passwd yuwen
+删除用户，-r用于彻底删除，删除用户HOME目录及其他位置上的文件
+userdel -r yuwen
+
+增加gorup用户组
+groupadd group
+
+强行设置某个用户所在组
+usermod -g group loginname 
+查看用户所属的组
+cat /etc/group |  pub
+id pub
+groups
+
+查找特定用户
+cat /etc/passwd | grep yuwen
+
+统计用户数量
+cat /etc/passwd | wc -l
+
+切换到用户家目录
+cd ~
+回到上一个目录
+cd -
+当前目录入栈
+pushd .
+栈顶目录出栈并切换到这个目录 
+popd
+
+从远程复制文件到本地，回车后输入远程用户的密码
+scp root@10.43.159.11:/home/hadoop/bin/hadoop-2.7.1.tar.gz ./
+scp的第1个参数是数据源，第2个参数是目的地
+从本地复制文件到远程，-r可以复制目录,
+scp -r localDir pub@IP:remoteDir
+
+使环境变量立即生效
+source .bash_profile
+
+移动文件时改名
+mv file newFile
+复制文件时改名
+cp file newfile
+复制文件时不改变属主
+cp -a userfile rootpath
+Linux文件批量重命名，当前目录下的所有文件名称中的.template替换成-test
+rename .template -test *
+
+创建备份文件夹并且把文件移入
+mkdir backup
+mv *
+
+批量删除
+rm access_log.2016*.log
+
+解压tar包
+tar -zxvf hadoop-2.7.1.tar.gz
+指定解压目录
+tar -zxvf hadoop-2.7.1.tar.gz -C /home/hadoop
+压缩文件
+tar -zcvf new.tar.gz target
+
+文件转化成tar包（打包，不使用gzip压缩）
+tar cvf scripts.tar scripts/
+上面第1个参数指定生成的tar包的文件名，第2个参数是要压缩的目录，
+多个目录可以直接在后面添加
+tar包恢复成文件
+tar xvf  scripts.tar
+
+将scripts.tar文件压缩成为scripts.tar.xz，-k保存原始文件
+xz -zk scripts.tar 
+将scripts.tar.xz文件解压成为scripts.tar
+xz -dk scripts1.tar 
+
+解压zip文件
+unzip hadoop-src.zip 
+压缩文件
+zip -q -r hadoop-src.zip hadoop-src
+
+二进制十六进制文件查看与转换
+将2进制转化成16进制（可视化jar包）
+xxd test.jar > test.txt
+将16进制转换成2进制（还原jar包）
+xxd -r test.txt test.jar
+
+改变文件属主，示例:
+chown yuwen hadoop.tar.gz
+改变目录及其内容的属主和属组
+chown -R hadoop:group /hadoop
+
+查看目录大小
+df -h
+查看挂载的硬盘目录，h容量大小可读，T磁盘文件类型
+df -hT
+
+查看目录大小，h以可读性较好的方式显示大小
+du -h
+查看指定目录的大小
+du -sh lib/
+查看当前目录下所有文件的大小
+du -sh 统计所有文件大小的总和
+du -sh * 分开列出各个文件的大小
+S排除子目录的大小
+du -shS hdfs
+
+查找文件：
+find . -name hdfs-default.xml
+linux下如何查找当前目录下所有jar包中包含RangerRESTClient字符串的class文件名
+find . -name "*.jar"|awk '{print "jar -tvf "$1}'| sh |grep -i RangerRESTClient
+查找文件名忽略大小写
+find . -iname ranger-yarn-plugin*
+递归在所有文件查找hadoop,且忽略大小写
+grep -Ri hadoop *
+匹配hadoop，并且显示找到的内容及上下文各三行
+grep -C 3 hadoop *
+grep 递归指定文件遍历方法,-R对单个文件没什么用，对目录有用
+find . -iname *.cpp | xargs -i grep "xxx" {} --color -RnH
+find . -name "*.cpp" -exec grep "xxx" --color -nH {} \;
+find . -iname "*.java" -exec grep "Unknown" --color -nH {} \;
+关键字需要加引号，特别是*通配符
+find . -iname "*.keytab"
+
+设置区域语言编码,让xshell命令行界面全部显示英文
+export LC_ALL=en_US.utf8
+
+保留当前用户的环境变量  
+sudo -E ./setup.sh 
+
+查看单板信息,cpu数量，内存大小等
+cat /proc/cpuinfo
+cat /proc/meminfo
+
+查看lunix运行状态
+top
+
+查看当前用户的进程
+ps -ef | grep `whoami`
+
+查看端口占用情况
+lsof -i:8080
+lsof -i | grep 8080
+
+查看jvm进程占用的端口
+netstat -anp | grep 23740（Pid/java）
+查看端口被进程占用
+netstat -anp | grep 6080（Port）
+
+全局环境变量
+cat /etc/profile
+
+个人环境变量，会继承上面的全局环境变量
+cat .bash_profile
+
+修改vim的配色
+root用户，查看已有的配色
+ls /usr/share/vim/vim72/colors
+在用户家目录，修改配色
+vi .vimrc
+colorscheme desert （绿豆沙）
+
+vi全局替换文本
+%s/info/debug/g
+替换时忽略大小写
+%s/\cinfo/debug/g
+
+查看操作系统对应版本
+uname -a
+cat /etc/issue
+lsb_release -a
+--如果lsb_release无法执行，则需要先安装
+yum install lsb
+more /proc/version
+
+设置别名
+alias ..='cd ..'
+
+查看软件是否安装
+type yum
+type apt-get
+type grep
+
+查看主机名
+hostname
+设置临时主机名
+hostname root2
+查看主机IP
+hostname -i
+主机名配置文件
+vi /etc/sysconfig/network
+suse /ets/HOSTNAME
+HOSTNAME=zdh194
+
+创建软链接
+ln -s ranger-0.4.0-hdfs-plugin ranger-hdfs-plugin
+删除软链接,不加后面的/
+rm -rf ranger-elasticsearch-plugin
+删除软链接的目录里面的内容,加后面的/
+rm -rf ranger-elasticsearch-plugin/
+
+查看空闲内存,单位分别为M和G
+free -m
+free -g
+实际内存占用=used-buffers-cached
+
+设置时间
+date -s 10:35:20
+date -s "2017-02-28 10:21:01" 
+查看Linux硬件时间
+hwclock -r
+将系统时钟写入硬件时钟
+hwclock -w
+根据系统时间设置硬件时间(同上)
+hwclock --systohc
+利用硬件时间来设置系统时间
+hwclock --hctosys 
+
+Linux下http命令行工具
+curl https://www.baidu.com
+通过curl获取需要鉴权的页面信息
+curl -k -u admin:admin "http://10.43.159.245:6080/service/plugins/policies/1"
+
+Linux后台服务器浏览器
+links http://10.43.159.41:18080/
+
+配置Linux开机自动启动
+将mysql设为linux服务
+chkconfig --add mysqld
+查看mysql是否在相应的级别打开自启动
+chkconfig --list | grep mysql
+打开自启动
+chkconfig --level 345 mysql on
+
+查看防火墙状态：
+service iptables status
+关闭防火墙，即刻生效,重启失效：
+service iptables stop
+
+关闭防火墙，永久生效：
+ipv4
+开启：chkconfig iptables on
+关闭：chkconfig iptables off
+状态：chkconfig --list iptables
+ipv6
+开启：chkconfig ip6tables on
+关闭：chkconfig ip6tables off
+状态：chkconfig --list ip6tables
+
+查看帮助
+--help
+man ls
+
+查看yum使用手册
+info yum
+yum查看搜索可用安装包
+yum list *rz*
+安装上传下载文件小工具rz和sz
+yum install lrzsz
+
+从Linux向windows发送文件，然后在对话框中选择保存的文件夹
+sz file
+从Linux接收windows文件，然后在对话框中选择上传的文件
+rz
+
+Lunix脚本无法执行,有可能是文本格式的问题,需要转换
+dos2unix setup.sh
+查看linux文件的版本等信息
+file libhadoop.so.1.0.0
+
+&重定向用法
+storm nimbus >nimbusInit.log 2>&1  
+storm nimbus  &>nimbusInit.log
+storm nimbus  &>/dev/null
+
+nohup进程后台运行
+nohup /root/start.sh & 
+输出被重定向到myout.file文件中
+nohup command > myout.file 2>&1 & 
+
+使用 jobs 查看任务
+使用 fg %n关闭 
+
+抓包命令：
+tcpdump
+监听发送到指定IP:端口的TCP或UDP数据包，输出信息到文件
+tcpdump -i eth0 host 10.43.159.11 and port 8983 -w info.cap
+
+从/cdrom中拷贝安装包单独使用，只要把cdrom挂载到一个目录下即可
+
+挂载和卸载设备
+mount /cdrom /media
+umount myrom
+
+将本地文件同步到远程目录
+rsync -t myrsync.txt yuwen@zdh-9:~
+rsync会使用ssh的免密配置
+同步目录
+rsync -r myDir yuwen@zdh-9:~
+rsync -azv myDir yuwen@zdh-9:~
+
+开启ssh
+查看本机是否安装 SSH 软件包
+rpm -qa | grep ssh
+开启 SSH 服务 
+service sshd start 
+
+重启网卡
+service network restart
+网络查看
+ifconfig
+
+监控网络流量，使用下面的命令行方式：
+统计时间间隔1s，count是总共统计8次
+sar -n DEV 1 8
+
+查看文件的详细信息：
+stat  test.log
+
+普通用户修改自己的 Shell为/bin/bash：
+chsh
+然后输入/bin/bash
+管理员修改文件的方式：
+ vi /etc/passwd
+sqoop2:x:1003:33::/home/sqoop2:/bin/bash

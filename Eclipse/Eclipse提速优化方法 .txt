@@ -1,0 +1,40 @@
+Eclipse提速优化方法
+
+Eclipse运行太慢了，尤其是导入大型maven项目的时候经常动不动就down掉，于是总结了一下Eclipse提速的方法。
+# 1.关闭不常用的工程
+打开的项目太多，会严重影响Eclipse的启动，将其关闭或者直接从工程视图中删除不是物理删除.即可。
+
+# 2.取消启动时自动加载的插件
+选择Preferrnces -> General -> Startup and Shutdown，将Plug-ins activited on startup的插件全部取消，保存即可。
+
+# 3.maven的设置
+选择Preferrnces -> Maven，将Download respository index updates on startup 选项取消，保存即可。
+
+# 4.取消validation
+选择Preferrnces -> validation，选择Disable All，保存即可。
+
+# 5.修改eclipse.ini参数
+可以参考如下文章进行设置：
+优化JVM参数提高eclipse运行速度
+
+设置启动VM,省去启动时查找的时间，使用最新的jdk来运行eclipse
+-vm
+D:/Program Files/Java/jdk1.8.0_91/jre/bin
+
+# 6.取消spell checking
+选择Preferrnces -> General -> Editors -> Text Editors -> spelling，取消Enable spell checking选项，保存即可。
+
+# 7.取消自动更新
+Install/Update > Automatic Updates > 取消勾选“Automatically find new updates and notify me”。
+
+# 8.禁用动画，使用classic主题,或者不使用主题
+Window -> Preferences -> General -> Appearance -> Uncheck 'Enable animations'
+
+Window > Customize Perspective > 移除所有用不到或不想用的内容尽量使用快捷键.，菜单栏也是如此你用过几次菜单栏的打印按钮
+
+# 9.不要在Eclipse中运行SVN和GIT 
+
+# 10.使用JVM性能监视工具
+首先启动JDK自带的JVM性能监视工具,在java\bin的目录下,有一个jvisualvm,它是绑定在JDK中的visualvm.双击启动 visualvm. 然后启动eclipse, 在eclipse启动完成以后,使用visualvm的查看eclipse的Visual GC情况:
+-server是让JVM以server模式运行,加重JIT的优化作用,由于eclipse是经常开着不关,在server模式下,JIT会随着运行的时间,把字节码更深刻的变成成机器代码.加快运行速度.
+-Xverify:none, 跳过对字节码的验证。

@@ -1,0 +1,12 @@
+Storm开启HA高可用，包括Nimbus和UI开启两个及以上的进程。
+基于已经安装好的Storm集群，开启关键节点角色的HA高可用。
+Storm安装请参考[Storm集群安装Version1.0.1](https://www.jianshu.com/p/fc5b56287be4)
+
+# 1.修改storm.yaml文件
+配置项配置可以启动nimbus的节点：
+nimbus.seeds: ["zdh-237", "zdh-238", "zdh-239"]
+
+# 2.启动Nimubs和UI高可用
+在集群中配置的三个节点启动nimbus和UI进程：  
+storm nimbus >/dev/null 2>&1 &  
+storm ui >/dev/null 2>&1 & 

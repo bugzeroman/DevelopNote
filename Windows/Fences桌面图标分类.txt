@@ -1,0 +1,43 @@
+# 1.简介
+Fences也称为栅栏桌面，
+可以用来分类和组织桌面上的图标。
+Fences可以将不同的图标放到不同的**容器**当中，
+还可以自由的设置这个**容器**，比如移动和拉伸等等。
+这样图标分类后，桌面就整洁多了。
+![](https://upload-images.jianshu.io/upload_images/11810589-9b5ca97e1f51b114.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 2.推荐用法
+## 2.1.创建图标容器
+鼠标右键在桌面画一个矩形的Fences，
+一个图标容器就创建好了，
+还可以给容器命名，
+然后就可以把图标拖进去了。
+
+## 2.2.隐藏所有图标
+双击桌面空白区域，隐藏所有图标，
+再次双击桌面空白区域，显示所有图标。
+这样就方便欣赏自己的壁纸啦。
+
+## 2.3.恢复桌面图标快照
+Fences每天都会创建桌面图标快照，
+并且保存最近三天的快照，
+![](https://upload-images.jianshu.io/upload_images/11810589-ba77bf49106b2abb.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+点击上面的**Take Snapshot**可以手动创建快照，
+如果不小心搞乱了桌面，
+可以选择已经保存的快照进行恢复，
+选中快照后在弹出的对话框中点击**Restore Snapshot**。
+
+# 3.使用心得
+下面是我使用Fences管理后的桌面截图：
+![](https://upload-images.jianshu.io/upload_images/11810589-692adb36fc93d857.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+简单说一下我的布局方式，
+可以看到我的桌面分为左中右三块，
+中间是工作核心，左右都是辅助完成工作的，
+**左边**是常用工具，左上是通用工具，左下是开发相关工具，
+**中间**是工作核心，是开发研究，问题处理，工作相关的文档，
+**右边**是辅助工具，右上是高效小工具，右下是工具箱和一些总结。
+
+# 4.参考
+[fences百度百科](https://baike.baidu.com/item/fences)
+[fences官网](https://www.stardock.com/products/fences/)

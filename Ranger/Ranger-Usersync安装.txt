@@ -1,0 +1,37 @@
+Ranger-Usersync安装，
+配置数据源Unix,Usersync从Unix拉取Users/Groups的数据源，
+对应的Ranger版本0.6.0。
+
+|IP/机器名 |安装软件 |运行进程 |
+|--------------|-------------|-------------|
+|zdh-245 |UserSync |UnixAuthenticationService |
+
+安装用户
+usersync/zdh1234 hadoop
+
+# 1.安装Ranger Usersync，需要使用root用户安装
+
+创建目录/home/usersync
+
+安装Ranger Usersync到/home/usersync
+tar –zxvf ranger-0.6.0-usersync.tar.gz
+
+修改install.properties的参数如下：
+```
+POLICY_MGR_URL=http://zdh-9:6080
+SYNC_SOURCE=unix
+SYNC_INTERVAL=1
+logdir=/home/usersync/ranger-0.6.0-usersync/logs
+
+unix_user=usersync
+unix_group=hadoop
+```
+使用root用户执行如下脚本安装Usersync:
+./setup.sh
+
+# 2.使用root用户启动Ranger Usersync
+./ranger-usersync-services.sh start
+或者ranger-usersync start
+
+# 3.验证是否安装成功
+同步Linux系统用户到ranger数据库,在RangerAdmin的web控制台可以看到users中同步的用户信息。

@@ -1,0 +1,59 @@
+Ranger-Sqoop2插件安装，基于Ranger版本1.0.0,支持Sqoop2版本1.99.7。
+
+# 1.获取安装包
+scp root@10.43.159.11:/home/compile/ranger/target/ranger-1.0.0-SNAPSHOT-sqoop-plugin.tar.gz .
+
+# 2.解压
+tar -zxvf ranger-1.0.0-SNAPSHOT-sqoop-plugin.tar.gz
+
+# 3.进入ranger-1.0.0-SNAPSHOT-sqoop-plugin，修改安装配置文件install.properties
+
+主要修改如下配置项：
+```
+#拉取Ranger策略的地址和服务名称
+POLICY_MGR_URL=http://10.43.159.11:6080
+REPOSITORY_NAME=sqoopdev
+#Kylin组件安装的目录
+COMPONENT_INSTALL_DIR_NAME=/home/sqoop/sqoop-1.99.7-bin-hadoop200
+
+#审计日志保存地址
+XAAUDIT.SOLR.ENABLE=true
+XAAUDIT.SOLR.URL=http://10.43.159.9:8983/solr/ranger_audits
+
+#Sqoop组件安装的用户和用户组
+CUSTOM_USER=sqoop
+CUSTOM_GROUP=hadoop
+```
+# 4.使用root用户执行插件安装脚本
+./enable-sqoop-plugin.sh
+
+# 5.重启sqoop2组件
+sqoop2-sever stop
+sqoop2-sever start
+
+# 6.验证策略生效
+重启后可以在sqoop的服务器上面看到如下文件：
+/etc/ranger/sqoopdev/policycache/sqoop_sqoopdev.json
+在Ranger Web页面的Audit下面的Plugins查看插件状态。
+
+Ranger页面创建sqoop服务:
+Service Name=sqoopdev
+Username=sqoop
+Sqoop URL=http://10.43.159.11:12000
+用户名最好填写安装用户的名字,此用户默认对sqoop的所有资源有访问权限。
+点击TestConnection成功后，保存即可。
+
+sqoopdev需要和上面插件安装的REPOSITORY_NAME名称一致，
+
+Sqoop集成ranger插件,查看conf/sqoop.properties，应该有如下配置：
+org.apache.sqoop.security.authorization.validator=org.apache.ranger.authorization.sqoop.authorizer.RangerSqoopAuthorizer
+
+
+Sqoop插件集成开启Ranger，还将conf目录加入到sqoop启动的classpath中:
+在bin/sqoop.sh脚本中的
+function sqoop_server_classpath_set里面
+新增如下配置：
+CLASSPATH="$CLASSPATH":"/home/sqoop/sqoop2/sqoop-1.99.7-bin-hadoop200/conf"
+
+参考文档：
+https://cwiki.apache.org/confluence/display/RANGER/Sqoop2+Plugin

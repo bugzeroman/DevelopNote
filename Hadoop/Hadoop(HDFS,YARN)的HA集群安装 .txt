@@ -1,0 +1,541 @@
+搭建Hadoop的HDFS HA及YARN HA集群,基于2.7.1版本安装。
+
+# 安装规划
+|角色规划 |IP/机器名 |安装软件 |运行进程 |
+|------------|--------------|-------------|-------------|
+|namenode1 |zdh-240 |hadoop NameNode、DFSZKFailoverController、ResourceManager |
+|namenode2 |zdh-245 |hadoop NameNode、DFSZKFailoverController、ResourceManager |
+|datanode1 |zdh-237 |hadoop，zookeeper DataNode、QuorumPeerMain、JournalNode、NodeManager |
+|datanode2 |zdh-238 |hadoop，zookeeper DataNode、QuorumPeerMain、JournalNode、NodeManager |
+|datanode3 |zdh-239 |hadoop，zookeeper DataNode、QuorumPeerMain、JournalNode、NodeManager |
+
+# 安装用户
+garrison/zdh1234
+
+# 配置IP对应节点名称
+cat /etc/hosts 
+vi /etc/hosts
+10.43.159.237 zdh-237
+10.43.159.238 zdh-238
+10.43.159.239 zdh-239
+10.43.159.240 zdh-240
+10.43.159.245 zdh-245
+
+# 1.创建用户（所有的用户必须同名）
+groupadd hadoop
+useradd -g hadoop -s /bin/bash -md /home/garrison garrison
+passwd garrison
+
+# 2.设置本地无密码登陆
+ssh-keygen -t dsa -P '' -f ~/.ssh/id_dsa
+cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys
+验证免密登陆
+ssh localhost
+
+设置远程无密码登陆，需要把本机的公钥放到对方的机器authorized_keys，才能免密登陆其他机器。
+进入zdh-238的garrison
+scp ~/.ssh/authorized_keys garrison@zdh-237:~/.ssh/authorized_keys_from_zdh-238
+进入zdh-237 garrison的.ssh目录,注意备份，否则下面步骤存在重复的ywmaster公钥。
+cat authorized_keys_from_zdh-238  >>  authorized_keys
+进入zdh-238的garrison，这样就能在zdh-238上面免密登陆zdh-237
+ssh zdh-237
+
+其他zdh-239等同理复制到zdh-237上面,实现其他机器免密登陆zdh-237
+
+再把zdh-237上面的authorized_keys分发到其他zdh-238等上面,实现几台机器都能免密登陆
+scp ~/.ssh/authorized_keys garrison@zdh-238:~/.ssh/authorized_keys
+
+# 3.拷贝安装包
+scp root@10.43.159.41:/home/xiehh/*.tar.gz .
+scp root@10.43.159.41:/home/ling/java/jdk-7u80-linux-x64.tar.gz .
+scp garrison@zdh-237:/home/garrison/*.tar.gz .
+
+# 4.安装jdk
+tar -zxvf jdk-7u80-linux-x64.tar.gz
+mv jdk-7u80-linux-x64.tar.gz backup/
+/home/garrison/jdk1.7.0_80
+配置环境变量，必须放在.bashrc里面，否则通过后台执行找不到环境变量。
+创建.bash_profile,加载.bashrc
+vi .bash_profile
+```
+# .bash_profile
+
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+        . ~/.bashrc
+fi
+# User specific environment and startup programs
+```
+vi .bashrc
+```
+export JAVA_HOME=~/jdk1.7.0_80
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar 
+```
+source .bashrc
+验证jdk
+java -version
+
+# 5.安装Zookeeper
+解压zookeeper包
+tar -zxvf zookeeper-3.5.1-alpha.tar.gz
+mv zookeeper-3.5.1-alpha.tar.gz  backup/
+在zookeeper-3.5.1-alpha/conf/目录执行
+mv zoo_sample.cfg zoo.cfg
+修改zoo.cfg文件,（默认服务端口2181，zookeeper修改源数据的地方，包括myid文件）：
+dataDir=/home/garrison/zookeeper-3.5.1-alpha/tmp
+文件最后添加，配置zookeeper集群通信端口:
+```
+server.1=zdh-237:2888:3888
+server.2=zdh-238:2888:3888
+server.3=zdh-239:2888:3888
+```
+然后分别在zdh-237三个节点中创建一个tmp文件夹：
+mkdir ~/zookeeper-3.5.1-alpha/tmp：
+再创建一个空文件：
+touch /tmp/myid 
+
+把zdh-237的zookeeper拷贝到zdh-238等节点
+scp -r garrison@zdh-237:/home/garrison/zookeeper-3.5.1-alpha .
+
+最后向该文件写入ID:
+zdh-237执行echo 1 > /tmp/myid
+zdh-238执行echo 2 > /tmp/myid
+zdh-239执行echo 3 > /tmp/myid
+
+配置环境变量方便以后操作：
+export ZOOKEEPER_HOME=:~/zookeeper-3.5.1-alpha
+export PATH=$PATH:$ZOOKEEPER_HOME/bin:$ZOOKEEPER_HOME/conf
+
+启动zookeeper，进入到 zookeeper-3.4.5/bin/ 
+./zkServer.sh start 
+查看状态： 
+./zkServer.sh status
+停止zookeeper:
+./zkServer.sh stop 
+
+验证，客户端登陆：
+./zkCli.sh -server zdh-237:2181
+列出目录：
+ls /
+
+# 6.安装hadoop
+tar -zxvf hadoop-2.7.1.tar.gz 
+mv  hadoop-2.7.1.tar.gz backup/
+
+配置环境变量
+export HADOOP_HOME=~/hadoop-2.7.1
+export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH
+export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop 
+
+别名方便进入配置操作
+alias conf='cd /home/garrison/hadoop-2.7.1/etc/hadoop'
+
+修改文件列表：
+- 6.1 core-site.xml
+- 6.2 hdfs-site.xml
+- 6.3 yarn-site.xml
+- 6.4 mapred-site.xml
+- 6.5 slaves
+
+zdh-237:2181,zdh-238:2181,zdh-239:2181
+/data/hadoop/dfs/name/current 等目录如果不存在则需要修改，一般加上前缀/home/garrison/hadoop-2.7.1
+
+## 6.1-6.4的配置可以参考文档：
+搭建hadoop2.6.0 HA及YARN HA
+http://www.aboutyun.com/thread-10572-1-1.html
+
+## 6.4
+新增mapred-site.xml
+
+## 6.5
+修改slaves （配置所有slave节点）
+zdh-237
+zdh-238
+zdh-239
+
+拷贝zdh-240的hadoop到其他节点。
+scp -r garrison@zdh-240:/home/garrison/hadoop-2.7.1 .
+rm -r /home/garrison/hadoop-2.7.1/etc/hadoop
+scp -r garrison@zdh-240:~/hadoop-2.7.1/etc/hadoop ~/hadoop-2.7.1/etc/hadoop
+集群机器配置hadoop环境变量
+
+修改zdh-245的yarn-site.xml的rm1为rm2
+```
+<!--在namenode1上配置rm1,在namenode2上配置rm2,
+注意：一般都喜欢把配置好的文件远程复制到其它机器上，
+但这个在YARN的另一个机器上一定要修改--> 
+<property> 
+  <name>yarn.resourcemanager.ha.id</name> 
+  <value>rm1</value> 
+<description>If we want to launch more than one RM in single node, we need this configuration</description> 
+</property> 
+```
+启动journalnode（在namenode1上启动所有journalnode） 
+进入到hadoop-2.6.0
+sbin/hadoop-daemons.sh start journalnode
+或者单独进入到datanode1,datanode2,datanode3执行
+sbin/hadoop-daemon.sh start journalnode
+停止journalnode：
+hadoop-daemon.sh stop journalnode
+(运行jps命令检验，多了JournalNode进程)
+
+# 7.启动hadoop和yarn
+格式化HDFS,在namenode1上执行命令: 
+hadoop namenode -format 
+格式化后会在根据core-site.xml中的hadoop.tmp.dir配置生成个文件
+
+启动namenode进程,在namenode1上执行
+sbin/hadoop-daemon.sh start namenode
+
+在namenode2上执行，完成主备节点同步信息
+hdfs namenode -bootstrapStandby
+
+格式化ZK(在namenode1上执行即可)，会在zookeeper集群上面创建节点hadoop-ha，
+用于管理切换主备namenode
+hdfs zkfc -formatZK
+
+启动HDFS(在namenode1上执行)
+sbin/start-dfs.sh
+
+启动YARN(在namenode1和namenode2上执行)
+sbin/start-yarn.sh
+注意在namenode2上执行此命令时会提示NodeManager已存在等信息不用管这些，
+主要是启动namenode2上的resourceManager完成与namenode1的互备作用，目前没有找到单独启动resourceManager的方法
+
+# 8.查看结点状态
+启动后查看namenode分别为Active和Standby
+http://10.43.159.240:50070
+http://10.43.159.245:50070
+在namenode1上查看nm1和nm2状态：
+hdfs haadmin -getServiceState nn1
+hdfs haadmin -getServiceState nn2
+
+在namenode1上查看rm1和rm2分别为active和standby状态
+yarn rmadmin -getServiceState rm1
+yarn rmadmin -getServiceState rm2
+或者查看状态：
+http://10.43.159.240:8188
+http://10.43.159.245:8188 会重定向到zdh-240
+hadoop
+zdh-240 active
+zdh-245 standby
+yarn
+zdh-240 rm1 active
+zdh-245 rm2 standby
+简单验证hadoop
+hadoop jar ~/hadoop-2.7.1/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar wordcount hdfs://gagcluster/usr/wordcout.txt /usr/wordresult_001
+hadoop fs -text /usr/wordresult_001/part-r-00000
+
+# 9.验证HA
+yarn kill zdh-240 上面的ResourceManager
+http://10.43.159.240:8188/cluster/apps 无法访问；rm1 链接失败
+http://10.43.159.245:8188/cluster/apps 可以访问；rm2 active
+
+hadoop kill zdh-240 上面的NameNode
+手动切换主备时，确定要转为active的namenode的id，这里将namenode1设为active：
+hdfs haadmin -failover --forcefence --forceactive nn2 nn1
+自动切换主备时，需要重新启动被kill的active节点，standby节点才会变为active,
+原来被kill的active节点变成standby。
+
+另外一种方法就是，关闭当前为 active namenode 状态的上的 DFSZKFailoverController 进程，
+在需要变成standby的hdfs上面执行：
+hadoop-daemon.sh stop zkfc
+
+# 10.配置免密登陆的其他方法
+## 10.1.生成ssh公私钥文件
+操作机器：
+在zte-1、zte-2、zte-3上，使用hdfs用户 ，家目录下
+操作命令：
+ssh-keygen
+操作说明：
+该命令执行完后应按三次Enter键，即三次需要输入的皆为空即可
+
+## 10.2.为hdfs用户配置ssh免密码登录
+操作机器：
+在zte-1、zte-2、zte-3上，使用hdfs用户
+操作命令：
+ssh-copy-id hdfs@zdh-7
+ssh-copy-id hdfs@zdh-9
+ssh-copy-id hdfs@zdh-11
+操作说明：
+交互(yes/no)需要输入yes，提示输入密码需要输入密码。
+当出现类似：
+Now try logging into the machine, with "ssh 'hdfs@zdh-1'", 
+and check in:.ssh/authorized_keys
+则表示成功，如果显示….can’t established则表示发生错误。
+
+## 10.3.上述操作可以优化
+分别在zdh-7，zdh-9,zdh-11上面
+ssh-copy-id -i hdfs@zdh-7，
+再把zdh-7上面的.ssh/authorized_keys,.ssh/known_hosts拷贝到其他机器即可。
+
+# 参考：
+## 6.1 core-site.xml中增加如下配置项
+```
+<configuration>
+    <property>
+            <name>fs.defaultFS</name>
+            <value>hdfs://gagcluster</value>
+    </property>
+    <property>
+            <name>io.file.buffer.size</name>
+            <value>131072</value>
+    </property>
+    <property>
+            <name>hadoop.tmp.dir</name>
+            <value>file:/home/garrison/hadoop-2.7.1/data/hadoop/tmp</value>
+            <description>Abase for other temporary directories.</description>
+    </property>
+    <property>
+            <name>hadoop.proxyuser.hduser.hosts</name>
+            <value>*</value>
+    </property>
+    <property>
+            <name>hadoop.proxyuser.hduser.groups</name>
+            <value>*</value>
+    </property>
+    <property>
+            <name>ha.zookeeper.quorum</name>
+            <value>zdh-237:2181,zdh-238:2181,zdh-239:2181</value>
+    </property>
+</configuration>
+```
+
+## 6.2 hdfs-site.xml增加如下配置项
+```
+<configuration>
+    <property>
+            <name>dfs.nameservices</name>
+            <value>gagcluster</value>
+    </property>
+    <property>
+            <name>dfs.ha.namenodes.gagcluster</name>
+            <value>nn1,nn2</value>
+    </property>
+    <property>
+            <name>dfs.namenode.rpc-address.gagcluster.nn1</name>
+            <value>zdh-240:9000</value>
+    </property>
+    <property>
+            <name>dfs.namenode.rpc-address.gagcluster.nn2</name>
+            <value>zdh-245:9000</value>
+    </property>
+    <property>
+            <name>dfs.namenode.http-address.gagcluster.nn1</name>
+            <value>zdh-240:50070</value>
+    </property>
+    <property>
+            <name>dfs.namenode.http-address.gagcluster.nn2</name>
+            <value>zdh-245:50070</value>
+    </property>
+    <property>
+            <name>dfs.namenode.shared.edits.dir</name>
+            <value>qjournal://zdh-237:8485;zdh-238:8485;zdh-239:8485/gagcluster</value>
+    </property>
+    <property>
+            <name>dfs.client.failover.proxy.provider.gagcluster</name>
+            <value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
+    </property>
+    <property>
+            <name>dfs.ha.fencing.methods</name>
+            <value>sshfence</value>
+    </property>
+    <property>
+            <name>dfs.ha.fencing.ssh.private-key-files</name>
+            <value>/home/garrison/.ssh/id_rsa</value>
+    </property>
+    <property>
+            <name>dfs.journalnode.edits.dir</name>
+            <value>/home/garrison/hadoop-2.7.1/data/hadoop/tmp/journal</value>
+    </property>
+    <property>
+            <name>dfs.ha.automatic-failover.enabled</name>
+            <value>true</value>
+    </property>
+    <property>   
+            <name>dfs.namenode.name.dir</name>   
+            <value>file:/home/garrison/hadoop-2.7.1/data/hadoop/dfs/name</value>  
+    </property> 
+    <property>   
+            <name>dfs.datanode.data.dir</name>   
+            <value>file:/home/garrison/hadoop-2.7.1/data/hadoop/dfs/data</value>  
+    </property> 
+    <property>   
+            <name>dfs.replication</name>   
+            <value>3</value> 
+    </property> 
+    <property>  
+            <name>dfs.webhdfs.enabled</name>  
+            <value>true</value> 
+    </property>
+    <property>  
+            <name>dfs.journalnode.http-address</name>  
+            <value>0.0.0.0:8480</value>  
+    </property>  
+    <property>  
+            <name>dfs.journalnode.rpc-address</name>  
+            <value>0.0.0.0:8485</value>  
+     </property> 
+     <property>
+            <name>ha.zookeeper.quorum</name>
+            <value>zdh-237:2181,zdh-238:2181,zdh-239:2181</value>
+    </property>
+</configuration>
+```
+## 6.3 yarn-site.xml增加如下配置项
+```
+<configuration>
+<property> 
+   <name>yarn.resourcemanager.connect.retry-interval.ms</name> 
+   <value>2000</value> 
+</property>
+<property> 
+   <name>yarn.resourcemanager.ha.enabled</name> 
+   <value>true</value> 
+</property> 
+<property>
+  <name>yarn.resourcemanager.ha.rm-ids</name>
+  <value>rm1,rm2</value>
+</property>
+<property>
+  <name>ha.zookeeper.quorum</name>
+  <value>zdh-237:2181,zdh-238:2181,zdh-239:2181</value> 
+</property>
+<property> 
+   <name>yarn.resourcemanager.ha.automatic-failover.enabled</name> 
+   <value>true</value> 
+</property> 
+<property>
+  <name>yarn.resourcemanager.hostname.rm1</name>
+  <value>zdh-240</value>
+</property>               
+<property>
+   <name>yarn.resourcemanager.hostname.rm2</name>
+   <value>zdh-245</value>
+</property>
+<property> 
+  <name>yarn.resourcemanager.ha.id</name> 
+  <value>rm1</value> 
+<description>If we want to launch more than one RM in single node, we need this configuration</description> 
+</property> 
+<property>
+  <name>yarn.resourcemanager.recovery.enabled</name> 
+  <value>true</value> 
+</property>
+<property> 
+  <name>yarn.resourcemanager.zk-state-store.address</name> 
+  <value>zdh-237:2181,zdh-238:2181,zdh-239:2181</value>
+</property> 
+<property> 
+  <name>yarn.resourcemanager.store.class</name> 
+  <value>org.apache.hadoop.yarn.server.resourcemanager.recovery.ZKRMStateStore</value> 
+</property> 
+<property>
+  <name>yarn.resourcemanager.zk-address</name>
+  <value>zdh-237:2181,zdh-238:2181,zdh-239:2181</value>
+</property>
+<property> 
+  <name>yarn.resourcemanager.cluster-id</name> 
+  <value>gagcluster-yarn</value> 
+</property> 
+<property> 
+  <name>yarn.app.mapreduce.am.scheduler.connection.wait.interval-ms</name> 
+  <value>5000</value> 
+</property> 
+<property> 
+  <name>yarn.resourcemanager.address.rm1</name> 
+  <value>zdh-240:8132</value> 
+</property> 
+<property> 
+  <name>yarn.resourcemanager.scheduler.address.rm1</name> 
+  <value>zdh-240:8130</value> 
+</property> 
+<property> 
+  <name>yarn.resourcemanager.webapp.address.rm1</name> 
+  <value>zdh-240:8188</value> 
+</property> 
+<property>
+   <name>yarn.resourcemanager.resource-tracker.address.rm1</name> 
+   <value>zdh-240:8131</value> 
+</property> 
+<property> 
+  <name>yarn.resourcemanager.admin.address.rm1</name> 
+  <value>zdh-240:8033</value> 
+</property> 
+<property> 
+  <name>yarn.resourcemanager.ha.admin.address.rm1</name> 
+  <value>zdh-240:23142</value> 
+</property> 
+<property> 
+  <name>yarn.resourcemanager.address.rm2</name> 
+  <value>zdh-245:8132</value> 
+</property> 
+<property> 
+  <name>yarn.resourcemanager.scheduler.address.rm2</name> 
+  <value>zdh-245:8130</value> 
+</property> 
+<property> 
+  <name>yarn.resourcemanager.webapp.address.rm2</name> 
+  <value>zdh-245:8188</value> 
+</property> 
+<property> 
+  <name>yarn.resourcemanager.resource-tracker.address.rm2</name> 
+  <value>zdh-245:8131</value> 
+</property> 
+<property> 
+  <name>yarn.resourcemanager.admin.address.rm2</name> 
+  <value>zdh-245:8033</value> 
+</property> 
+<property> 
+  <name>yarn.resourcemanager.ha.admin.address.rm2</name> 
+  <value>zdh-245:23142</value> 
+</property> 
+<property> 
+  <name>yarn.nodemanager.aux-services</name> 
+  <value>mapreduce_shuffle</value> 
+</property> 
+<property> 
+  <name>yarn.nodemanager.aux-services.mapreduce.shuffle.class</name> 
+  <value>org.apache.hadoop.mapred.ShuffleHandler</value> 
+</property> 
+<property> 
+  <name>yarn.nodemanager.local-dirs</name> 
+  <value>/home/garrison/hadoop-2.7.1/data/hadoop/yarn/local</value> 
+</property> 
+<property> 
+  <name>yarn.nodemanager.log-dirs</name> 
+  <value>/home/garrison/hadoop-2.7.1/data/log/hadoop</value> 
+</property> 
+<property> 
+  <name>mapreduce.shuffle.port</name> 
+  <value>23080</value> 
+</property> 
+<property> 
+  <name>yarn.client.failover-proxy-provider</name> 
+  <value>org.apache.hadoop.yarn.client.ConfiguredRMFailoverProxyProvider</value> 
+</property> 
+<property>
+  <name>yarn.resourcemanager.ha.automatic-failover.zk-base-path</name>
+  <value>/yarn-leader-election</value>
+  <description>Optional setting. The default value is /yarn-leader-election</description>
+</property>
+</configuration>
+```
+## 6.4 mapred-site.xml增加如下配置项
+```
+<configuration>
+    <property>
+        <name>mapreduce.framework.name</name>
+        <value>yarn</value>
+    </property>
+    <property>
+        <name>mapreduce.jobhistory.address</name>
+        <value>0.0.0.0:10020</value>
+    </property>
+    <property>
+        <name>mapreduce.jobhistory.webapp.address</name>
+        <value>0.0.0.0:19888</value>
+     </property>
+</configuration>
+```

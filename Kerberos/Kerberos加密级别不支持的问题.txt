@@ -1,0 +1,20 @@
+# 1.问题现象
+Zookeeper开启kerberos认证后出现如下问题，不支持的加密级别：
+```
+2017-02-23 09:20:57,048 [myid:1] - WARN  [NIOWorkerThread-1:ZooKeeperServer@1080] - Client failed to SASL authenticate: javax.security.sasl.SaslException: GSS initiate failed [Caused by GSSException: Failure unspecified at GSS-API level (Mechanism level: Encryption type AES256 CTS mode with HMAC SHA1-96 is not supported/enabled)]
+```
+
+# 2.原因分析
+由于"Java密码扩展（JCE）无限制权限策略文件"导致的，是jdk安装包的问题,需要替换jdk。
+因为某些国家的进口管制限制，Java发布的运行环境包中的加解密有一定的限制。
+比如默认不允许256位密钥的AES加解密，解决方法就是修改策略文件。 
+
+# 3.解决方法
+需要在替换java安全目录下面的两个策略：
+把local_policy.jar,US_export_policy.jar替换
+目录java/jdk1.7.0_80/jre/lib/security里的jar包即可
+
+# 4.参考网址：
+http://czj4451.iteye.com/blog/1986483
+https://knowledge.safe.com/articles/395/enabling-aes256-in-the-java-runtime-environment-fo.html
+http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html

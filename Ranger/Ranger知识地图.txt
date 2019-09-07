@@ -1,0 +1,52 @@
+自己总结的Ranger的学习路线和知识点，
+提供给感兴趣的同学入门参考之用。
+
+# Ranger入门路线
+1.准备能够上网的电脑，Eclisp开发环境，Linux服务器等；
+2.掌握Hadoop(HDFS/YARN)大数据组件基本功能，环境搭建，命令使用等；
+3.掌握Ranger的基本功能，了解Ranger的框架；
+4.下载Ranger源码编译打包，包括Git、Maven等工具使用，导入工程到Eclipse等；
+5.手工搭建Ranger完整运行环境，安装MySQL,RangerAdmin,Usersync等;
+6.安装HDFS插件到Hadoop环境;
+7.使用上面的环境，实现Ranger对HDFS的权限控制；
+8.基于上面的操作，进一步完善对Ranger的理解；
+9.研究Ranger源码，了解工程中代码作用，定位问题时能够找到相关代码；
+10.熟悉Ranger源码，向开源社区提交小的bug问题，并且处理解决；
+11.掌握其他组件例如Hive，HBase插件的权限控制，深入Ranger插件源码；
+12.总结学习研究成果，输出有参考价值的文档。
+
+# Ranger涉及知识点
+Hadoop(HDFS/YARN)
+Solr
+MySQL
+## Hadoop生态中的其他组件
+- hdfs,   hbase,  hive,
+- sqoop,  storm,  solr,
+- kafka,  knox,   kylin,
+- yarn,   atlas,  nifi,
+- sparksql,   elasticserach.
+
+LDAP
+Kerberos
+
+Linux
+JAVA
+JDK
+Eclipse
+Git
+
+## JavaScript
+- Backbone
+- Jquery
+- Bootstrap
+- RequireJS
+- Underscore
+
+## Ranger 
+- RangerAdmin
+- UserSync
+- AgentPlugin
+
+
+
+    

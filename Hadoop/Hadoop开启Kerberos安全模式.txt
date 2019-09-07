@@ -1,0 +1,171 @@
+Hadoop开启Kerberos安全模式,
+基于已经安装好的Hadoop的2.7.1环境，
+在此基础上开启Kerberos安全模式。
+
+# 1.安装规划
+已经安装好Hadoop的环境
+10.43.159.7	zdh-7
+hdfsone/zdh1234
+
+Kerberos服务器
+10.43.159.11 zdh-11 
+kerberos server
+
+# 2.创建用户的keytab
+在zdh-11上，用root用户在/root/keytabs目录下，
+创建hdfsone的principal，并导出hdfsone.keytab，
+创建HTTP的principal，并导出HTTP.keytab:
+```
+kadmin.local
+addprinc -randkey hdfsone/zdh-7@ZDH.COM
+addprinc -randkey HTTP/zdh-7@ZDH.COM
+xst -k hdfsone.keytab hdfsone/zdh-7@ZDH.COM
+xst -k HTTP.keytab HTTP/zdh-7@ZDH.COM
+exit
+```
+
+# 3.合并上面2个keytab到hdfsone.keytab
+```
+ktutil
+rkt hdfsone.keytab    
+rkt HTTP.keytab
+wkt hdfsone.keytab  
+exit
+```
+
+# 4.将新生成的hdfsone.keytab拷贝到指定位置
+首先在hdfsone上面创建目录/home/hdfsone/hadoop-2.7.1/etc/keytabs,
+然后进入到/root/keytabs目录下，执行拷贝：
+scp hdfsone.keytab hdfsone@zdh-7:/home/hdfsone/hadoop-2.7.1/etc/keytabs
+
+# 5.修改keytab权限
+chown hdfsone:hadoop hdfsone.keytab
+chmod 400 hdfsone.keytab
+
+# 6.修改core-site.xml文件
+```
+<property>
+  <name>hadoop.security.authentication</name>
+  <value>kerberos</value>
+</property>
+<property>
+  <name>hadoop.security.authorization</name>
+  <value>true</value>
+</property>
+```
+
+# 7.修改hdfs-site.xml文件
+```
+<property>
+  <name>dfs.block.access.token.enable</name>
+  <value>true</value>
+</property>
+<property>  
+  <name>dfs.datanode.data.dir.perm</name>  
+  <value>700</value>  
+</property>
+<property>
+  <name>dfs.namenode.keytab.file</name>
+  <value>/home/hdfsone/hadoop-2.7.1/etc/keytabs/hdfsone.keytab</value>
+</property>
+<property>
+  <name>dfs.namenode.kerberos.principal</name>
+  <value>hdfsone/_HOST@ZDH.COM</value>
+</property>
+<property>
+  <name>dfs.namenode.kerberos.https.principal</name>
+  <value>HTTP/_HOST@ZDH.COM</value>
+</property>
+
+<property>
+  <name>dfs.datanode.address</name>
+  <value>0.0.0.0:1004</value>
+</property>
+<property>
+  <name>dfs.datanode.http.address</name>
+  <value>0.0.0.0:1006</value>
+</property>
+<property>
+  <name>dfs.datanode.keytab.file</name>
+  <value>/home/hdfsone/hadoop-2.7.1/etc/keytabs/hdfsone.keytab</value>
+</property>
+<property>
+  <name>dfs.datanode.kerberos.principal</name>
+  <value>hdfsone/_HOST@ZDH.COM</value>
+</property>
+<property>
+  <name>dfs.datanode.kerberos.https.principal</name>
+  <value>HTTP/_HOST@ZDH.COM</value>
+</property>
+
+<property>
+  <name>dfs.webhdfs.enabled</name>
+  <value>true</value>
+</property>
+<property>
+  <name>dfs.web.authentication.kerberos.principal</name>
+  <value>HTTP/_HOST@ZDH.COM</value>
+</property>
+<property>
+  <name>dfs.web.authentication.kerberos.keytab</name>
+  <value>/home/hdfsone/hadoop-2.7.1/etc/keytabs/hdfsone.keytab</value>
+</property>
+```
+
+注意：hdfs/_HOST@ZDH.COM不用手动修改，hadoop运行是自动替换成hdfs/zdh-7@ZDH.COM
+
+# 8.启动hadoop
+启动NameNode:
+start-dfs.sh 
+开启Kerberos安全模式后，此命令只会启动NamdeNode，
+所以还需要再次启动datanode：
+/home/hdfsone/hadoop-2.7.1/sbin/hadoop-daemon.sh start datanode
+
+# 9.问题处理
+启动DataNode时发生如下异常：
+```
+2018-03-02 17:20:15,261 FATAL org.apache.hadoop.hdfs.server.datanode.DataNode: Exception in secureMain
+java.lang.RuntimeException: Cannot start secure DataNode without configuring either privileged resources or SASL RPC data transfer protection and SSL for HTTP.  Using privileged resources in combination with SASL RPC data transfer protection is not supported.
+        at org.apache.hadoop.hdfs.server.datanode.DataNode.checkSecureConfig(DataNode.java:1173)
+        at org.apache.hadoop.hdfs.server.datanode.DataNode.startDataNode(DataNode.java:1073)
+        at org.apache.hadoop.hdfs.server.datanode.DataNode.<init>(DataNode.java:428)
+        at org.apache.hadoop.hdfs.server.datanode.DataNode.makeInstance(DataNode.java:2373)
+        at org.apache.hadoop.hdfs.server.datanode.DataNode.instantiateDataNode(DataNode.java:2260)
+        at org.apache.hadoop.hdfs.server.datanode.DataNode.createDataNode(DataNode.java:2307)
+        at org.apache.hadoop.hdfs.server.datanode.DataNode.secureMain(DataNode.java:2484)
+        at org.apache.hadoop.hdfs.server.datanode.DataNode.main(DataNode.java:2508)
+2018-03-02 17:20:15,264 INFO org.apache.hadoop.util.ExitUtil: Exiting with status 1
+2018-03-02 17:20:15,265 INFO org.apache.hadoop.hdfs.server.datanode.DataNode: SHUTDOWN_MSG:
+```
+解决办法：
+当设置了安全的datanode时,启动datanode需要root权限,需要修改hadoop-env.sh文件.且需要安装jsvc,同时重新下载编译包commons-daemon-1.0.15.jar,并把$HADOOP_HOME/share/hadoop/hdfs/lib下替换掉.
+否则报错Cannot start secure DataNode without configuring either privileged resources
+
+## 9.1.编译安装JSVC
+下载解压commons-daemon-1.0.15-src.tar.gz及commons-daemon-1.0.15-bin.tar.gz
+操作命令：
+```
+wget http://apache.fayea.com//commons/daemon/binaries/commons-daemon-1.0.15-bin.tar.gz
+wget http://apache.fayea.com//commons/daemon/source/commons-daemon-1.0.15-src.tar.gz
+tar zxvf commons-daemon-1.0.15-src.tar.gz
+tar zxvf commons-daemon-1.0.15-bin.tar.gz
+```
+编译生成jsvc，并拷贝至指定目录
+```
+cd commons-daemon-1.0.15-src/src/native/unix/
+./configure
+make
+cp jsvc /home/hdfs/hadoop-3.0.0-alpha2-SNAPSHOT/libexec/
+```
+
+## 9.2.拷贝commons-daemon-1.0.15.jar
+rm hadoop-3.0.0-alpha2-SNAPSHOT/share/hadoop/hdfs/lib/commons-daemon-*.jar
+cp commons-daemon-1.0.15.jar hadoop-3.0.0-alpha2-SNAPSHOT/share/hadoop/hdfs/lib/
+
+## 9.3.修改hadoop-env.sh文件
+vi hadoop-env.sh
+export HADOOP_SECURE_DN_USER=hdfs
+export JSVC_HOME=/home/hdfs/hadoop-3.0.0-alpha2-SNAPSHOT/libexec
+
+## 9.4.参考文章：
+[kerberos-hadoop配置常见问题汇总](https://www.cnblogs.com/warmingsun/p/6738730.html)

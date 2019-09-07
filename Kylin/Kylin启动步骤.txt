@@ -1,0 +1,34 @@
+Kylin本身的启动命令比较简单，
+但是由于Kylin依赖的其他组件比较多，
+所以把完整的启动步骤整理一下。
+
+# 1.确保集群时间同步
+首先查看集群中的时间是否同步
+date
+如果时间不一致，需要使用如下命令同步时间：
+date -s "20170505 09:21:00"
+
+# 2.启动MySQL
+/etc/init.d/mysqld restart
+
+# 3.启动Zookeeper
+zkServer.sh start
+ 
+# 4.启动HDFS
+start-dfs.sh 
+
+# 5.启动YARN
+start-yarn.sh
+
+# 6.启动JobHistory 
+mr-jobhistory-daemon.sh start historyserver
+
+# 7.启动Hbase
+start-hbase.sh 
+
+# 8.启动Hive
+hive --service metastore > metastore.log 2>&1 &
+hive --service hiveserver2 > hiveserver2.log 2>&1 &
+
+# 9.启动Kylin
+kylin.sh start

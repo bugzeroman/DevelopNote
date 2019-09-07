@@ -1,0 +1,175 @@
+# 1.插件介绍
+frontend-maven-plugin为项目本地下载/安装Node和NPM，运行npm install命令 。
+它适用于Windows，OS X和Linux。
+这个插件也可以下载Node和Yarn，
+然后运行yarn install你的项目。
+
+使用这个插件目的：
+- 让你的前端和后端版本尽可能分开，通过减少它们之间的交互量到最低限度; 仅使用1个插件。
+- 让您在构建过程中使用Node.js及其库，而无需为构建系统全局安装Node / NPM
+- 让您确保在每个构建环境中运行的Node和NPM的版本是相同的
+
+# 2.插件使用示例
+我所在的项目security-admin/pom.xml配置如下：
+```
+<plugin>
+    <groupId>com.github.eirslett</groupId>
+    <artifactId>frontend-maven-plugin</artifactId>
+    <version>1.6</version>
+    <configuration>
+        <workingDirectory>${project.build.directory}</workingDirectory>
+    </configuration>
+    <executions>
+        <execution>
+            <phase>prepare-package</phase>
+            <id>install node and npm</id>
+            <goals>
+                <goal>install-node-and-npm</goal>
+            </goals>
+            <configuration>
+                <nodeVersion>v8.12.0</nodeVersion>
+                <npmVersion>6.4.1</npmVersion>
+            </configuration>
+        </execution>
+        <execution>
+            <phase>prepare-package</phase>
+            <id>npm install</id>
+            <goals>
+                <goal>npm</goal>
+            </goals>
+            <configuration>
+                <arguments>install</arguments>                
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+```
+
+# 3.离线环境打包问题解决方法
+该插件在打包security-admin工程时，
+要求联网下载文件，并且之后的npm需要连接远程仓库，
+而我们的工程是在内网打包的，不能随意连接外网，
+从而会导致打包失败。
+
+使用的打包测试命令：
+mvn package -pl security-admin -am -DskipTests
+
+离线打包的解决方法有两种：
+
+## 3.1.修改downloadRoot改变下载的地址，使用国内或者内网URL:
+下载node-v8.12.0-linux-x64.tar.gz安装包，默认连接如下网址：
+```
+<!-- optional: where to download node and npm from. Defaults to https://nodejs.org/dist/ -->
+<downloadRoot>https://nodejs.org/dist/</downloadRoot>
+https://nodejs.org/dist/v8.12.0/node-v8.12.0-linux-x64.tar.gz
+```
+
+### 3.1.1.如果无法连接国外网址，可以使用国内淘宝的网址：
+```
+<downloadRoot>http://npm.taobao.org/mirrors/node/</downloadRoot>
+http://npm.taobao.org/mirrors/node/v8.12.0/node-v8.12.0-linux-x64.tar.gz
+```
+downloadRoot的配置参考如下：
+```
+<execution>
+    <phase>prepare-package</phase>
+    <id>install node and npm</id>
+    <goals>
+        <goal>install-node-and-npm</goal>
+    </goals>
+    <configuration>
+        <nodeVersion>v8.12.0</nodeVersion>
+        <npmVersion>6.4.1</npmVersion>
+		<downloadRoot>http://npm.taobao.org/mirrors/node/</downloadRoot>
+    </configuration>
+</execution>
+```
+注意downloadRoot不支持本地文件目录
+
+### 3.1.2.如果国内网址也无法使用，只能连接内网
+可以使用本地启动tomcat的方式，将要下载的安装包提前下好，
+放到tomcat的webapp目录下，启动tomcat提供下载服务，
+详细步骤请参考：
+[使用tomcat搭建HTTP文件下载服务器](https://www.jianshu.com/p/d7239900dc84)
+然后将downloadRoot改为tomcat服务的路径，从tomcat下载相应的包，解决问题。
+
+## 3.2.使用本地目录缓存，则不需要联网下载
+查看打包过程发现如下日志：
+```
+[INFO] Downloading https://nodejs.org/dist/v8.12.0/node-v8.12.0-linux-x64.tar.gz to /home/maven/repository/com/github/eirslett/node/8.12.0/node-8.12.0-linux-x64.tar.gz
+```
+插件从指定网址下载node-v8.12.0-linux-x64.tar.gz下载文件到本地缓存目录后，
+并且改名为node-8.12.0-linux-x64.tar.gz，
+当每次开始编译时，插件会先查看缓存目录文件是否已经存在，
+存在则不会重新下载，不存在才会去联网，
+所有可以先从其他路径获取需要的安装包文件，
+手动把node-v8.12.0-linux-x64.tar.gz放到对应的目录：
+/home/maven/repository/com/github/eirslett/node/8.12.0/
+
+具体操作如下：
+下载安装包node-v8.12.0-linux-x64.tar.gz：
+https://nodejs.org/dist/v8.12.0/node-v8.12.0-linux-x64.tar.gz
+创建目录：
+mkdir -p /home/maven/repository/com/github/eirslett/node/8.12.0/
+上传安装包：
+ftp node-v8.12.0-linux-x64.tar.gz /home/maven/repository/com/github/eirslett/node/8.12.0/
+并且改名，去掉名字中的v：
+mv node-v8.12.0-linux-x64.tar.gz node-8.12.0-linux-x64.tar.gz
+
+上面需要的npm进行同样的操作即可：
+```
+[INFO] Downloading https://registry.npmjs.org/npm/-/npm-6.4.1.tgz to /home/maven/repository/com/github/eirslett/npm/6.4.1/npm-6.4.1.tar.gz
+mkdir -p /home/maven/repository/com/github/eirslett/npm/6.4.1/
+mv npm-6.4.1.tgz npm-6.4.1.tar.gz
+```
+
+## 3.3.npm使用内网的制品库作为远程仓库地址
+在pom中插件的配置项中增加如下两个配置项：
+vim security-admin/pom.xml
+```
+<npmRegistryURL>https://10.41.103.97:443/artifactory/api/npm/zenap-npm-virtual</npmRegistryURL>
+<arguments>install --strict-ssl=false</arguments>
+```
+
+### 3.3.1.如果未 设置npmRegistryURL则会报如下错误，因为内网无法访问到外网远程仓库：
+```
+[INFO] --- frontend-maven-plugin:1.6:npm (npm install) @ security-admin-web ---
+[INFO] Running 'npm install' in /home/compile/ranger/security-admin/target
+[ERROR] npm ERR! code ENOTFOUND
+[ERROR] npm ERR! errno ENOTFOUND
+[ERROR] npm ERR! network request to https://registry.npmjs.org/requirejs failed, reason: getaddrinfo ENOTFOUND registry.npmjs.org registry.npmjs.org:443
+[ERROR] npm ERR! network This is a problem related to network connectivity.
+[ERROR] npm ERR! network In most cases you are behind a proxy or have bad network settings.
+[ERROR] npm ERR! network
+[ERROR] npm ERR! network If you are behind a proxy, please make sure that the
+[ERROR] npm ERR! network 'proxy' config is set properly.  See: 'npm help config'
+[ERROR]
+[ERROR] npm ERR! A complete log of this run can be found in:
+[ERROR] npm ERR!     /root/.npm/_logs/2018-10-15T08_23_03_167Z-debug.log
+[INFO] -------------------------------------------------------------------
+```
+
+### 3.3.2.改为内网的仓库后，还是报错，无法解析返回的html文件：
+```
+17 http fetch GET 200 https://10.41.103.97:443/artifactory/public-npm-remote-cache/requirejs 64ms
+18 silly fetchPackageMetaData error for requirejs@^2.3.6 Unexpected token < in JSON at position 0 while parsing near '<!DOCTYPE HTML PUBLI...'
+```
+
+查看淘宝的npm返回结果，返回的是一个json文件，里面记录了版本信息：
+https://registry.npm.taobao.org/requirejs
+
+查看资料后，发现如下URL会返回josn格式的结果：
+https://10.41.103.97:443/artifactory/api/npm/zenap-npm-virtual/requirejs
+
+所以npmRegistryURL配置如下：
+<npmRegistryURL>https://10.41.103.97:443/artifactory/api/npm/zenap-npm-virtual</npmRegistryURL>
+
+### 3.3.3.如果不配置设置strict-ssl为false，则打包时会报证书不存在错误：
+```
+23 verbose stack FetchError: request to https://10.41.103.97:443/artifactory/api/npm/zenap-npm-virtual/requirejs failed, reason: Hostname/IP doesn't match certificate's altnames: "IP: 10.41.103.97 is not in the cert's list: "
+```
+设置strict-ssl为false关闭强制SSL检查：
+<arguments>install --strict-ssl=false</arguments>
+实际上这个参数执行一次就会改变全局变量，
+但是重复执行也没有问题，可以写入到pom中执行，
+防止第一次编译的时候没有该配置项导致失败。

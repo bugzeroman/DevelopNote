@@ -1,0 +1,171 @@
+# 1.说明
+pgAdmin 4是一款为PostgreSQL设计的可靠和全面的数据库设计和管理软件，
+它允许您连接到特定的数据库，创建表和运行各种从简单到复杂的SQL语句。
+它支持的操作系统包括Linux，Windows，Mac OS X。
+这里使用的pgAdmin 4是安装PostgreSQL数据库时自带的，
+在安装包解压后的目录可以看到客户端工具pgAdmin 4。
+![](https://upload-images.jianshu.io/upload_images/11810589-5e5b0095590c257a.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 2.启动pgAdmin 4
+使用MobaXterm终端登陆数据库所在服务器：
+ssh postgres@10.43.159.9
+登陆后执行如下脚本：
+/home/postgres/pgsql/pgAdmin 4/bin/pgAdmin4
+由于pgAdmin 4中间带有空格，
+可以用引号''把命令括起来。
+脚本执行成功后，
+会在当前Windwos打开一个pgAdmin窗口：
+![](https://upload-images.jianshu.io/upload_images/11810589-38c71924001f5b13.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+同时打开远程的firefox浏览器，
+浏览器中自动打开pgAdmin页面：
+![](https://upload-images.jianshu.io/upload_images/11810589-2e08fc512f9d3f05.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 3.pgAdmin窗口
+pgAdmin窗口的菜单提供的功能：
+![](https://upload-images.jianshu.io/upload_images/11810589-c78cb7473a89d5c3.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 3.1.New pgAdmin 4 Window
+在浏览器中打开一个新的pgAdmin页面，
+这样就可以同时连接不同的PostgreSQL数据库。
+如果关闭了浏览器，
+会重新打开浏览器并且载入pgAdmin页面。
+
+# 4.创建服务器
+创建服务器连接到指定的PostgreSQL数据库。
+在pgAdmin的Dashboard欢迎界面，
+点击Add New Server创建服务器：
+![](https://upload-images.jianshu.io/upload_images/11810589-112dcf106eb9d7c7.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+输入地址、用户名和密码等信息后点击Save。
+Hostname/address:10.43.159.9
+Port            :5432
+Maintenance database: postgres
+Username        :postgres
+Password        :passowrd1234
+
+# 5.连接服务器
+依次点击左边的数据库视图树，
+可以看到数据库的各种信息，
+包括数据库表，角色和表空间等。
+Browser -> zdh-9-PostgreSQL -> 10.43.159.9_postgres -> 
+Databases  -> postgres  -> 
+Schemas -> public  -> 
+Tables  -> weather
+![](https://upload-images.jianshu.io/upload_images/11810589-60b11bc63c5f262d.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 6.Dashboard等6个选项卡作用
+在连接到数据库服务器后，
+可以看到pgAdmin页面主要有6个选项卡：
+Dashboard，Properties，SQL，Statistics，Dependencies，Dependents。
+在视图树中选择不同的数据库对象，
+对应的选项卡也会展示不同的内容，
+下面以表和表空间为例简单说明一下。
+
+## 6.1.表Tables
+![](https://upload-images.jianshu.io/upload_images/11810589-bed3728583b9d6e2.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-b0a7edb083a0c6df.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-cf4d37c4a6f58499.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-c8f799eff43d4eee.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-c4d1b9df92da8e96.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-1eb3064eb42a278b.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 6.2.表空间TableSpaces
+![](https://upload-images.jianshu.io/upload_images/11810589-065306b13166638d.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-080437be80a0e604.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-be84d7a8afac12e9.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-20b32f1fc7b4b98e.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-f60aec0a289e32c3.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-f878dac3ab494440.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 6.3.总结
+总结一下Dashboard页面没有变化，
+Dashboard页面展示的都是数据库的信息，
+Properties展示当前对象的配置项，
+SQL展示构建当前对象使用的DDL，
+Statistics展示当前对象的统计信息，
+Dependencies展示当前对象对其他对象的依赖，
+Dependents展示其他对象对当前对象的依赖。
+
+# 7.编辑表
+右击视图树中的weather表，
+点击Properties可以编辑weather表。
+![](https://upload-images.jianshu.io/upload_images/11810589-e6b23856bea36960.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+weather -> General
+![](https://upload-images.jianshu.io/upload_images/11810589-568cf32184ba9ce8.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+weather -> Columns
+![](https://upload-images.jianshu.io/upload_images/11810589-a3d7bce7bf27e7b8.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击右边的+号可以新增字段。
+
+各个选项卡可以编辑表的各种配置，
+可以直接修改，然后保存即可。
+
+# 8.执行SQL
+进入可以执行自定义SQL窗口:
+Tools -> Query Tool
+![](https://upload-images.jianshu.io/upload_images/11810589-fcc0696b488ab403.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 8.1.执行SQL
+点击工具栏上面的闪电按钮，
+或者点击下拉框中的Execute/Refresh，
+或者使用快捷键 F5，
+![](https://upload-images.jianshu.io/upload_images/11810589-4ae1a3bcf7f0fa7b.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击执行后，会在页面下方弹出如下内容：
+Data Output:输出SQL查询返回的条目内容；
+Explain:输出SQL执行计划；
+Messages:输出SQL执行后的返回消息，类似于命令行的返回；
+Notifications:输出一些事件信息；
+Query History:记录SQL的执行历史，可以看到每次执行的详细SQL内容。
+![](https://upload-images.jianshu.io/upload_images/11810589-77c479d6bc2aaf9f.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-d5486418a806f2cd.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-0dc72a1049235dc2.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-2ff4a51dd5a2880f.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 8.2.执行指定的SQL
+选中一条SQL，再按执行按钮，
+会执行选中的SQL，而不是全部SQL。
+
+## 8.3.保存SQL
+工具栏上的Sava File可以将SQL保存为文件，
+第一次保存时需要在URL中写上文件名。
+![](https://upload-images.jianshu.io/upload_images/11810589-a5c8144c516fff18.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+下次使用时使用Open File直接打开即可。
+
+## 8.4.保存查询结果
+工具栏上的Download可以保存查询结果，
+下载保存为csv文件，参考路径如下：
+/home/postgres/Downloads/data-1550655947955.csv
+![](https://upload-images.jianshu.io/upload_images/11810589-9c9e614d7c61987c.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 8.5.查看执行计划
+Explain F7 
+Explain Analyze Shift+F7（更详细）
+
+# 9.创建数据库、角色和表空间
+右键视图树10.43.159.9_postgres，
+可以看到Create命令，
+其中可以创建各种数据库对象。
+![](https://upload-images.jianshu.io/upload_images/11810589-33fb27ed6ef0a22f.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+还有对数据库其他对象的增删改查各种命令，
+基于可视化界面，功能非常强大，且易于使用。
+
+# 10.其他功能
+## 10.1.修改显示语言
+File -> Preferences -> Miscellaneout -> User language
+可以选择中文等语言显示：
+![](https://upload-images.jianshu.io/upload_images/11810589-7527a9bd4272c5bc.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 10.2.重置界面布局
+File -> Reset Layout
+如果界面布局乱了，又改不回来，
+可以重置界面布局。
+
+## 10.3.关闭进程
+在Dashboard -> Sessions界面可以看到连接到服务器的进程，
+可以对这些客户端进程进行一些简单的管理，
+比如关闭对应的进程：
+![](https://upload-images.jianshu.io/upload_images/11810589-726c07de564bf077.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 11.参考文章
+[pgAdmin4的应用（一）](https://blog.csdn.net/qq_28289405/article/details/80243476)
+[pgAdmin4的应用（二）](https://blog.csdn.net/qq_28289405/article/details/80249509)

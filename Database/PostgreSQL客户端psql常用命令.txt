@@ -1,0 +1,68 @@
+使用psql客户端访问数据库,
+列出了psql常用命令和参数。
+
+# 常用命令
+-- 使用指定用户和IP端口登陆 
+psql -h 10.43.159.11 -p 5432 -U postgres -W
+
+-- 退出psql命令行
+\q
+
+-- 查看角色属性
+\du
+
+-- 查看数据库列表
+\l (小写的L)
+
+-- 查看包含template字符的数据库
+\l \*template\*
+
+-- 切换到test数据库
+\c test 
+
+-- 查看当前schema中所有的表
+\d
+
+-- 查看表的结构
+\d [schema.]table 
+
+-- 查询结果横纵显示切换
+\x	 
+
+-- 查询当前主机名
+\\! hostname	
+
+-- 执行SQL消耗时间开关
+\timing	
+
+-- 查看命令历史记录
+\s
+
+-- 显示字符集
+\encoding
+
+-- 命令行操作的帮助
+\\?
+
+-- 查看所有的sql关键字
+\h
+
+# psql常用连接参数
+使用psql --help可以直接查看详细说明：
+|缩写 |全拼 |说明 |
+|----|------|----|
+|-h | --host=HOSTNAME |数据库服务器主机或套接字目录 (默认local socket) |
+|-p | --port=PORT |数据库服务器端口 (默认5432) |
+|-U | --username=USERNAME |数据库用户名(默认postgres) |
+|-d | --dbname=DBNAME |连接的数据库名称(默认postgres) |
+|-W |--password | 强制密码提示（应该会自动提示） |
+|-c | --command=COMMAND  | 运行一条SQl或者内部命令, 然后退出 |
+|-f | --file=FILENAME  |执行文件中的命令, 然后退出 |
+|-l   |--list          |列出可用的数据库, 然后退出 |
+|-V | --version  |输出版本信息，然后退出 |
+|-q | --quiet      |安静的运行(没有多余消息，只有查询输出) |
+|-H |--html       | 查询结果以HTML表格形式输出 |
+
+# 参加文章
+[PostgreSql新手入门命令](https://blog.csdn.net/smstong/article/details/17138355)
+[psql命令行快速参考](http://www.mamicode.com/info-detail-144616.html)

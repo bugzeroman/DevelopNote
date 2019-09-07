@@ -1,0 +1,32 @@
+使用Linux的root用户安装jdk，然后设置环境变量，并且共享给其他用户使用。
+
+# 1.卸载redhat自带jdk
+rpm -qa|grep jdk
+rpm -e --nodeps java-1.7.0-openjdk-1.7.0.45-2.4.3.3.el6.x86_64
+rpm -e --nodeps java-1.6.0-openjdk-1.6.0.0-1.66.1.13.0.el6.x86_64
+
+查看java软连接，如果存在则删除/usr/bin/java软连接
+type java
+java is hashed (/usr/bin/java)
+
+# 2.获取并安装jdk
+获取jdk安装包：
+scp root@10.43.159.11:/home/backup/jdk-7u80-linux-x64.tar.gz .
+创建java的安装目录：
+mkdir -p /usr/java
+解压安装包到/usr/java目录：
+tar -zxvf jdk-7u80-linux-x64.tar.gz -C /usr/java/
+修改解压后的jdk目录的属主：
+chown -R root:root jdk1.7.0_80
+
+# 3.配置环境变量
+vi .bashrc 
+export JAVA_HOME=/usr/java/jdk1.7.0_80
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar 
+使配置生效：
+source .bashrc 
+
+# 4.验证安装：
+jps
+java -version

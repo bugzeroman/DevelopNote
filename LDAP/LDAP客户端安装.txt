@@ -1,0 +1,65 @@
+安装环境：
+10.43.159.7 客户端
+
+使用ldap客户端验证登陆:
+用户为10.43.159.9服务端上面创建的ldap:zdh1234
+
+# 1.安装LDAP client认证需要的pam包
+yum install nss-pam-ldapd pam_ldap -y 
+
+# 2.进入验证配置和LDAP设置
+authconfig-tui
+上面是中文配置可能有问题，可以使用英文界面
+LANG=C authconfig-tui
+选择使用LDAP验证，然后下一步,
+里面配置LDAP服务器的相关信息：
+服务器：ldap://10.43.159.9/
+基点DN:dc=my-domain,dc=com
+点击确定，注意不要选择TLS
+
+# 3.在ldap客户端上建立ldapuser用户的主目录
+mkdir /home/ldapuser
+
+# 4.在root用户下面使用su命令登陆ldapuser
+su - ldapuser
+由于配置了LDAP，所有即使本地没有ldapuser用户也能够登陆。
+ldapuser/zdh1234
+
+# 5.Ldap服务端配置
+LDAP_URL=ldap://10.43.159.9:389
+LDAP_BIND_DN=cn=Manager,dc=my-domain,dc=com 
+LDAP_BIND_PASSWORD=zdh1234
+LDAP_SEARCH_BASE=dc=my-domain,dc=com  
+
+# 6.查询ldap中已经存在的数据，用户和用户组
+ldapsearch -x -D "cn=Manager,dc=my-domain,dc=com" -w zdh1234 -b "ou=People,dc=my-domain,dc=com"
+ldapsearch -x -D "cn=Manager,dc=my-domain,dc=com" -w zdh1234 -b "ou=Group,dc=my-domain,dc=com"
+ldapsearch -x -D "cn=Manager,dc=my-domain,dc=com" -w zdh1234 -b "dc=my-domain,dc=com"
+在ldap宿主机上用root用户执行可以不带rdn用户名和密码
+ldapsearch -x -b "dc=my-domain,dc=com"
+
+# 7.使用命令行往LDAP中添加用户
+新建create_testuser1.ldif文件，在文件中填写要创建的用户信息：
+```
+dn: uid=testuser1,ou=People,dc=my-domain,dc=com
+uid: testuser1
+cn: testuser1
+objectClass: account
+objectClass: posixAccount
+objectClass: top
+objectClass: shadowAccount
+userPassword: {crypt}$6$QWFZkAIq$Hp1mhiq4ZDFOXkbu67hHn.ob8WoExbfYo0hswNmkopwdwoPNmsDGsP1JMmE2jQqmVCz7uD94rYqviJtUfdwPe.
+shadowLastChange: 17268
+shadowMin: 0
+shadowMax: 99999
+shadowWarning: 7
+loginShell: /bin/bash
+uidNumber: 510
+gidNumber: 501
+homeDirectory: /home/testuser1
+```
+
+然后执行ldap的添加用户命令,注意add的时候要使用管理员用户名密码：
+ldapadd -x -D "cn=Manager,dc=my-domain,dc=com" -w zdh1234 -f /home/ldapuser/create_testuser1.ldif
+查看添加的用户：
+ldapsearch -x -b "uid=testuser1,ou=People,dc=my-domain,dc=com"

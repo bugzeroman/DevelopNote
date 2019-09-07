@@ -1,0 +1,52 @@
+Kibana可视化管理平台安装，以及Kibana安装X-Pack插件：
+基于已经安装好的6.2.2版本的Elasticsearch，安装6.2.2版本的Kibana。
+基于已经安装好的6.2.2版本的Kibana，安装6.2.2版本的X-Pack插件。
+
+Kibana是一个为 ElasticSearch 提供的数据分析的 Web 接口。
+可使用它对日志进行高效的搜索、可视化、分析等各种操作。
+
+# 1.下载Kibana安装包
+https://artifacts.elastic.co/downloads/kibana/kibana-6.2.2-darwin-x86_64.tar.gz
+
+# 2.安装包上传到Elasticsearch所在服务器并且解压
+tar -zxvf kibana-6.2.2-linux-x86_64.tar.gz
+
+# 3.下载x-pack的zip包到本地
+https://artifacts.elastic.co/downloads/packs/x-pack/x-pack-6.2.2.zip
+
+# 4.Kibana离线安装x-pack
+将x-pack-6.2.2.zip上传到Kibana所在服务器，使用如下命令安装插件：
+bin/kibana-plugin install file:///home/elasticsearch/x-pack-6.2.2.zip
+
+注意指定x-pack的安装路径，安装过程会比较久，请耐心等待。
+
+# 5.修改kibana的配置文件kibana.yml
+vi $KIBANA_HOME/config/kibana.yml
+```
+elasticsearch.username: "kibana"
+elasticsearch.password: "CeoxAZHhQ17Hm9tyux33"
+server.name: "zdh-7"
+server.host: "10.43.159.7"
+elasticsearch.url: "http://10.43.159.7:9200"
+xpack.monitoring.enabled: true
+xpack.security.enabled: true
+xpack.ml.enabled: true
+xpack.watcher.enabled: true
+xpack.graph.enabled: true
+```
+注意上面的用户名和密码，是在Elasticsearch安装X-Pack插件的时候已经生成的。
+注意配置server.host，否则无法远程登陆Kinaba。
+
+# 6.启动Kibana
+后台启动kibana服务：
+bin/kibana >kibana.log 2>&1 &  
+
+停止kibana服务：
+grep找到kibana对应的进程，kill掉即可
+
+# 7.浏览器登陆Kibana图形化界面
+http://10.43.159.7:5601
+使用kibana/CeoxAZHhQ17Hm9tyux33登陆。
+
+# 8.参考文档
+https://www.elastic.co/guide/en/x-pack/current/installing-xpack.html#xpack-installing-offline

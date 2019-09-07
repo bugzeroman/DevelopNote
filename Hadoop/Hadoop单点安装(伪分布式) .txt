@@ -1,0 +1,141 @@
+Hadoop单点安装,基于版本2.7.1，
+在一台Lunix主机上面安装Hdoop，
+包括Hdfs的NameNode和DataNode，
+以及Yarn的ResouceManager和NodeManager。
+
+# 1.安装规划
+vi /etc/hosts
+10.43.159.7 zdh-7
+useradd -g hadoop -s /bin/csh -md /home/hdfsone hdfsone
+hdfsone/zdh1234
+
+# 2.配置文件
+登陆hdfsone用户，
+安装jdk，修改.bashrc文件，配置jdk目录:
+```
+export JAVA_HOME=/usr/java/jdk1.8.0_151
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+```
+配置hadoop的安装目录：
+```
+export HADOOP_HOME=/home/hdfsone/hadoop-2.7.1
+export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH
+export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
+```
+
+# 3.配置ssh，实现免密登陆
+ssh-keygen -t dsa -P '' -f ~/.ssh/id_dsa
+cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys
+必须修改权限，否则无法免秘登陆
+chmod 600 ~/.ssh/authorized_keys
+验证无密码登陆
+ssh localhost
+注意，本步骤单机也需要配置的，在启动脚本中会用到相应的功能。
+
+# 4.安装rsync
+使用如下命令查看是否已经安装,一般都有:
+type rsync
+
+# 5.解压hadoop
+tar -zxvf hadoop-2.7.1.tar.gz
+
+# 6.配置伪分布模式
+修改etc/hadoop/core-site.xml如下：
+```
+<property>
+<name>fs.defaultFS</name>
+<value>hdfs://10.43.159.7:9000</value>
+</property>
+```
+修改etc/hadoop/hdfs-site.xml如下：
+```
+<property>
+<name>dfs.replication</name>
+<value>1</value>
+</property>
+
+<property>
+    <name>dfs.namenode.name.dir</name>
+    <value>file:/home/hdfsone/dfs/name</value>
+</property>
+
+<property>
+    <name>dfs.datanode.data.dir</name>
+    <value>file:/home/hdfsone/dfs/data</value>
+</property>
+
+<property>
+  <name>dfs.namenode.rpc-address</name>
+  <value>10.43.159.7:9000</value>
+  <description>
+    RPC address that handles all clients requests. In the case of HA/Federation where multiple namenodes exist,
+    the name service id is added to the name e.g. dfs.namenode.rpc-address.ns1
+    dfs.namenode.rpc-address.EXAMPLENAMESERVICE
+    The value of this property will take the form of nn-host1:rpc-port.
+  </description>
+</property>
+
+<property>
+  <name>dfs.namenode.secondary.http-address</name>
+   <value>10.43.159.7:40090</value>
+   <description>
+        The secondary namenode http server address and port.
+   </description>
+</property>
+```
+注意：core-site.xml的fs.defaultFS的端口要和hdfs-site.xml的dfs.namenode.rpc-address一致，以rpc配置的端口开启监听
+   
+# 7.初始化并且启动hdfs
+格式化namenode，修改完配置后执行：
+hdfs namenode -format
+dfs/name等目录不存在会自动新建
+
+启动hdfs服务：
+start-dfs.sh
+停止hdfs服务：
+stop-dfs.sh
+
+hdfs的web管理页面：
+http://10.43.159.7:50070
+hdfs服务地址：
+hdfs://10.43.159.7:9000
+
+查看namenodes节点：
+hdfs getconf -namenodes
+
+# 8.配置yarn
+cp mapred-site.xml.template mapred-site.xml
+```
+<property>
+<name>mapreduce.framework.name</name>
+<value>yarn</value>
+</property>
+```
+yarn-site.xml
+```
+<property>
+<name>yarn.nodemanager.aux-services</name>
+<value>mapreduce_shuffle</value>
+</property>
+```
+启动yarn服务：
+start-yarn.sh
+停止yarn服务：
+stop-yarn.sh
+
+yarn的web管理页面：
+http://10.43.159.7:8088/
+
+# 9.验证hdfs安装
+创建目录
+hadoop fs -mkdir /user
+列出根目录
+hadoop fs -ls /
+
+# 10.验证yarn安装
+后台执行mapreduce任务，可以在yarn的web管理页面查看到：
+hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar wordcount input/wordcount /user/wordresult
+
+# 11.参考文章
+http://www.aboutyun.com/thread-12798-1-1.html

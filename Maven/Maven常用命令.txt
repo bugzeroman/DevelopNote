@@ -1,0 +1,20 @@
+打包命令
+mvn clean install -Dmaven.test.skip=true 
+mvn clean compile package assembly:assembly install -DskipTests
+
+使用指定Profile（linux）打包
+mvn clean compile package assembly:assembly install -DskipTests -Plinux
+
+打开maven的debug日志
+mvn package -X
+
+jar包发布到远程仓库
+mvn deploy -DskipTests
+
+下面这3个命令是等价的，都是不执行测试用例：
+mvn test -Dmaven.test.skip=true
+mvn test -DskipTests=true
+mvn test -DskipTests
+
+查看pom中生效的profile
+mvn help:active-profiles -N

@@ -1,0 +1,259 @@
+Hadoop真分布式完全集群安装，基于版本2.7.2安装，
+在两台Linux机器上面分别安装Hadoop的master和slave节点。
+
+# 1.安装说明
+不管NameNode还是DataNode节点，安装的用户名需要一致。
+master和slave的区别，只是在于配置的hostname，
+在config的slaves配置的hostname所代表的机器即为slave，
+不使用主机名也可以，直接配置为IP即可。
+在这种集群下面，需要在master节点创建namenode路径，
+并且使用格式化命令hdfs namenode –format。
+然后在slave节点创建datanode路径，注意目录的权限。
+
+# 2.配置hosts
+如果已经存在则不需要，每台机器进行相同的操作
+10.43.156.193 zdh193 ywmaster/fish master
+10.43.156.194 zdh194 ywmaster/fish slave
+
+# 3.创建用户
+集群上面的用户名必须都是一样的，否则无法影响Hadoop集群启动，
+在每台机器里面添加相同的用户，参考如下命令：
+useradd ywmaster
+
+# 4.安装JDK
+此处安装的是jdk1.7
+```
+scp yuwen@10.43.156.193:/home/yuwen/backup/jdk-7u80-linux-x64.tar.gz .
+zdh123
+tar -zxvf jdk-7u80-linux-x64.tar.gz 
+vi .bash_profile 
+export JAVA_HOME=~/jdk1.7.0_80
+export PATH=$JAVA_HOME/bin:$PATH
+export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+source .bash_profile 
+```
+验证jdk
+java -version
+
+# 5.设置集群免密登陆
+
+## 5.1.设置本地免密登陆
+```
+ssh-keygen -t dsa -P '' -f ~/.ssh/id_dsa
+cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys
+```
+必须修改权限，否则无法免秘登陆
+chmod 600 ~/.ssh/authorized_keys
+验证免密登陆
+ssh localhost
+
+## 5.2.设置远程免密登陆
+需要把本机的公钥放到对方的机器authorized_keys，才能免密登陆其他机器。
+进入ywmaster的.ssh目录
+```
+scp ~/.ssh/authorized_keys ywmaster@10.43.156.194:~/.ssh/authorized_keys_from_zdh193
+```
+进入ywslave的.ssh目录,注意备份，否则下面步骤存在重复的ywmaster公钥。
+cat authorized_keys_from_zdh193  >>  authorized_keys
+ssh zdh194
+
+## 5.3.设置其他机器免密登陆
+参考上面的步骤同理设置其他机器，配置后zdh193可以免密登陆。
+```
+scp ~/.ssh/authorized_keys ywmaster@10.43.156.193:~/.ssh/authorized_keys_from_zdh194
+```
+
+# 6.安装Hadoop
+上传并解压hadoop文件
+```
+scp pub@10.43.156.193:/home/pub/hadoop/source/hadoop-2.7.2-src/hadoop-dist/target/hadoop-2.7.2.tar.gz .
+zdh1234
+tar -zxvf hadoop-2.7.2.tar.gz
+```
+
+# 7.配置环境变量
+```
+export HADOOP_HOME=~/hadoop-2.7.2
+export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH
+export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop 
+```
+
+配置别名，可以快速访问配置路径
+alias conf='cd /home/ywmaster/hadoop-2.7.2/etc/hadoop'
+
+# 8.检查和修改Hadoop配置文件
+
+## 8.1 hadoop-env.sh
+涉及环境变量：JAVA_HOME，HADOOP_HOME，HADOOP_CONF_DIR
+
+## 8.2 yarn-env.sh
+涉及环境变量：JAVA_HOME，HADOOP_YARN_USER，HADOOP_YARN_HOME, YARN_CONF_DIR
+
+## 8.3 slaves 
+这个文件里面保存所有slave节点，注释掉localhost,新增zdh194作为slave节点。
+
+## 8.4 core-site.xml 
+```
+<name>fs.defaultFS</name>
+<value>hdfs://10.43.156.193:29080</value>
+
+<name>fs.default.name</name>
+<value>hdfs://10.43.156.193:29080</value>
+  
+<name>io.file.buffer.size</name>
+<value>131072</value>
+
+<name>hadoop.tmp.dir</name>
+<value>file:/home/ywmaster/tmp</value>
+```
+
+## 8.5 hdfs-site.xml 
+```
+<name>dfs.namenode.rpc-address</name>
+<value>10.43.156.193:29080</value>
+
+<name>dfs.namenode.http-address</name>
+<value>10.43.156.193:20070</value>
+  
+<name>dfs.namenode.secondary.http-address</name>
+<value>10.43.156.193:29001</value>
+
+<name>dfs.namenode.name.dir</name>
+<value>file:/home/ywmaster/dfs/name</value>
+
+<name>dfs.datanode.data.dir</name>
+<value>file:/home/ywmaster/dfs/data</value>
+
+<name>dfs.replication</name>
+<value>1</value>
+
+<name>dfs.webhdfs.enabled</name>
+<value>true</value>
+```
+
+## 8.6 mapred-site.xml
+```
+<name>mapreduce.framework.name</name>
+<value>yarn</value>
+
+<name>mapreduce.shuffle.port</name>
+<value>23562</value>
+  
+<name>mapreduce.jobhistory.address</name>
+<value>10.43.156.193:20020</value>
+
+<name>mapreduce.jobhistory.webapp.address</name>
+<value>10.43.156.193:29888</value>
+```
+
+## 8.7：yarn-site.xml
+```
+<name>yarn.nodemanager.aux-services</name>
+<value>mapreduce_shuffle</value>
+                                                            
+<name>yarn.nodemanager.aux-services.mapreduce.shuffle.class</name>  TODODELETE
+<value>org.apache.hadoop.mapred.ShuffleHandler</value>
+
+#mapreduce.shuffle已经过时，改为mapreduce_shuffle
+<name>yarn.nodemanager.aux-services.mapreduce_shuffle.class</name>
+<value>org.apache.hadoop.mapred.ShuffleHandler</value>
+
+<name>yarn.resourcemanager.address</name>
+<value>10.43.156.193:28032</value>
+
+<name>yarn.resourcemanager.scheduler.address</name>
+<value>10.43.156.193:28030</value>
+
+<name>yarn.resourcemanager.resource-tracker.address</name>
+<value>10.43.156.193:28031</value>
+
+<name>yarn.resourcemanager.admin.address</name>
+<value>10.43.156.193:28033</value>
+
+<name>yarn.resourcemanager.webapp.address</name>
+<value>10.43.156.193:28088</value>
+```
+
+## 8.8 获取Hadoop的默认配置文件
+选择相应版本的hadoop,下载解压后，搜索*.xml,
+找到core-default.xml,hdfs-default.xml,mapred-default.xml,
+这些就是默认配置,可以参考这些配置的描述说明，
+在这些默认配置上进行修改，配置自己的Hadoop集群。
+```
+find . -name *-default.xml
+./hadoop-2.7.1/share/doc/hadoop/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml
+./hadoop-2.7.1/share/doc/hadoop/hadoop-project-dist/hadoop-common/core-default.xml
+./hadoop-2.7.1/share/doc/hadoop/hadoop-mapreduce-client/hadoop-mapreduce-client-core/mapred-default.xml
+./hadoop-2.7.1/share/doc/hadoop/hadoop-yarn/hadoop-yarn-common/yarn-default.xml
+./hadoop-2.7.1/share/hadoop/httpfs/tomcat/webapps/webhdfs/WEB-INF/classes/httpfs-default.xml
+```
+
+# 9.把配置好的Hadoop复制到其他节点
+scp -r ~/hadoop-2.7.2 ywmaster@10.43.156.194:~/
+或者只拷贝配置文件，可以提高拷贝效率:
+scp -r ~/hadoop-2.7.2/etc/hadoop ywmaster@10.43.156.194:~/hadoop-2.7.2/etc 
+
+创建好name和data数据目录
+```
+mkdir -p ./dfs/name
+mkdir -p ./dfs/data
+```
+
+# 10.启动验证Hadoop
+格式化namenode： 
+hdfs namenode -format
+出现如下结果则表示成功：
+16/09/13 23:57:16 INFO common.Storage: Storage directory /home/ywmaster/dfs/name has been successfully formatted.
+
+启动hdfs
+start-dfs.sh
+启动yarn:
+start-yarn.sh
+
+注意修改了配置之后一定要重新复制到其他节点，否则启动会有问题。
+
+# 11.检查启动结果
+
+NameNode下执行jps应该包含如下进程：
+```
+15951 ResourceManager
+13294 SecondaryNameNode
+12531 NameNode
+16228 Jps
+```
+DataNode下执行jps应该包含如下进程：
+```
+3713 NodeManager
+1329 DataNode
+3907 Jps
+```
+
+查看HDFS服务：
+http://10.43.156.193:20070
+查看SecondaryNameNode：
+http://10.43.156.193:29001/
+具体IP和Port参考hdfs-site.xml:
+```
+<name>dfs.namenode.http-address</name>
+<description> The address and the base port where the dfs namenode web ui will listen on.</description>
+```
+
+查看RM: 
+http://10.43.156.193:28088
+具体IP和Port参考yarn-site.xml：
+```
+<name>yarn.resourcemanager.webapp.address</name>
+<value>10.43.156.193:28088</value>
+```
+
+# 12.其他参考
+停止命令：
+stop-yarn.sh
+stop-dfs.sh
+执行命令验证：
+hadoop fs -ls /usr
+hadoop fs -mkdir usr/yuwen
+hadoop fs -copyFromLocal wordcount /user
+hadoop fs -rm -r /user/wordresult
+hadoop jar ~/hadoop-2.7.2/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.2.jar wordcount /user/wordcount.txt /user/wordresult_001
+hadoop fs -text /user/wordresult_001/part-r-00000

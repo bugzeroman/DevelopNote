@@ -1,0 +1,190 @@
+Hive安装，基于版本2.1.0，
+使用apache-hive-2.1.0-bin.tar.gz安装包。
+
+# 1.安装规划
+|角色规划 |IP/机器名 |安装软件 |运行进程 |
+|---------|----------|---------|---------|
+|hive     |zdh-9     |hive     |RunJar(metastore),RunJar(hiveserver2) |
+
+# 2.安装用户
+hive/zdh1234	
+
+# 3.配置hosts
+10.43.159.9    zdh-9
+
+# 4.安装依赖
+## 4.1.JDK配置
+```
+export JAVA_HOME=/usr/java/jdk1.7.0_80
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+```
+
+## 4.2.Hadoop集群
+```
+hdfs://gagcluster
+NameNode1:hdfs://10.43.159.7:9000
+NameNode2:hdfs://10.43.159.9:9000
+```
+
+## 4.3.Mysql数据库
+```
+Unix:mysql/zdh1234
+mysql:root/zdh1234
+Link: zdh-9:3306
+```
+
+# 5.在zdh-9上面创建hive用户
+useradd -g hadoop -s /bin/bash -md /home/hive hive
+
+# 6.上传并且解压安装包
+tar -zxvf apache-hive-2.1.0-bin.tar.gz 
+
+# 7.配置环境变量
+安装并且配置JDK
+```
+export JAVA_HOME=/usr/java/jdk1.7.0_80
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+```
+
+配置Hive环境变量和别名，方便操作
+```
+export HIVE_HOME=~/apache-hive-2.1.0-bin
+export PATH=$PATH:$HIVE_HOME/bin
+alias logs='cd $HIVE_HOME/logs'
+alias conf='cd $HIVE_HOME/conf'
+```
+
+# 8.拷贝相关jar包
+拷贝mysql的jdbc驱动包到hive的lib目录下面,mysql的驱动包需要自己下载
+cp /usr/share/java/mysql-connector-java.jar ~/apache-hive-2.1.0-bin/lib/
+拷贝hive的jdbc目录下hive-jdbc-2.1.0-standalone.jar到lib目录下，否则执行beeline报错
+cp hive-jdbc-2.1.0-standalone.jar ../lib/
+
+# 9.从模板获得配置文件
+进入conf目录把所有带template后缀的文件，移除后缀：
+rename .template "" *.template
+再把hive-default.xml重命名为hive-site.xml：
+mv hive-default.xml hive-site.xml
+
+# 10.修改hive-env.sh配置项
+export HADOOP_HOME=/home/hdfs/hadoop-2.7.1
+export HIVE_CONF_DIR=/home/hive/apache-hive-2.1.0-bin/conf
+主要是配置hadoop的目录，且hive启动前hdfs需要已经启动。
+
+# 11.修改hive-site.xml的配置项
+```
+<property>
+	<name>hive.exec.local.scratchdir</name>
+	<value>/home/hive/apache-hive-2.1.0-bin/tmp</value>
+	<description>Local scratch space for Hive jobs</description>
+</property>
+<property>
+	<name>hive.downloaded.resources.dir</name>
+	<value>/home/hive/apache-hive-2.1.0-bin/tmp/resources</value>
+	<description>Temporary local directory for added resources in the remote file system.</description>
+</property>
+<property>
+	<name>hive.metastore.warehouse.dir</name>
+	<value>/home/hive/apache-hive-2.1.0-bin/warehouse</value>
+</property>
+<property>
+	<name>javax.jdo.option.ConnectionDriverName</name>
+	<value>com.mysql.jdbc.Driver</value>
+</property>
+<property>
+	<name>javax.jdo.option.ConnectionURL</name>
+	<value>jdbc:mysql://zdh-9:3306/hive?createDatabaseIfNotExist=true</value>
+</property>
+<property>
+	<name>javax.jdo.option.ConnectionUserName</name>
+	<value>root</value>
+</property>
+<property>
+	<name>javax.jdo.option.ConnectionPassword</name>
+	<value>zdh1234</value>
+</property>
+<property>
+	<name>datanucleus.autoCreateSchema</name>
+	<value>true</value>
+	<description>creates necessary schema on a startup if one doesn't exist. set this to false, after creating it once</description>
+</property>
+<property>
+	<name>datanucleus.fixedDatastore</name>
+	<value>false</value>
+</property>
+<property>
+	<name>datanucleus.schema.autoCreateAll</name>
+	<value>true</value>
+</property>
+```
+上面主要是配置hive的元数据使用mysql存储，配置mysql的一些连接。
+
+# 12.在mysql预先创建数据库以及用户
+创建一个数据库 
+CREATE DATABASE hive;  
+使用已经存在的root@zdh-9用户，并且设置相应的密码
+```
+update mysql.user set password=password("zdh1234") where user="root" and host='zdh-9';
+```
+或者使用root用户新建hive用户，
+注意修改hive-site.xml中的数据库用户名密码，
+保证配置项正确。
+
+# 13.执行脚本，初始化数据库schema如下：
+schematool -initSchema -dbType mysql
+
+# 14.启动hive
+hive
+通过jps可以看到新进程RunJar
+
+# 15.执行测试命令
+测试hive创建表格，使用hive命令行：
+hive
+create table student(name string,sex string,age int);
+show tables; 
+desc student;
+exit;
+
+查看mysql数据库hive中创建的表格在元数据库中有相应更新
+select * from TBLS;
+若查询到TBLS表中TBL_NAME的内容有student，
+则说明刚才在hive命令行中创建的表格student的元数据更新到MySql中了。
+
+# 16.启动hive server2
+#后台启动metastore服务和hiveserver2服务
+hive --service metastore > metastore.log 2>&1 &
+hive --service hiveserver2 > hiveserver2.log 2>&1 &
+或者
+nohup hive --service metastore&
+nohup hive --service hiveserver2&
+
+# 17.使用beeline命令行测试
+beeline
+!connect jdbc:hive2://zdh-9:10000/default
+用户名和密码都为空，直接回车;
+成功进入beeline连接jdbc数据库,
+执行命令查看default默认数据库和库中的表，
+以及查看student表结构:
+```
+show databases;
+show tables;
+desc student;
+```
+退出连接:
+!q
+
+# 18.报错处理
+User: hive is not allowed to impersonate anonymous (state=,code=0)
+修改hadoop的core-site.xml中的配置文件如下，里面需要设置hive用户的代理，并且重启hdfs。
+```
+<property>
+        <name>hadoop.proxyuser.hive.hosts</name>
+        <value>*</value>
+</property>
+<property>
+        <name>hadoop.proxyuser.hive.groups</name>
+        <value>*</value>
+</property>
+```

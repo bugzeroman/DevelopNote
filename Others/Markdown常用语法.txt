@@ -1,0 +1,170 @@
+汇总一下，主要是自己写文章的使用参考用的。
+# 参考文章
+[Markdown 语法说明 (简体中文版) ](http://wowubuntu.com/markdown/)
+[献给写作者的 Markdown 新手指南](https://www.jianshu.com/p/q81RER)
+
+---
+# 标题
+# 一级标题
+## 二级标题
+### 三级标题
+#### 四级标题
+##### 五级标题
+###### 六级标题
+
+---
+# 无序列表
+- 文本1
+- 文本2
+- 文本3
+---
+# 有序列表1
+1. 文本
+1. 文本
+1. 文本
+----
+# 有序列表2
+1. 文本
+2. 文本
+3. 文本
+---
+# 引用文章
+> 一盏灯， 一片昏黄； 一简书， 一杯淡茶。
+
+---
+# 斜体和粗体
+*一盏灯*， 一片昏黄；**一简书**， 一杯淡茶。 
+
+---
+# 代码引用
+` hello world `
+# 多段代码引用
+```
+public static void test()
+{
+     int name = "Jane";
+     System.out.println("hello world"+name);
+}
+```
+```java
+// This is Java
+void alohaKosmos (String msg) {
+    String word1 = "Aloha ";
+    String word2 = "Kosmos ";
+    String word3 = ": ";
+    Log.i("Call Me God", word1 + word2 + word3 + msg);
+}
+alohaKosmos("Tartarus Chronos Riddle");
+```
+
+---
+# 表格1：默认靠左
+dog | bird | cat
+----|------|----
+foo | foo  | foo
+bar | bar  | bar
+baz | baz  | baz
+
+# 表格2：设置字段靠左，居中，靠右
+
+| Tables        | Are           | Cool  |
+| ------------- |:-------------:| -----:|
+| col 3 is      | right-aligned | $1600 |
+| col 2 is      | centered      |   $12 |
+| zebra stripes | are neat      |    $1 |
+
+---
+# 插入链接
+[简书](http://www.jianshu.com)
+
+---
+# 插入图片
+![](http://upload-images.jianshu.io/upload_images/259-0ad0d0bfc1c608b6.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![图片名称](http://upload-images.jianshu.io/upload_images/259-0ad0d0bfc1c608b6.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+---
+本篇文章源码如下
+``````
+# 参考文章
+[Markdown 语法说明 (简体中文版) ](http://wowubuntu.com/markdown/)
+[献给写作者的 Markdown 新手指南](https://www.jianshu.com/p/q81RER)
+
+---
+# 标题
+# 一级标题
+## 二级标题
+### 三级标题
+#### 四级标题
+##### 五级标题
+###### 六级标题
+
+---
+# 无序列表
+- 文本1
+- 文本2
+- 文本3
+---
+# 有序列表1
+1. 文本
+1. 文本
+1. 文本
+----
+# 有序列表2
+1. 文本
+2. 文本
+3. 文本
+---
+# 引用文章
+> 一盏灯， 一片昏黄； 一简书， 一杯淡茶。
+
+---
+# 斜体和粗体
+*一盏灯*， 一片昏黄；**一简书**， 一杯淡茶。 
+
+---
+# 代码引用
+` hello world `
+# 多段代码引用
+```
+public static void test()
+{
+     int name = "Jane";
+     System.out.println("hello world"+name);
+}
+```
+```java
+// This is Java
+void alohaKosmos (String msg) {
+    String word1 = "Aloha ";
+    String word2 = "Kosmos ";
+    String word3 = ": ";
+    Log.i("Call Me God", word1 + word2 + word3 + msg);
+}
+alohaKosmos("Tartarus Chronos Riddle");
+```
+
+---
+# 表格1：默认靠左
+dog | bird | cat
+----|------|----
+foo | foo  | foo
+bar | bar  | bar
+baz | baz  | baz
+
+# 表格2：设置字段靠左，居中，靠右
+
+| Tables        | Are           | Cool  |
+| ------------- |:-------------:| -----:|
+| col 3 is      | right-aligned | $1600 |
+| col 2 is      | centered      |   $12 |
+| zebra stripes | are neat      |    $1 |
+
+---
+# 插入链接
+[简书](http://www.jianshu.com)
+
+---
+# 插入图片
+![](http://upload-images.jianshu.io/upload_images/259-0ad0d0bfc1c608b6.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![图片名称](http://upload-images.jianshu.io/upload_images/259-0ad0d0bfc1c608b6.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+``````

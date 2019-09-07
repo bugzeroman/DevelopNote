@@ -1,0 +1,83 @@
+统计一下自己在Ranger开源社区贡献的Issue数量，
+开源社区的Issue主要分为New Feature,Bug,Improvement，
+这三种都是和代码相关的，会直接修改开源项目的代码库，
+还有一种是文档相关的，可以是安装指导操作说明等等，记为Document，
+另外一种不是我自己提交的，指导或者帮助别人提交的，记为Assist。
+
+# Issue Summary
+|Type           |Number |
+|---------------|-------|
+|New Feature    |7      |
+|Bug            |13     |
+|Improvement    |10     |
+|Document       |2      |
+|Assist         |8      |
+|Total          |40     |
+
+# Issue Detail
+
+## New Feature
+|No. |Issue No.   |Resolved Time |Issue Title |
+|----|------------|--------------|------------|
+|1   |RANGER-1201 |2016/12/28    |Ranger admin support yarn HA, support standby yarn rest url configuration when creating yarn service |
+|2   |RANGER-1285 |2017/01/06    |Ranger-Admin support storm HA, support the list of stormUIs when creating storm service |
+|3   |RANGER-1810 |2017/10/25    |Ranger supports plugin to enable, monitor and manage apache Sqoop2 |
+|4   |RANGER-1830 |2017/11/09    |Write unit test for RANGER-1810(Sqoop2) |
+|5   |RANGER-1848 |2017/11/22    |Implement getLinkList/getJobList in SqoopClient for Ranger Sqoop2 plugin |
+|6   |RANGER-1672 |2018/03/12    |Ranger supports plugin to enable, monitor and manage apache kylin |
+|7   |RANGER-1808 |2018/03/29    |Write unit test for RANGER-1672(Kylin) |
+
+## Bug
+|No. |Issue No.   |Resolved Time |Issue Title |
+|----|------------|--------------|------------|
+|1   |RANGER-1187 |2016/11/04    |In pamCredValidator.c, pam_end() is not called if authentication fails |
+|2   |RANGER-1242 |2016/12/22    |Create storm service with error configurations, test connection should not be successful |
+|3   |RANGER-1316 |2017/01/19    |Ranger-Admin enable security mode should not depend on configuration logdir |
+|4   |RANGER-1359 |2017/02/09    |Remove unnecessary spring dependency |
+|5   |RANGER-1369 |2017/04/10    |There is invalid group error when install Solr for Ranger Audits |
+|6   |RANGER-1387 |2017/02/28    |Remove unused SQL_CONNECTOR_JAR in install.properties of ranger plugin |
+|7   |RANGER-1391 |2017/02/20    |Error occurred when use EndDate as Search Filter in Audit Access WebPage |
+|8   |RANGER-1431 |2017/03/09    |Do some code improvement in Java method AuthSessionService.mapEntityToViewBean |
+|9   |RANGER-1445 |2017/04/17    |Incorrect error message for searching in Audit page |
+|10  |RANGER-1592 |2017/05/23    |Do code improvement for static fields and Log in the AtlasClient.java |
+|11  |RANGER-1859 |2017/10/30    |Fix new findBugs in HdfsClient.java |
+|12  |RANGER-2054 |2018/04/04    |Fix new findBugs in RangerAdminClientImpl.java for kylin plugin test |
+|13  |RANGER-2280 |2018/11/13    |The emptyText of User Sync and Plugin Status should be reasonable |
+
+## Improvement
+|No. |Issue No.   |Resolved Time |Issue Title |
+|----|------------|--------------|------------|
+|1   |RANGER-1287 |2017/01/17    |Remove code duplication from Java method EmbeddedServer.start() |
+|2   |RANGER-1399 |2017/02/28    |Do some code improvement in Java method SolrUtil.searchResources |
+|3   |RANGER-1419 |2017/03/09    |Do some code improvement in Java method XTrxLogService.searchXTrxLogs |
+|4   |RANGER-1468 |2017/03/23    |To make the search tips of Plugin-Status consistent with others |
+|5   |RANGER-1532 |2017/04/22    |Friendly groups page delete function display, and other pages of the same function in sync |
+|6   |RANGER-1539 |2017/04/25    |Improve, modify print log display method name |
+|7   |RANGER-1598 |2017/05/23    |make the tips of group and user consistent with others in en.js |
+|8   |RANGER-2257 |2018/10/26    |Add policyID to error message when click the Access log of Audit |
+|9   |RANGER-2265 |2018/11/01    |To make the profile "all" to be active by default when ranger build |
+|10  |RANGER-2266 |2018/11/01    |To make Id to ID in Audit Pages of Ranger Admin |
+
+## Document
+|No. |Issue No.   |Resolved Time |Issue Title |
+|----|------------|--------------|------------|
+|1   |RANGER-1810 |2017/10/24    |Write install guide for RANGER-1810(Sqoop2) |
+|2   |RANGER-1809 |2017/03/29    |Write install guide for RANGER-1672(Kylin) |
+
+
+## Assist
+|No. |Issue No.   |Resolved Time |Issue Title |Type |
+|----|------------|--------------|------------|--------|
+|1   |RANGER-1844 |2017/10/24    |Ranger admin support hdfs HA configuration when creating hdfs service |
+|2   |RANGER-2067 |2018/04/16    |Supply the function of viewing policy history version |
+|3   |RANGER-2153 |2018/09/25    |Supply the function of reverting policy history version |
+|4   |RANGER-1803 |2017/09/26    |Json may be analysis a null value at tests[] for test_resourcematcher_default.json |
+|5   |RANGER-1813 |2017/10/10    |The drop-down box name "database" is not showing full when edit hive policy |
+|6   |RANGER-1807 |2017/09/26    |Static object can be used directly at start() method for RangerHdfsAuthorizer class |
+|7   |RANGER-1874 |2017/11/08    |ranger README.txt should be add tar and sqoop-plugin desc |
+|8   |RANGER-1877 |2017/11/20    |The ranger policies json file should be formatted when exported at ranger service manager |
+
+
+通过Issue No.可以找到这个Issue具体的信息，
+比如Issue No.为RANGER-1201，可以通过以下URL查看：
+https://issues.apache.org/jira/browse/RANGER-1201

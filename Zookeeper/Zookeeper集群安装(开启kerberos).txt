@@ -1,0 +1,151 @@
+# 安装规划
+zookeeper集群模式，安装到如下三台机器
+10.43.159.237 zdh-237
+10.43.159.238 zdh-238
+10.43.159.239 zdh-239
+Kerberos服务器
+10.43.159.240 zdh-240
+Kerberos客户端
+zdh-237，zdh-238，zdh-239
+
+# 安装用户
+zookeeper/zdh1234
+useradd -g hadoop -s /bin/bash -md /home/zookeeper zookeeper
+
+# 安装zookeeper集群，并且开启kerberos认证
+
+# 1.
+获取并解压Zookeeper安装包
+scp garrison@zdh-237:/home/garrison/backup/zookeeper-3.5.1-alpha.tar.gz .
+解压zookeeper包
+tar -zxvf zookeeper-3.5.1-alpha.tar.gz
+在zookeeper-3.5.1-alpha/conf/目录执行
+mv zoo_sample.cfg zoo.cfg
+修改zoo.cfg文件：
+dataDir=/home/zookeeper/zookeeper-3.5.1-alpha/dataDir
+clientPort=12181
+文件最后添加，配置zookeeper集群通信端口:
+server.1=zdh-237:12888:13888
+server.2=zdh-238:12888:13888
+server.3=zdh-239:12888:13888
+
+创建一个dataDir文件夹：
+mkdir ~/zookeeper-3.5.1-alpha/dataDir
+再创建一个空文件：
+touch /dataDir/myid
+最后向该文件写入ID:
+echo 1 > /dataDir/myid
+
+配置Java环境变量：
+export JAVA_HOME=/usr/java/jdk1.7.0_80
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar 
+配置环境变量方便以后操作：
+export ZOOKEEPER_HOME=:~/zookeeper-3.5.1-alpha
+export PATH=$PATH:$ZOOKEEPER_HOME/bin:$ZOOKEEPER_HOME/conf
+增加别名，快速进入文件夹：
+alias conf='cd ~/zookeeper-3.5.1-alpha/conf'
+alias logs='cd ~/zookeeper-3.5.1-alpha/logs'
+
+# 2.在kerberos服务器zdh-240上，使用root用户，在/root/keytabs目录下,创建Zookeeper的principal
+```
+kadmin.local
+addprinc -randkey zookeeper/zdh-237@ZDH.COM
+addprinc -randkey zookeeper/zdh-238@ZDH.COM
+addprinc -randkey zookeeper/zdh-239@ZDH.COM
+xst -k zookeeper.keytab zookeeper/zdh-237@ZDH.COM
+xst -k zookeeper.keytab zookeeper/zdh-238@ZDH.COM
+xst -k zookeeper.keytab zookeeper/zdh-239@ZDH.COM
+exit
+scp zookeeper.keytab zookeeper@zdh-237:/home/zookeeper/zookeeper-3.5.1-alpha/conf
+```
+
+# 3.修改zoo.cfg，添加以下安全相关的配置
+```
+authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+jaasLoginRenew=3600000
+kerberos.removeHostFromPrincipal=true
+kerberos.removeRealmFromPrincipal=true
+```
+
+# 4.在conf目录创建java.env文件，添加以下内容
+export JVMFLAGS="-Djava.security.auth.login.config=/home/zookeeper/zookeeper-3.5.1-alpha/conf/jaas.conf"
+
+# 5.在conf目录创建jaas.conf文件
+```
+Server {
+com.sun.security.auth.module.Krb5LoginModule required
+useKeyTab=true
+keyTab="/home/zookeeper/zookeeper-3.5.1-alpha/conf/zookeeper.keytab"
+storeKey=true
+useTicketCache=false
+principal="zookeeper/zdh-237@ZDH.COM";
+};
+Client {
+com.sun.security.auth.module.Krb5LoginModule required
+useKeyTab=true
+keyTab="/home/zookeeper/zookeeper-3.5.1-alpha/conf/zookeeper.keytab"
+storeKey=true
+useTicketCache=false
+principal="zookeeper/zdh-237@ZDH.COM";
+};
+```
+注意：如果修改jaas.conf配置，则一定要重启zkServer,否则会导致zkClient连不上，
+可能是因为zkClinet和zkServer使用同一个jaas配置，实际zkClient应该配置自己的keytab用于访问,
+而不是配置成和Server一样，可以在其他机器上面新建一个用户作为访问的客户端。
+
+# 6.将zookeeper拷贝到其他节点
+scp -r zookeeper-3.5.1-alpha zookeeper@zdh-238:/home/zookeeper
+然后登陆到zdh-238的zookeeper，修改jaas.conf文件principal
+修改zookeeper/zdh-237@ZDH.COM为zookeeper/zdh-238@ZDH.COM
+修改myid文件的值为集群对应的值，每个节点的值都必须唯一不能相同：
+echo 2 > dataDir/myid
+zdh-239等其他节点做同样操作；
+同样注意环境变量的设置。
+
+# 7.启动zookeeper
+进入到 bin目录
+./zkServer.sh start 
+查看状态： 
+./zkServer.sh status
+停止zookeeper:
+./zkServer.sh stop
+
+# 8.客户端登陆验证
+客户端能够登陆开启Kerberos的zkServer
+zkCli.sh -server zdh-237:12181
+注意不能使用zkCli.sh -server 10.43.159.237:12181登陆，
+会导致鉴权失败，zdh41和10.43.159.237在Kerberos服务器看来是不一样的principle
+客户端登陆失败时，报时间过大导致鉴权失败，
+需要把集群机器的时间进行统一，kerberos鉴权对时间差有一定要求。
+
+# 9.登陆AdminServer管理页面查看zookeeper的状态
+http://10.43.159.237:8080/commands/
+管理端口默认为8080，可以在zoo.cfg修改配置项。
+admin.serverPort=18080
+
+# 其他参考：
+# 1.常用命令
+kinit -kt zookeeper.keytab zookeeper/zdh-237@ZDH.COM
+deleteall /storm
+create /znode1 
+getAcl /znode1
+setAcl /znode1 sasl:zookeeper/zdh-7@ZDH.COM:cdwra
+delete /test
+ls /
+
+# 2.zookeeper打印debug日志方法
+查看zkClient.sh发现需要在zkEnv.sh中配置ZOO_LOG4J_PROP参数，
+ZOO_LOG4J_PROP="DEBUG,CONSOLE"
+打开远程debug端口，在zkEnv.sh增加如下配置：
+CLIENT_JVMFLAGS=" ${JAVA_OPTS} -Xdebug -Xrunjdwp:transport=dt_socket,address=1077,server=y,suspend=y "
+服务端的类似
+
+# 3.使用zkClient.sh访问开启kerberos的服务端
+当zookeeper的服务端的用户名不为zookeeper,例如是zookeeperkrb,
+则需要在zkEnv.sh增加如下配置，指明客户端需要访问的服务端的名称：
+CLIENT_JVMFLAGS=" -Dzookeeper.sasl.client.username=zookeeperkrb $CLIENT_JVMFLAGS" 
+
+客户端访问的服务端名称是在如下代码中进行的初始化，默认值为zookeeper：
+org.apache.zookeeper.ClientCnxn.SendThread.startConnect()
+String principalUserName = System.getProperty("zookeeper.sasl.client.username", "zookeeper");

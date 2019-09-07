@@ -1,0 +1,107 @@
+安装环境：
+10.43.159.9 root/zdh1234
+使用离线的yum源安装，如果机器重启过需要重新挂载镜像
+mount /dev/cdrom /media/zidong/
+
+# 1.查看openldap可用的安装包
+yum list openldap-*
+yum list | grep openldap
+
+# 2.安装openladp的服务端和客户端
+yum install -y openldap-servers openldap-clients
+
+# 3.OpenLDAP 使用Berkely-DB来作为数据库存储信息
+查看bdb安装的命令：
+rpm -qa | grep db4
+显示如下结果表示已经安装：
+db4-cxx-4.7.25-18.el6_4.x86_64
+db4-utils-4.7.25-18.el6_4.x86_64
+db4-devel-4.7.25-18.el6_4.x86_64
+db4-4.7.25-18.el6_4.x86_64
+
+# 4.安装后找到如下服务端目录
+/usr/share/openldap-servers
+/etc/openldap
+并且自动创建用户和用户组：ldap:ldap
+
+# 5.拷贝LDAP配置文件模板到LDAP目录,并且重命名为slapd.conf
+cd /usr/share/openldap-servers/
+cp slapd.conf.obsolete /etc/openldap/slapd.conf
+
+# 6.创建LDAP管理员密码
+slappasswd
+输入密码是zdh1234,复制如下密文，配置LDAP配置文件时需要用到:
+{SSHA}qCYQJ+JzqMFcA1fNuE8ErygvRmJC0RkT
+
+# 7.修改slapd.conf文件
+在database definitions配置项下面增加如下的密码配置：
+rootpw  {SSHA}qCYQJ+JzqMFcA1fNuE8ErygvRmJC0RkT
+参考配置如下：
+```
+#######################################################################
+# database definitions
+#######################################################################
+
+database        bdb
+suffix          "dc=my-domain,dc=com"
+checkpoint      1024 15
+rootdn          "cn=Manager,dc=my-domain,dc=com"
+rootpw  {SSHA}qCYQJ+JzqMFcA1fNuE8ErygvRmJC0RkT
+```
+
+# 8.配置文件测试
+slaptest -u -f slapd.conf
+config file testing succeeded
+
+# 9.修改配置目录属主为"ldap:ldap" 
+chown -R ldap:ldap /etc/openldap/
+
+# 10.删除默认目录/etc/openldap/slapd.d，否则后面在使用ldapadd的时候会报错
+rm -rf /etc/openldap/slapd.d
+
+# 11.启动openldap服务（使用root用户）
+service slapd start
+service slapd restart
+
+# 12.使用root创建一个用户，用来客户端测试登陆
+useradd -g hadoop -s /bin/bash -md /home/ldapuser ldapuser
+passwd ldapuser
+密码修改为：zdh1234
+此用户仅仅是Linux上的用户，需要把用户导入到LDAP数据库，
+LDAP只能识别特定格式的文件，需要通过工具migrationtools进行转换，
+转换文件：/etc/passwd和/etc/shadow并导入LDAP。
+
+# 13.安装配置migrationtools
+yum install migrationtools -y
+查看安装包：
+yum list migrationtools
+
+# 14.安装完后进入migrationtool配置目录
+cd /usr/share/migrationtools/
+修改migrate_common.ph脚本
+主要修改如下两个配置项，
+里面的名称要和slapd.conf中配置的"dc=my-domain,dc=com"一致
+```
+# Default DNS domain
+$DEFAULT_MAIL_DOMAIN = "my-domain.com";
+# Default base
+$DEFAULT_BASE = "dc=my-domain,dc=com";
+```
+
+# 15.执行以下脚本生成LDAP文件格式，保存在ldapuser家目录下
+cd /usr/share/migrationtools/
+./migrate_base.pl > /home/ldapuser/base.ldif
+./migrate_passwd.pl  /etc/passwd > /home/ldapuser/user.ldif
+./migrate_group.pl  /etc/group > /home/ldapuser/group.ldif
+
+# 16.然后把上面三个文件导入到LDAP数据库
+使用之前设置的LDAP管理员"cn=Manager,dc=my-domain,dc=com"和密码zdh1234导入数据：
+ldapadd -x -D "cn=Manager,dc=my-domain,dc=com" -W -f /home/ldapuser/base.ldif
+ldapadd -x -D "cn=Manager,dc=my-domain,dc=com" -W -f /home/ldapuser/user.ldif
+ldapadd -x -D "cn=Manager,dc=my-domain,dc=com" -W -f /home/ldapuser/group.ldif
+
+# 17.最后重启lapd完成配置
+service slapd restart
+
+# 18.使用ldap客户端验证登陆
+请参考[《LDAP客户端安装》](https://www.jianshu.com/p/27537187304c)

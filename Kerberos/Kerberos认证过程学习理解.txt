@@ -1,0 +1,87 @@
+概念：
+Kerberos服务器：AS认证服务器,TGS服务授权服务器
+Client 客户端，代表使用应用的用户
+AppServer 服务端，应用提供各种服务的服务器
+
+Client在Kerberos注册用户名c,密码Kc
+AppServer在Kerberos注册用户名s,密码Ks
+TGS在Kerberos注册用户名tgs,密码Ktgs
+
+说明：
+Kerberos为Client和AppServer提供可信任第三方认证服务。
+Kerberos服务器将用户的用户名及密码存放在它的数据库中。
+密码Kc只有Client和Kerberos才拥有，通过Client在Kerberos服务器注册保证密码一致。
+同理密码Ks只有AppServer和Kerberos才拥有。
+
+认证过程：
+1.Client->AS
+KRB_AS_REQ={c, tgs, TS1} 
+c表示Client客户标识，告诉AS请求的Client身份，便于AS到数据库中查询c的密钥
+tgs是Client下一步要访问TGS服务器标识
+TS1时间戳被AS用于验证Client时钟是否与AS时钟同步
+
+2.AS->Client
+KRB_AS_REP={K(c,tgs),TS2,lifetime,tgs_Tickets}Kc
+K(c,tgs)是由AS随机产生的，用于Client与TGS共享的一个会话私钥
+TS2是票据发放的时间戳，lifetime是票据有效期
+tgs_Tickets是AS发给Client的用于访问TGS的票据授权票据
+tgs_Tickets={K(c,tgs), c, c_mac, tgs, TS2, lifetime2}Ktgs
+c_mac是Client的MAC地址
+
+3.Client->TGS
+KRB_TGS_REQ={s, tgs_Tickets, Authen_info}
+s是Client期望访问的AppServer服务器
+tgs_Tickets是Client上一步从AS获取的票据授权票据
+Authen_info是Client发送的一条认证消息，用于确认发送票据tgs_Tickets的用户就是c
+Authen_info={c, c_mac, TS3}K(c,tgs)
+
+4.TGS->Client
+KRB_TGS_REP={K(c,s), s, TS4, s_Tickets}K(c,tgs)
+K(c,s)是TGS随机生成的密钥，为Client端和AppServer共享的会话密钥
+s_Tickets={K(c,s), c, c_mac, s, TS4, lifetime}Ks
+TGS用自己的密码Ktgs解密tgs_Tickets获得c,c_mac,K(c,tgs),TS2,lifetime
+TGS首先根据时TS2,lifetime时间判断票据是否过期，未过期则继续，
+TGS再用上面解密出来的会话私钥K(c,tgs)解密Authen_info，获得c,c_mac，
+比较上面2次解密出来的c,c_mac是否一致，判断此次请求来自合法Client。
+
+5.Client->AppServer
+KRB_APPSERVER_REQ={s_Tickets,Authent_info}，
+Client使用K(c,tgs)从KRB_TGS_REP响应中获取K(c,s)
+Client采用会话密钥K(c,s)加密Authent_info消息
+Authen_info={c, c_mac, TS5}K(c,s)
+
+6.AppServer->Client
+AppServer用自己的密码Ks从S_Tickets解密获得K(c,s), c, c_mac, s, TS4, lifetime
+（s标识确认Client需要访问该AppServer,AppServer可以通过能否在票中找到自已的名字s来判断解密是否正确）
+AppServer然后用TS4时间戳和有效期lifetime来检查票是否有效,有效才进行下一步
+AppServer再用从上面解密出来的K(c,s)从Authen_info解密获得c, c_mac
+AppServer比较上面2次解密出来的c,c_mac是否一致，判断此次请求来自合法Client。
+最后AppServer使用K(c,s)加密确认消息给Client端，告知对方它期待的服务器已收到它的服务请求。
+
+7.Client
+Client接收到AppServer的响应，并且使用K(c,s)解密成功即可。
+此时Client与AppServer即实现了可信的双方认证。
+
+其他：
+2中因为Tickets_tgs已经采用TGS的私钥加密,故没有必要采用客户端的私钥再次加密,
+所以AS向Client响应可以修改为：
+KRB_AS_REP=tgs_Tickets,{K(c,tgs),TS2,lifetime}Kc
+4中同样S_Tickets已经采用AppServer的私钥加密,也不需要使用K(c,tgs)，可以修改为：
+KRB_TGS_REP=s_Tickets,{K(c,s), s, TS4}K(c,tgs)
+
+参考文档：
+
+【hadoop大数据安全基础知识】Kerberos安全协议（原理）解析与编程实现 
+http://www.aboutyun.com/thread-11577-1-1.html
+
+![KerberosRequestResponseFlow.png](https://upload-images.jianshu.io/upload_images/11810589-252aebb7ac0855d6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+![KerberosObjectsHoldSummary.png](https://upload-images.jianshu.io/upload_images/11810589-88b940cd211d956a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![KerberosRequestResponseHandel.png](https://upload-images.jianshu.io/upload_images/11810589-a35e4191d88466b6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+
+
+

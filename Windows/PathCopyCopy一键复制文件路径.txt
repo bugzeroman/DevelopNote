@@ -1,0 +1,32 @@
+# 1.简介
+PathCopyCopy一键复制文件/文件夹名称和路径，
+右键文件或者文件夹，可以复制名称，路径和父目录等。
+
+# 2.推荐理由
+当我们想拷贝文件名或者文件路径时，简直是神器啊，实测真的好用。
+还有更多使用方法请参考官网或者打开工具选项自行研究。
+
+# 3.使用方法
+现有如下路径的文件：
+```
+F:\学习资料\MyBlog\jinashu\Windows\PathCopyCopy一键复制文件路径.txt
+```
+右键该文件，选择PathCopy:
+![](https://upload-images.jianshu.io/upload_images/11810589-6471be3cde51c550.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+其中的几个选项输出效果如下：
+Name，获取文件名:
+```
+PathCopyCopy一键复制文件路径.txt
+```
+Path，获取文件完整路径:
+```
+F:\学习资料\MyBlog\jinashu\Windows\PathCopyCopy一键复制文件路径.txt
+```
+Parent Folder Path，获取父目录:
+```
+F:\学习资料\MyBlog\jinashu\Windows
+```
+
+# 4.参考文章
+[Path Copy Copy](https://pathcopycopy.github.io/)
+[Path CopyCopy 12.0 – 非常实用的辅助工具](https://www.52pojie.cn/thread-521890-1-1.html)

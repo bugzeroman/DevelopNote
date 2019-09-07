@@ -1,0 +1,99 @@
+本文介绍Docker基本的操作命令,包括对镜像容器的获取，查看，保存，启停等操作。
+
+# 1.
+检查docker的版本：
+docker version
+docker -v
+
+# 2.
+搜索名字叫做tutorial的镜像：
+docker search tutorial
+
+# 3.
+下载tutorial镜像：
+docker pull learn/tutorial
+
+# 4.
+在docker容器中运行hello world：
+docker run learn/tutorial echo "hello word"
+
+在learn/tutorial镜像里面安装ping程序：
+docker run learn/tutorial apt-get install -y ping
+
+在新的镜像中运行ping www.google.com命令
+docker run lean/ping ping www.google.com
+
+# 5.
+查看所有正在运行中的容器列表：
+docker ps -a
+
+获得上一个执行完命令之后容器的id：
+docker ps -l
+
+列出镜像的基本信息
+docker images
+docker images [NAME]/[CONTAINER ID]
+
+查看容器的详细信息
+docker inspect efe
+
+# 6.
+使用指定镜像ubuntu:16.04来启动一个容器:
+docker run -t -i ubuntu:16.04 /bin/bash
+如果不指定具体的标记，则默认使用latest标记信息。
+
+交互模式运行:
+docker run -it chug/ubuntu14.04x64 /bin/bash
+-it表示运行在交互模式，i表示打开并保持stdout，t表示分配一个终端（pseudo-tty）。
+一般这个模式就是可以启动bash，然后和容器有命令行的交互。
+
+后台启动一个容器：
+docker run -d mysql
+
+如果想进入到后台运行的容器，首先获取其id,使用attach命令进入：
+docker attach aa97ba3292ce
+
+使用rm在退出容器时删除容器，不然docker中临时容器会越来越多：
+docker run --rm -it chug/ubuntu14.04x64 /bin/bash
+
+如果使用exit，命令退出，则容器的状态处于停止状态，而不是后台运行。
+如果想让容器一直后台运行，而不是停止，可以使用快捷键 ctrl+p ctrl+q 退出，此时容器的状态为Up。
+
+启动、停止、重启容器aa97ba3292ce的命令：
+docker start aa97ba3292ce
+docker stop aa97ba3292ce
+docker restart aa97ba3292ce
+
+# 7.
+保存镜像，需要在退出镜像前记住容器的id:
+root@aa97ba3292ce
+或者获得上一个执行完命令之后容器的id：
+docker ps -l
+然后保存镜像如下，提交作者，描述，需要保存的镜像id，保存的镜像名称：
+docker commit -a "yuwen 10208438" -m "ranger admin install with mysql5.5 v1" ba9ca696127d  org.apache.ranger/mysql:v1
+查看所有的镜像，查看保存结果
+docker images | grep mysql 
+
+使用tag命令添加镜像标签，为了方便在后续工作中使用特定的镜像：
+docker tag docker.io/hello-world:latest hello-world:mytag
+
+保存镜像到文件,将org.apache.ranger/mysql:v1保存为mysql5.5v1.tar：
+docker save -o  mysql5.5v1.tar  org.apache.ranger/mysql:v1
+加载本地镜像：
+docker load -i  mysql5.5v1.tar
+
+# 8.
+删除容器或者镜像，注意：删除镜像前必须先删除以此镜像为基础的容器：
+docker rm container_id
+使用ID删除:
+docker rmi image_id
+使用标签删除(如果存在别名，只会删除该别名)
+docker rmi TAG
+强制删除：
+docker rmi -f centos-test:vim
+
+# 9.
+递归地输出指定镜像的历史镜像
+docker history <image-id>
+不截断输出结果：
+docker history --no-trunc <image-id>

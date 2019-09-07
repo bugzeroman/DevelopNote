@@ -1,0 +1,94 @@
+-- 查看已创建的数据库
+SELECT datname FROM pg_database;
+
+-- 创建数据库
+CREATE DATABASE mydb;
+
+-- 删除数据库
+DROP DATABASE mydb;
+
+-- 查看已创建的用户
+SELECT usename FROM pg_user;
+
+-- 创建用户并且指定密码
+CREATE USER yuwen WITH PASSWORD 'zdh1234';
+
+-- 删除用户
+drop user yuwen;
+
+-- 修改用户密码
+ALTER USER yuwen WITH PASSWORD 'zdh1234$' 
+
+-- 创建数据库并且指定用户
+CREATE DATABASE yuwen WITH ENCODING='utf8' OWNER=yuwen;
+
+-- 查看已创建的表
+SELECT tablename FROM pg_tables;
+
+-- 创建表
+CREATE TABLE weather (
+    city            varchar(80),
+    temp_lo         int,            -- 最低温度
+    temp_hi         int,            -- 最高温度
+    prcp            real,           -- 湿度
+    date            date		        -- 时间	
+);
+
+-- 删除表
+DROP TABLE weather;
+
+-- 查询表数据,返回所有的列
+SELECT * FROM weather;
+-- 查询表数据,返回指定的列
+SELECT city, date FROM weather;
+-- 查询表数据,添加WHERE查询指定数据
+SELECT * FROM weather WHERE city='San Francisco';
+
+-- 删除表数据,删除所有数据
+DELETE FROM weather;  
+-- 添加WHERE删除指定数据
+DELETE FROM weather WHERE city='San Francisco';
+
+-- 方法1：插入一条数据，省略列名
+INSERT INTO weather VALUES ('San Francisco', 46, 50, 0.25, '2019-02-02');
+
+-- 方法2：插入一条数据，明确列出所有的列名
+INSERT INTO weather (city, temp_lo, temp_hi, prcp, date) VALUES ('San Francisco', 43, 57, 0.0, '1994-11-29');
+-- 方法2的好处在于，可以任意改变列名的顺序，以及忽略某些不是必填的列
+INSERT INTO weather (date, city, temp_hi, temp_lo) VALUES ('1994-11-29', 'Hayward', 54, 37);
+
+-- 使用ORDER BY对数据排序,默认排序为升序ASC
+SELECT * FROM weather ORDER BY city;
+-- 建议指明排序方式：ASC升序，DESC降序
+SELECT * FROM weather ORDER BY city ASC;
+SELECT * FROM weather ORDER BY city DESC;
+-- 使用多个字段排序，越靠近ORDER BY的字段优先级越高
+SELECT * FROM weather ORDER BY city ASC, date DESC;
+
+-- LIMIT语法，限制返回的行数为1行
+SELECT * FROM weather LIMIT 1;
+-- 使用offset跳过前1行，返回之后的指定2行
+SELECT * FROM weather LIMIT 2 OFFSET 1;
+-- 由于数据库表行的顺序是不可预测的，
+-- 因此LIMIT通常配合ORDER BY使用，来控制返回数据顺序。
+SELECT * FROM weather ORDER BY city LIMIT 1;
+
+-- 使用DISTINCT去掉结果集中的重复行
+-- 该distinct子句为每组重复项保留一行
+SELECT DISTINCT city FROM weather;
+-- 两个字段组合用于去掉重复项，查询结果确保city+date唯一
+SELECT DISTINCT city,date FROM weather;
+
+-- 查看版本信息
+select version();
+
+-- 查看当前搜索路径：
+SHOW search_path;
+
+-- 添加新的模式到搜索路径
+SET search_path TO myschema,public;
+
+
+-- 参考文章：
+-- [PostgreSQL快速入门](https://www.cnblogs.com/weihengblog/p/9307666.html)
+-- [PostgreSQL教程](https://www.yiibai.com/postgresql)

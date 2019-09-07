@@ -1,0 +1,20 @@
+查看jdk版本
+java -version
+
+获取jvm的进程号
+jps -lm
+
+获取jvm的运行信息
+jinfo 10053
+
+查看class的编译信息
+javap -verbose RangerKylinAuthorizer.class 
+
+解压jar包
+jar -xvf hadoop-2.7.jar
+
+将两个类文件归档到一个名为 classes.jar 的档案中: 
+jar cvf classes.jar Foo.class Bar.class 
+
+远程debug
+JAVA_OPTS=" ${JAVA_OPTS} -Xdebug -Xrunjdwp:transport=dt_socket,address=1088,server=y,suspend=n "

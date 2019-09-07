@@ -1,0 +1,70 @@
+Ranger-Hdfs插件ranger-0.6.0-hdfs-plugin安装到Hdfs的所有NameNode节点，
+其他的DataNode节点不需要安装。
+
+# 1.
+登陆hdfs安装的用户，hdfs/zdh1234(用户组hadoop),获取安装包解压安装
+tar –zxvf ranger-0.6.0-hdfs-plugin.tar.gz
+vi install.properties
+修改的参数如下：
+POLICY_MGR_URL=http://10.43.159.245:6080
+REPOSITORY_NAME=hadoopdev
+CUSTOM_USER=hdfs
+CUSTOM_GROUP=hadoop
+
+创建软连接，软连接的作用类似于环境变量：
+需要把Hadoop的配置文件conf放到/home/hdfs/hadoop/conf下面：
+ln -s /home/hdfs/hadoop-2.7.1/etc/hadoop/ /home/hdfs/hadoop/conf
+
+再建立hadoop的lib包到/home/hdfs/hadoop/lib的软连接：
+ln -s /home/hdfs/hadoop-2.7.1/share/hadoop/hdfs/lib/ /home/hdfs/hadoop/lib
+
+使用root用户执行如下脚本安装Ranger HDFS Plugin:
+./enable-hdfs-plugin.sh
+创建完成后，需要重新启动hdfs才能使插件生效。
+
+# 2.
+Ranger-Admin里注册hdfs plugin的服务
+HDFS新建Service，修改如下
+Service Name = hadoopdev
+UserName = hdfs
+Password = zdh1234
+NameNodeURL = hdfs://10.43.159.240:9000
+然后点击TestConnection，成功即可保存。
+
+关掉all-path策略，给hdfs对/usr目录的只读权限
+插件拉取策略本地缓存，文件存在则拉取成功：
+/etc/ranger/hadoopdev/policycache/hdfs_hadoopdev.json
+可以查看日志：hadoop-hdfs-namenode-zdh-245.log
+2016-10-21 08:47:19,696 INFO org.apache.ranger.plugin.util.PolicyRefresher: PolicyRefresher(serviceName=hadoopdev): found updated version. lastKnownVersion=3; newVersion=4
+LoginSessions里面可以看到后台从zdh-245的rangerusersync用户登入的记录.
+
+将zdh245上面的hadoop和ranger-0.6.0-hdfs-plugin复制到zdh240等其他hadoop的集群
+同上创建hadoop的软连接
+scp -r hdfs@zdh-245:/home/hdfs/ranger-0.6.0-hdfs-plugin .
+注意：有可能只需要把hdfs-plugin安装到hadoop的NameNode，未验证
+实际安装时，对应DataNode安装了hdfs-plugin，但实际没有拉取策略，故怀疑不用安装hdfs-plugin到DataNode节点。
+
+# 3.关闭Ranger HDFS Plugin
+使用root执行，需要在zdh-240和zdh-245两个NameNode上面执行
+./disable-hdfs-plugin.sh 
+重启hadoop使修改生效
+目前测试结果disable无效，把集群的5个点都使用root用户disable了，然后重启。
+确认位脚本问题，需要修改。
+
+
+# 4.验证：
+hdfs@zdh-245
+hadoop fs -ls /usr
+hadoop fs -mkdir /usr/new
+hdfs用户是hadoop的安装用户，可能无法控制权限。
+./hadoop fs -rm -r /usr/new*
+
+使用mysql用户
+export JAVA_HOME=/home/hdfs/jdk1.7.0_80
+mysql@zdh-245:/home/hdfs/hadoop-2.7.1/bin> ./hadoop fs -mkdir /usr/new13
+16/10/21 11:22:37 WARN util.NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+mkdir: Permission denied: user=mysql, access=WRITE, inode="/usr/new13":hdfs:supergroup:drwxr-xr-x
+mysql@zdh-245:/home/hdfs/hadoop-2.7.1/bin> ./hadoop fs -mkdir /usr/new13
+16/10/21 11:24:52 WARN util.NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+
+设置/usr目录mysql用户可以写之后，原来不能创建文件，现在新建文件，验证权限成功

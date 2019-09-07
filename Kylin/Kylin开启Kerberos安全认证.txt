@@ -1,0 +1,6 @@
+Kylin开启Kerberos安全认证,
+由于Kylin是依赖Hbase启动的，
+Kylin启动脚本kylin.sh中就是调用的Hbase的启动脚本，
+所以当Hbase开启了Keberos之后就等于Kylin开启Kerberos，
+但是由于Kylin自己有基本的用户名密码登陆管理，
+目前Kylin代码中没有关于Kerberos的显示使用。

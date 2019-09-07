@@ -1,0 +1,171 @@
+Hbase集群安装，基于版本1.1.5，
+使用hbase-1.1.5.tar.gz安装包。
+
+# 1.安装说明
+使用外部Zookeeper集群而非Hbase自带zookeeper，
+使用Hadoop文件系统存储数据。
+
+# 2.安装规划
+|角色规划        |IP/机器名   |安装软件    |运行进程 |
+|------------------|----------------|---------------|-------------|
+|hmaster           |zdh-7        |hbase       |HMaster |
+|regionServer    |zdh-9        |hbase       |HRegionServer |	
+|regionServer    |zdh-11      |hbase       |HRegionServer |	
+
+# 3.安装用户
+hbase/zdh1234
+
+# 4.配置hosts
+```
+10.43.159.7 	zdh-7 	
+10.43.159.9 	zdh-9  	
+10.43.159.11	zdh-11 	
+```
+
+# 5.安装依赖
+## 5.1.JDK配置
+```
+export JAVA_HOME=/usr/java/jdk1.7.0_80
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+```
+
+## 5.2.Hadoop集群
+```
+hdfs://gagcluster
+NameNode1:hdfs://10.43.159.7:9000
+NameNode2:hdfs://10.43.159.9:9000
+```
+
+## 5.3.Zookeeper集群
+zdh-7:2181,zdh-9:2181,zdh-11:2181
+
+# 6.创建用户并且设置免密登陆
+在zdh-7，9，11集群上面创建hbase用户，并且配置集群里面用户之间可以免密登陆
+
+分别在需要部署hbase的节点上使用root创建用户
+useradd -g hadoop -s /bin/bash -md /home/hbase hbase
+
+zdh-7,zdh-9,zdh-11的hbase用户家目录下面生成ssh公私钥文件
+ssh-keygen -t dsa -P '' -f ~/.ssh/id_dsa
+
+分别在zdh-7,zdh-9,zdh-11上面执行
+ssh-copy-id -i ~/.ssh/id_dsa.pub hbase@zdh-7
+交互(yes/no)需要输入yes，提示输入密码需要输入hdfs@zdh-7的密码。
+分别在zdh-7,zdh-9,zdh-11上面验证，执行
+ssh hbase@zdh-7
+ssh hbase@zdh-9
+ssh hbase@zdh-11
+设置成功则不需要输入密码
+再把zdh-7上面的.ssh/authorized_keys文件拷贝到其他机器:
+scp hbase@zdh-7:~/.ssh/authorized_keys .
+
+如果只在zdh-7上面验证，而没有在zdh-9,zdh-11验证，可以
+再把zdh-7上面的.ssh/known_hosts文件拷贝到其他机器:
+scp hbase@zdh-7:~/.ssh/known_hosts .
+
+# 7.获取并且解压安装包
+登陆hbase并且进入家目录，上传安装包并且解压
+tar -zxvf hbase-1.1.5-bin.tar.gz
+
+# 8.配置环境变量
+安装并且配置JDK
+```
+export JAVA_HOME=/usr/java/jdk1.7.0_80
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+```
+
+配置Hbase环境变量和别名，方便操作
+```
+export HBASE_HOME=/home/hbasesingle/hbase-1.1.5
+export PATH=$PATH:$HBASE_HOME/bin
+alias conf='cd $HBASE_HOME/conf'
+alias logs='cd $HBASE_HOME/logs'
+```
+
+# 9.修改hbase-env.sh的配置项
+```
+export JAVA_HOME=/usr/java/jdk1.7.0_80
+export HBASE_MANAGES_ZK=false
+```
+说明：配置JAVA_HOME后，可以不用在hbase用户下面再设置JAVA_HOME环境变量，
+HBASE_MANAGES_ZK为fasle表示不使用hbase内置的zookeeper。
+
+# 10.修改regionservers的配置项
+zdh-9
+zdh-11
+表示在这两个主机上面运行regionservers。
+
+# 11.修改hbase-site.xml的配置项
+## 11.1
+配置Hbase依赖的Hdfs文件系统
+配置zookeeper集群和端口，以及本地缓存的位置
+```
+<property>
+	<name>hbase.rootdir</name>
+	<value>hdfs://gagcluster/hbase</value>
+</property>
+<property>
+	<name>hbase.cluster.distributed</name>
+	<value>true</value>
+</property>
+<property>    
+	<name>hbase.zookeeper.quorum</name>    
+	<value>zdh-7,zdh-9,zdh-11</value>    
+</property> 
+<property>    
+	<name>hbase.zookeeper.property.clientPort</name>    
+	<value>2181</value>    
+</property>
+<property>    
+	<name>hbase.zookeeper.property.dataDir</name>    
+	<value>/home/hbase/hbase-1.1.5/data/zk</value>    
+</property>
+```
+
+## 11.2
+配置hmaster的web管理页面，从而可以使用浏览器访问：
+http://10.43.159.7:60010
+```
+<property>
+	<name>hbase.master.info.bindAddress</name>
+	<value>zdh-7</value>
+	<description>HBase Master Web UI0.0.0.0</description>
+</property>
+<property>
+	<name>hbase.master.info.port</name>
+	<value>60010</value>
+	<description>HBase Master Web UIWeb UI</description>
+</property>
+```
+
+## 11.3
+把hadoop的配置文件core-site.xml和hdfs-site.xml拷贝到hbase的conf目录下
+
+# 12.把zdh-7上面配置好的hbase拷贝到集群其他机器
+scp -r hbase@zdh-7:/home/hbase/hbase-1.1.5 .
+
+# 13.启动Hbase集群
+在Hmaster机器zdh-7上面启动集群，使用如下命令：
+start-hbase.sh 
+停止集群：
+stop-hbase.sh
+
+脚本会自动把集群的其他机器启动或者停止，
+注意执行启动脚本机器会自动成为Hmaster。
+
+# 14.启用Hbase的HA高可用模式
+第二个以上Hmaster需要单独启动，
+在某个regionserver上启动Hmaster即可：
+hbase-daemon.sh start master
+
+# 15.用shell连接HBase
+./bin/hbase shell
+退出shell连接
+exit
+help查看帮助命令
+
+# 16.执行测试命令
+请参考下文的第10节：
+[Hbase单点安装Version1.1.5](https://www.jianshu.com/p/2fc6275ef42c)

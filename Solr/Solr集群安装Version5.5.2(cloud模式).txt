@@ -1,0 +1,52 @@
+Solr安装cloud模式,基于Solr的安装版本为5.5.2。
+
+# 安装规划
+## Solr
+|IP/机器名  |安装软件  |运行进程 |	
+|--------------|--------------|-------------|
+|zdh-7 	 |solr 	   |jar            |
+|zdh-9 	 |solr 	   |jar            |
+
+## zookeeper
+zdh-7:2181,zdh-8:2181,zdh-9:2181
+
+# 安装用户
+solrcloud/zdh1234 hadoop
+useradd -g hadoop -s /bin/bash -md /home/solrcloud solrcloud
+
+# 安装步骤
+## 1.使用solrcloud登陆zdh-7，获取安装包并且解压
+scp root@zdh-7:/home/solr/backup/solr-5.5.2.tgz .
+tar -zxvf solr-5.5.2.tgz 
+
+## 2.修改配置文件solr.in.sh
+vi bin/solr.in.sh
+SOLR_HEAP="1024m"
+ZK_HOST="zdh-7:2181,zdh-9:2181,zdh-11:2181/ranger_audits"
+
+## 3.把zhd-7上面的solr复制到zhd-9等其他集群机器上面
+scp -r root@zdh-7:/home/solrcloud/solr-5.5.2 .
+并且设置JAVA环境变量：
+vi .bashrc
+```
+export JAVA_HOME=/usr/java/jdk1.7.0_80
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+```
+注意如果使用SOLR_HOME作为环境变量的名称可能会导致启动失败：
+```
+export SOLR_HOME_2=/home/solrcloud/solr-5.5.2
+export PATH=$PATH:$SOLR_HOME_2/bin
+```
+
+## 4.在zdh-7执行如下命令，用以在zookeeper上创建ranger_audits的chroot目录，该目录只需要创建一次
+cd solr-5.5.2
+server/scripts/cloud-scripts/zkcli.sh -zkhost zdh-7,zdh-9,zdh-11 -cmd makepath /ranger_audits
+
+## 5.在每台机器上执行命令，启动所有集群的solr
+solr start -c
+停止：
+solr stop
+
+
+

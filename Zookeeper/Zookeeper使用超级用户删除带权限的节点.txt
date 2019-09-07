@@ -1,0 +1,44 @@
+# 1.背景
+Zookeeper管理员会因为某些客户端对某些节点设置了权限，而导致在紧急的情况下无法修改这些节点感到困扰。在这种情况下，管理员可以通过Zookeeper超级用户模式访问这些节点，一旦设置了超级权限访问节点，后续的操作就不需要check ACL了。
+使用超级用户模式，可以通过Zookeeper的zookeeper.DigestAuthenticationProvider.superDigest参数开启。
+
+# 2.对超级用户的密码加密
+使用org.apache.zookeeper.server.auth.DigestAuthenticationProvider生成superDigest：
+```
+public void generate() {  
+    try {  
+       System.out.println(DigestAuthenticationProvider.generateDigest("super:superpw"));  
+    } catch (NoSuchAlgorithmException e) {  
+        // TODO Auto-generated catch block  
+        e.printStackTrace();  
+    }  
+}  
+```
+输出super:superpw对应的加密参数为：
+super:g9oN2HttPfn8MMWJZ2r45Np/LIA=  
+
+# 3.超级用户加入到服务端启动参数
+在zookeeper服务端的zkEnv.sh环境变量中加入以下参数，开启超级用户，重启zookeeper服务端：
+```
+SERVER_JVMFLAGS="-Dzookeeper.DigestAuthenticationProvider.superDigest=super:g9oN2HttPfn8MMWJZ2r45Np/LIA= $SERVER_JVMFLAGS"  
+```
+
+# 4.在客户端使用超级用户登陆
+使用客户端登陆到zookeeper服务端：
+zkCli.sh -server zdh-9:12181
+然后执行命令切换到超级用户：
+addauth digest super:superpw
+这样就可以删除带有权限控制的节点了：
+deleteall /storm
+可以看到/storm节点stormkrb使用sasl创建的
+```
+[zk: zdh-9:12181(CONNECTED) 7] getAcl /storm
+'sasl,'stormkrb
+: cdrwa
+'world,'anyone
+: cr
+```
+
+# 5.参考：
+http://blog.csdn.net/qianshangding0708/article/details/50128305
+http://www.cnblogs.com/fesh/p/5798353.html

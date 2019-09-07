@@ -1,0 +1,22 @@
+我们平常进行Base64编码需要自己写代码转换，
+或者使用其他人编写的小工具程序，
+也可以使用在线base64编码工具，
+现在我们还可以使用Notepad++自带的插件，
+进行Base64编码和解码，非常方便。
+
+# 1.Base64编解码示例
+下图中选中ADMIN:Password进行Base64编码，
+输出编码后的结果QURNSU46UGFzc3dvcmQ=
+![](https://upload-images.jianshu.io/upload_images/11810589-52e7a3e4dcf5da2f.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+# 2.Base64编码
+插件(P) -> MIME Tools -> Base64 Encode
+选中ADMIN:Password进行Base64编码
+![](https://upload-images.jianshu.io/upload_images/11810589-16541d5dc20be45d.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 3.Base64解码
+插件(P) -> MIME Tools -> Base64 Decode
+选中QURNSU46UGFzc3dvcmQ=进行Base64解码
+![](https://upload-images.jianshu.io/upload_images/11810589-7a17eeea2909d503.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+

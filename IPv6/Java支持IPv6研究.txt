@@ -1,0 +1,102 @@
+# 1.Java对IPv6的支持
+相对其他开发语言而言，Java对IPv6的支持是比较透明的，
+如果全部采用域名(主机名)的方式进行通信，那么基本不需要修改也无需编译原来的代码就可以直接在IPv6上运行。
+Java从其1.4版开始对IPv6提供了较好的支持，对程序员基本屏蔽了IPv4和IPv6的差异。
+
+## 1.1作为Server端
+Windows平台必须升级到JDK/JRE 5.0或以上版本，其他平台JDK/JRE应该至少使用1.4.2版本。
+使用Tomcat，jetty等web服务器的Web应用，缺省将监听本地所有IP地址，包括IPv6和IPv4。
+自己写的ServerSocket，在调用ServerSocket.accept时候如果监听没有指定绑定地址，则将监听本地所有IP地址。
+如果只监听了IPv4的地址，则只能接受IPv4的包。
+
+## 1.2作为Client端
+Windows平台必须升级到JDK/JRE 5.0或以上版本，其他平台JDK/JRE应该至少使用1.4.2版本。
+如果Socket连接使用域名进行访问，则不会有任何问题，如果使用的是IPv4的地址，那么对方必须是IPv4或者IPv4/IPv6双栈节点。
+使用URL方式访问IPv6地址时候，要在IPv6地址前后分别加“[”和“]”，这个不仅仅适用于Java，它本身是RFC2732定义的国际标准格式。
+比如下面是个包含IPv6的http URL的例子http://[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:80/index.html
+
+# 2.使用IPv6地址
+在浏览器中使用IPv6的地址访问web资源，IPv6的地址必须要使用中括号“[]”包起来，如下：
+http://[2001:db8:1:0:20c:29ff:fe96:8b55]:6080
+相对的，使用IPv4地址是不需要加的，如下：
+http://10.43.159.11:6080
+相对的，使用主机名地址也是不需要加的，如下：
+http://zdh-11:6080
+不管zdh-11实际对应的是IPv4还是IPv6地址，都不需要加中括号。
+主机名可以配置为如下二选一：
+10.43.159.11    				zdh-11
+2001:db8:1:0:20c:29ff:fe96:8b55 zdh-11
+
+# 3.查看IPv4和IPv6地址
+
+## 3.1 Linux平台
+### 3.1.1 查看网络信息
+ifconfig
+
+### 3.1.2 检查IPv4网络
+ping localhost
+ping 127.0.0.1
+ping 10.43.159.11
+
+### 3.1.3 检查IPv6网络
+ping6 localhost
+ping6 ::1
+ping6 2001:db8:1:0:20c:29ff:fe96:8b55
+
+## 3.2 Windows平台
+### 3.2.1 查看网络信息
+ipconfig
+
+### 3.2.2 检查IPv4网络
+ping localhost
+ping 127.0.0.1
+ping 10.43.159.11
+
+### 3.2.3 检查IPv6网络
+ping -6 localhost
+ping -6 ::1
+ping -6 2001:db8:1:0:20c:29ff:fe96:8b55
+
+说明Windwos中dos下面的ping命令支持如下两个参数：
+-4 强制使用 IPv4
+-6 强制使用 IPv6
+如果知道网络地址的协议类型，可以使用如上参数强制指定。
+ping也可以不指定具体类型，命令会自动检查并且ping成功，
+特别是在测试主机名时，不知道主机名对应的地址类型，
+可以直接使用如下命令，此时兼容IPv4和IPv6的情况：
+ping zdh-hostname
+
+# 4.检查Server支持的IP地址类型
+## 4.1使用netstat查看端口
+netstat -an | grep 3306 
+
+## 4.2监听端口绑定IPv4（0.0.0.0），只支持IPv4地址连接，如下：
+0.0.0.0:3306
+
+## 4.3监听端口绑定IPv4和IPv6（::），支持IPv4和IPv6地址连接，如下：
+:::3306
+
+# 5.Java虚拟机中IPv6相关配置
+在IPv4/IPv6双环境中，对于使用Java开发的网络应用，
+比较值得注意的是以下两个IPv6相关的Java虚拟机系统属性：
+java.net.preferIPv4Stack=<true|false> 
+java.net.preferIPv6Addresses=<true|false>
+preferIPv4Stack（默 认 false）表示如果存在IPv4和IPv6双栈，Java程序是否优先使用IPv4套接字。
+默认值是优先使用IPv6套接字，因为IPv6套接字可以与对应的IPv4或IPv6主机进行对话；
+相反如果优先使用IPv4，则只不能与IPv6主机进行通信。
+preferIPv6Addresses（默认 false）表示在查询本地或远端IP地址时，
+如果存在IPv4和IPv6双地址，Java程序是否优先返回IPv6地址。
+Java默认返回IPv4地址主要是为了向后兼容，以支持旧有的IPv4验证逻辑，以及旧有的仅支持IPv4地址的服务。
+
+# 6.浏览器对IPv6的支持
+在使用过程中遇到firefox浏览器不能打开IPv6地址的网站，
+然而同一个网站使用IPv4地址就能打开，
+发现是Linux自带的firefox浏览器版本太低（17），
+将其升级到最新的版本（60），即可正常访问。
+
+# 7.参考文章
+[IPv6技术详解：基本概念、应用现状、技术实践（上篇）](https://www.jianshu.com/p/7ad482f5a10c)
+
+[IPv6技术详解：基本概念、应用现状、技术实践（下篇）](https://www.jianshu.com/p/910d790984c2)
+
+[使用 Java 开发兼容 IPv6 的网络应用程序](https://www.cnblogs.com/wzyxidian/p/5074978.html)

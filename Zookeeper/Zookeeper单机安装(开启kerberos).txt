@@ -1,0 +1,105 @@
+# 安装规划
+zookeeper安装到zdh41上面，单机模式
+10.43.159.41 zdh41 ZDH.COM
+
+# 安装用户
+zookeeper/zdh1234
+useradd -g hadoop -s /bin/bash -md /home/zookeeper zookeeper
+
+# 安装zookeeper集群，并且开启kerberos认证
+
+# 1.获取Zookeeper安装包
+scp garrison@zdh-237:/home/garrison/backup/zookeeper-3.5.1-alpha.tar.gz .
+解压zookeeper包
+tar -zxvf zookeeper-3.5.1-alpha.tar.gz
+在zookeeper-3.5.1-alpha/conf/目录执行
+mv zoo_sample.cfg zoo.cfg
+修改zoo.cfg文件：
+dataDir=/home/zookeeper/zookeeper-3.5.1-alpha/dataDir
+clientPort=2181
+文件最后添加，配置zookeeper集群通信端口:
+server.1=zdh-237:12888:13888
+
+创建一个dataDir文件夹：
+mkdir ~/zookeeper-3.5.1-alpha/dataDir
+再创建一个空文件：
+touch /dataDir/myid 
+
+最后向该文件写入ID:
+echo 1 > /dataDir/myid
+
+配置环境变量方便以后操作：
+export ZOOKEEPER_HOME=:~/zookeeper-3.5.1-alpha
+export PATH=$PATH:$ZOOKEEPER_HOME/bin:$ZOOKEEPER_HOME/conf
+
+# 2.在zte-krb上，使用root用户，在/root/keytabs目录下,创建Zookeeper的principal
+kadmin.local
+addprinc -randkey zookeeper/zdh41@ZDH.COM
+xst -k zookeeper.keytab zookeeper/zdh41@ZDH.COM
+exit
+scp zookeeper.keytab storm@zdh41:/home/storm/zookeeper-3.5.1-alpha/conf
+
+# 3.修改zoo.cfg，添加以下内容
+```
+authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+jaasLoginRenew=3600000
+kerberos.removeHostFromPrincipal=true
+kerberos.removeRealmFromPrincipal=true
+```
+
+# 4.在conf目录创建java.env文件，添加以下内容
+export JVMFLAGS="-Djava.security.auth.login.config=/home/zookeeper/zookeeper-3.5.1-alpha/conf/jaas.conf"
+下面这句zkClient单独部署的时候可以用
+export CLIENT_JVMFLAGS="-Djava.security.auth.login.config=/home/zookeeper/zookeeper-3.5.1-alpha/conf/jaas.conf"
+
+# 5.在conf目录创建jaas.conf文件
+```
+Server {
+   com.sun.security.auth.module.Krb5LoginModule required
+   useKeyTab=true
+   keyTab="/home/zookeeper/zookeeper-3.5.1-alpha/conf/zookeeper.keytab"
+   storeKey=true
+   useTicketCache=false
+   principal="zookeeper/zdh41@ZDH.COM";
+};
+Client {
+   com.sun.security.auth.module.Krb5LoginModule required
+   useKeyTab=true
+   keyTab="/home/zookeeper/zookeeper-3.5.1-alpha/conf/zookeeper.keytab"
+   storeKey=true
+   useTicketCache=false
+   principal="zookeeper/zdh41@ZDH.COM";
+};
+```
+
+注意：如果修改jaas.conf配置，则一定要重启zkServer,否则会导致zkClient连不上，
+可能是因为zkClinet和zkServer使用同一个配置，实际zkClient应该配置自己的keytab用于访问。
+
+# 6.启动zookeeper
+进入到 zookeeper-3.4.5/bin/ 
+./zkServer.sh start 
+查看状态： 
+./zkServer.sh status
+停止zookeeper:
+./zkServer.sh stop 
+
+# 7.验证开启Kerberos
+客户端能够登陆开启Kerberos的zkServer
+./zkCli.sh -server zdh41:12181
+注意不能使用zkCli.sh -server 10.43.159.41:12181登陆，
+会导致鉴权失败，zdh41和10.43.159.41在Kerberos服务器看来是不一样的principle
+
+但是无法删除不是自己的storm
+deleteall /storm
+Authentication is not valid : /storm/leader-lock
+
+其他IP的客户端未使用kerberos的也能登陆并且查看，
+但是应该无法修改有权限的节点：
+zkCli.sh -server 10.43.159.41:12181
+zkCli.sh -server zdh41:12181
+
+create /znode1 sasl:zookeeper/zdh41@ZDH.COM:cdwra
+getAcl /znode1
+delete /test
+列出目录：
+ls /

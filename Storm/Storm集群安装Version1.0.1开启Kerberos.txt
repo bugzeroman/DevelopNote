@@ -1,0 +1,339 @@
+Storm集群安装，基于版本1.0.1，
+同时开启Kerberos安全认证，
+使用apache-storm-1.0.1.tar.gz安装包。
+
+# 1.安装规划
+|角色规划   |IP/机器名  |安装软件   |运行进程     |
+|-----------|-----------|-----------|-------------|
+|UI, nimbus |zdh-237    |storm      |core,nimbus  |
+|supervisor |zdh-238    |storm      |supervisor,worker,LogWriter |
+|supervisor |zdh-239    |storm      |supervisor,worker,LogWriter |
+Storm集群有三台机器，各个角色的安装规划如上。
+
+# 2.安装用户
+storm/zdh1234
+useradd -g hadoop -s /bin/bash -md /home/storm storm
+
+# 3.安装依赖
+1.JDK
+2.Python
+3.Zookeeper
+4.Kerberos
+
+# 4.主机名配置
+```
+vi /etc/hosts
+10.43.159.237 zdh-237
+10.43.159.238 zdh-238
+10.43.159.239 zdh-239
+10.43.159.240 zdh-240
+```
+
+# 5.JDK安装
+可以使用root用户安装的公共jdk，要求JDK 6+，
+为Storm用户配置JAVA_HOME：
+```
+export JAVA_HOME=/usr/java/jdk1.7.0_80
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar 
+```
+
+# 6.Python安装
+确定系统自带的Python版本，如果是2.6.6+可以不用再安装。
+python -V  
+如果版本不对，请参考以下文章安装或者升级Python:
+[Python升级至2.7方法](https://www.jianshu.com/p/91b210b07792)
+
+# 7.Zookeeper安装
+请参考[Zookeeper集群安装(开启kerberos)](https://www.jianshu.com/p/ca78a43ec107)
+这里使用的Zookeeper集群信息:
+zookeeper集群 zookeeper/zdh1234
+zdh-237，zdh-238，zdh-239 端口：12181
+
+# 8.Kerberos安装
+Kerberos安装方法请自行百度参考。
+这里使用的Kerberos集群信息:
+Kerberos服务器:
+root/zdh1234
+zdh-240
+Kerberos客户端:
+zdh-237，zdh-238，zdh-239
+
+Kerberos是用于认证用户的，
+Storm安装集群上要有keberos的客户端。
+
+
+# 9.Storm安装
+请自行从官网获取安装包：
+apache-storm-1.0.1.tar.gz
+将安装包上传到zdh-237的storm用户下,
+解压安装包：
+tar -zxvf apache-storm-1.0.1.tar.gz
+配置环境变量和别名，方便操作：
+```
+export STORM_HOME=/home/storm/apache-storm-1.0.1
+export PATH=$PATH:$STORM_HOME/bin
+alias logs='cd $STORM_HOME/logs'
+alias conf='cd $STORM_HOME/conf'
+```
+创建本地数据存放的目录:
+mkdir /home/storm/apache-storm-1.0.1/data
+
+# 10.配置storm.yaml文件
+vi conf/storm.yaml
+修改为如下配置，注意字符串需要加上引号，特别是包含**/**的值：
+```
+storm.zookeeper.servers:
+    - "zdh-237"
+    - "zdh-238"
+    - "zdh-239"
+storm.zookeeper.port: 12181
+storm.local.dir: "/home/storm/apache-storm-1.0.1/data"
+nimbus.seeds: ["zdh-237", "zdh-238", "zdh-239"]
+nimbus.thrift.port: 6627
+ui.port: 18080
+logviewer.port: 8000
+drpc.port: 3772
+drpc.invocations.port: 3773
+drpc.http.port: 3774
+ui.filter: "org.apache.hadoop.security.authentication.server.AuthenticationFilter"
+ui.filter.params:
+   "type": "kerberos"
+   "kerberos.principal": "HTTP/zdh-237@ZDH.COM"
+   "kerberos.keytab": "/home/storm/apache-storm-1.0.1/conf/HTTP.keytab"
+   "kerberos.name.rules": "RULE:[2:$1/$2@$0](.*@ZDH.COM)s/.*/storm/"
+ui.header.buffer.bytes: 65536
+storm.thrift.transport: "org.apache.storm.security.auth.kerberos.KerberosSaslTransportPlugin"
+java.security.auth.login.config: "/home/storm/apache-storm-1.0.1/conf/storm-jaas.conf"
+nimbus.childopts: "-Xmx1024m -Djava.security.auth.login.config=/home/storm/apache-storm-1.0.1/conf/storm-jaas.conf"
+ui.childopts: "-Xmx768m -Djava.security.auth.login.config=/home/storm/apache-storm-1.0.1/conf/storm-jaas.conf"
+supervisor.childopts: "-Xmx256m -Djava.security.auth.login.config=/home/storm/apache-storm-1.0.1/conf/storm-jaas.conf"
+storm.principal.tolocal: "org.apache.storm.security.auth.KerberosPrincipalToLocal"
+storm.zookeeper.superACL: "sasl:storm"
+nimbus.impersonation.authorizer: "org.apache.storm.security.auth.authorizer.ImpersonationAuthorizer"
+nimbus.impersonation.acl:
+    "storm/zdh-237@ZDH.COM":
+        "hosts":
+            ["zdh-237"]
+        "groups":
+            ["hadoop"]
+    "storm/zdh-238@ZDH.COM":
+        "hosts":
+            ["zdh-238"]
+        "groups":
+            ["hadoop"]
+    "storm/zdh-239@ZDH.COM":
+        "hosts":
+            ["zdh-239"]
+        "groups":
+            ["hadoop"]	
+```
+请注意正确配置上面的每一个配置项，
+有问题可以参加storm.yaml中对配置项的解释。
+
+# 11.创建storm-jaas.conf文件
+在/home/storm/apache-storm-1.0.1/conf目录下，
+创建storm-jaas.conf文件内容如下：
+```
+StormServer {
+   com.sun.security.auth.module.Krb5LoginModule required
+   useKeyTab=true
+   keyTab="/home/storm/apache-storm-1.0.1/conf/storm.keytab"
+   storeKey=true
+   useTicketCache=false
+   principal="storm/zdh-237@ZDH.COM";
+};
+StormClient {
+   com.sun.security.auth.module.Krb5LoginModule required
+   useKeyTab=true
+   keyTab="/home/storm/apache-storm-1.0.1/conf/storm.keytab"
+   storeKey=true
+   useTicketCache=false
+   serviceName="storm"
+   principal="storm/zdh-237@ZDH.COM";
+};
+Client {
+   com.sun.security.auth.module.Krb5LoginModule required
+   useKeyTab=true
+   keyTab="/home/storm/apache-storm-1.0.1/conf/storm.keytab"
+   storeKey=true
+   useTicketCache=false
+   principal="storm/zdh-237@ZDH.COM";
+};
+```
+
+# 12.确定要访问的Zookeeper服务器名称
+上面**Client**是Storm用来访问Zookeeper的，
+如果未指定serviceName作为请求对象，
+则默认是zookeeper@zdh-237@ZDH.COM。
+
+**StormClient**是UI(core)用来访问nimbus的,
+如果指定serviceName="stormkrb"，
+则访问的是stormkrb/zdh-237@ZDH.COM，
+否则默认向TGTServer请求的服务器的
+名字为storm/zdh-237@ZDH.COM，
+即serviceName作用是指定要访问的AppServer服务器名称。
+
+Storm使用Zookeeper的客户端访问
+开启kerberos的zookeeper服务端时，
+如果Zookeeper的服务端的安装用户不为zookeeper,
+假设服务器名称是zookeeperkrb时,
+则需要在storm中需要修改storm.yaml中nimbus的进程参数，
+指明客户端需要访问的服务端的名称：
+```
+nimbus.childopts: "-Xmx1024m -Djava.security.auth.login.config=/home/stormkrb/apache-storm-1.0.1/conf/storm-jaas.conf -Dzookeeper.sasl.client.username=zookeeperkrb"
+```
+zookeeperkrb即为Storm的nimbus要访问的Zookeeper服务端的名称，
+同时配合storm-jaas.conf的**Client**配置能够正确的工作。
+Storm的supervisor也是需要访问zookeeper的，
+同步进行修改如下：
+```
+supervisor.childopts: "-Xmx256m -Djava.security.auth.login.config=/home/stormkrb/apache-storm-1.0.1/conf/storm-jaas.conf -Dzookeeper.sasl.client.username=zookeeperkrb"
+```
+
+# 13.创建Storm和HTTP的principal
+操作机器：
+在zdh-240 Kerberos服务器，
+使用root用户，切换到/root/keytabs目录，
+执行如下操作命令：
+```
+kadmin.local
+addprinc -randkey storm/zdh-237@ZDH.COM
+addprinc -randkey storm/zdh-238@ZDH.COM
+addprinc -randkey storm/zdh-239@ZDH.COM
+xst -k storm.keytab storm/zdh-237@ZDH.COM
+xst -k storm.keytab storm/zdh-238@ZDH.COM
+xst -k storm.keytab storm/zdh-239@ZDH.COM
+
+addprinc -randkey HTTP/zdh-237@ZDH.COM
+addprinc -randkey HTTP/zdh-238@ZDH.COM
+addprinc -randkey HTTP/zdh-239@ZDH.COM
+xst -k HTTP.keytab HTTP/zdh-237@ZDH.COM
+xst -k HTTP.keytab HTTP/zdh-238@ZDH.COM
+xst -k HTTP.keytab HTTP/zdh-239@ZDH.COM
+exit
+```
+把storm.keytab和HTTP.keytab拷贝到storm的conf目录下:
+```
+scp storm.keytab storm@zdh-237:/home/storm/apache-storm-1.0.1/conf
+scp HTTP.keytab storm@zdh-237:/home/storm/apache-storm-1.0.1/conf
+```
+
+storm.keytab：
+用于UI访问Nimbus,以及Strom访问Zookeeper时Kerberos鉴权。
+HTTP.keytab：
+用于UI对外提供Rest查询管理等服务。
+
+# 14.拷贝Storm到集群其他机器
+zdh-237的stom复制到zdh-238节点的storm用户下:
+scp -r storm@zdh-237:/home/storm/apache-storm-1.0.1 .
+修改storm.yaml文件，替换zdh-237为zdh-238，
+注意不要把storm.zookeeper.servers和nimbus.seeds里面数组替换掉了。
+修改storm-jaas.conf文件，替换zdh-237为zdh-238：
+%s/zdh-237/zdh-238/g
+
+对zdh-239节点操作类似。
+
+如果后面又修改了配置，可以仅拷贝同步配置文件：
+scp storm@zdh-237:/home/storm/apache-storm-1.0.1/conf/storm.yaml .
+
+# 15.启动Storm
+启动之前请确保ZooKeeper,Kerberos等已正常启动
+
+## 15.1.nimbus节点启动(无日志)
+bin/storm nimbus >/dev/null 2>&1 &  
+bin/storm ui >/dev/null 2>&1 & 
+supervisor节点启动：
+bin/storm supervisor >/dev/null 2>&1 &   
+
+## 15.2.nimbus节点启动(有日志)：  
+storm nimbus >nimbusInit.log 2>&1 &  
+storm ui >uiCoreInit.log 2>&1 & 
+supervisor节点启动：
+storm supervisor > superInit.log 2>&1 & 
+
+## 15.3.Storm启动后相关进程
+nimbus启动后相应会产生如下进程：
+core（对应Storm UI）
+nimbus
+
+supervisor启动后相应会产生如下进程:
+supervisor
+提交storm任务后还会生成:
+worker,LogWriter
+
+## 15.4.Storm重启
+Storm没有提高停止节点的命令，
+需要先使用jps或者ps找到Storm所有进程，
+再kill掉相应进程，重新启动。
+
+# 16.登陆Web管理页面
+需要使用具有Kerberos客户端的Lunix环境上面的浏览器，
+例如zdh-237上面的firefox：
+10.43.159.41:18080    （不能用,开启kerberos就无法访问）
+zdh-237:18080		  （能用）
+
+关于如何使用Lunix上面的firefox，请参考：
+[MobaXterm远程连接Linux图形用户界面](https://www.jianshu.com/p/170a20b37f8c)
+[Xstart远程连接Linux图形用户界面](https://www.jianshu.com/p/a6bf60385c50)
+[VNC的安装和使用](https://www.jianshu.com/p/caa0f8348380)
+
+# 17.提交topo任务
+运行自带测试用例
+cd /home/storm/apache-storm-1.0.1/examples/storm-starter/
+storm jar storm-starter-topologies-1.0.1.jar storm.starter.StatefulTopology topoNewTest1
+
+# 18.查询提交的topo任务
+
+## 18.1.后台命令查看topo信息
+storm list
+
+## 18.2.模拟http请求topo信息
+查看crul的特性Features，需要支持GSS-Negotiate:
+curl -V 
+先使用kinit获取票据:
+kinit -kt /home/storm/apache-storm-1.0.1/conf/storm.keytab storm/zdh-237@ZDH.COM
+注意需要使用域名zdh-237，而不能用真实的IP，
+而且curl向TGTServer请求访问的Server是HTTP/zdh-237@ZDH.COM：
+curl -u : --negotiate http://zdh-237:18080/api/v1/topology/summary
+如果没有响应，使用下面的进行调试：
+curl -v -i -u : --negotiate http://zdh-237:18080/api/v1/topology/summary
+下面这种使用IP的是无法成功的：
+curl -i --negotiate -u : http://10.43.159.237:18080/api/v1/topology/summary
+
+## 18.3.使用浏览器查看topo信息
+使用vncview登陆zdh-237的可视化界面：
+10.43.159.237:1 
+
+使用storm/zdh1234用户登陆
+Firefox地址栏输入:
+about:config
+搜索配置项network.negotiate-auth.trusted-uris 
+双击添加变量值 "http://zdh-237:18080"
+然后在firefox里面输入：
+http://zdh-237:18080
+
+如果登陆失败，在命令行使用kinit获取票据：
+kinit -kt /home/storm/apache-storm-1.0.1/conf/storm.keytab storm/zdh-237@ZDH.COM
+再次输入地址即可访问stormUI
+
+# 19.问题总结			
+## 19.1
+storm.zookeeper.superACL: "sasl:storm"如果未配置，会导致worker进程无法启动
+
+## 19.2
+不要在业务启动之前运行kinit，业务启动是发现kerberos鉴权不过，
+则删除tmp目录下storm创建的类似/tmp/kbr5cc_[UID]的文件
+NOT to run kinit before starting the app.
+rm krb5cc_521
+
+## 19.3
+删除原有zookeeper上面的storm集群信息
+deleteall /storm
+如果/storm被加密无法删除，需要使用zookeeper的超级账户删除，
+请参考[Zookeeper使用超级用户删除带权限的节点](https://www.jianshu.com/p/373d52375a65)
+或者清除zookeeper下面的dataDir，相当于初始化zookeeper。
+
+## 19.4
+其他问题，请参考[Storm集群安装Version1.0.1](https://www.jianshu.com/p/fc5b56287be4)
+建议安装普通Storm集群，可以正常运行之后，再来开启Kerberos。

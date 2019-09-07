@@ -1,0 +1,52 @@
+汇总TortoiseGit使用技巧，包括提交代码，创建patch等等。
+
+# 1.提交代码到本地仓库
+在Git工程目录下右键，
+点击 Git Commit -> "master"...
+可以修改提交信息，时间和作者：
+Message
+Set Author Date
+Set Author
+选择需要提交的问题，点击OK即可。
+如果存在新增的文件，
+注意勾选Show Unversioned Files。
+![GitCommit.jpg](https://upload-images.jianshu.io/upload_images/11810589-03a93c9d535112d3.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 2.推送代码到远程仓库
+TortoiseGit -> Push...
+
+# 3.更新远程仓库的最新代码
+TortoiseGit -> Pull...
+
+# 4.查看代码提交记录
+TortoiseGit -> Show log
+
+# 5.创建Patch
+在查看代码提交记录页面，
+右键需要打patch的记录，
+点击Format Patch...，
+Vserion标签下选择Number Commits，
+值为1不用修改，
+点击Ok即可在当前目录下生成对应的Patch。
+Version下的其他两个参数可以生成多个Patch。
+![FormatPatch.jpg](https://upload-images.jianshu.io/upload_images/11810589-ef8c9729b575fb27.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+#6.克隆本地仓库
+Git不仅可以克隆远程仓库的代码，
+也可以克隆本机已经下载下来的仓库代码，
+任意目录右键Git Clone...，
+URL中输入本机目录地址，
+点击Ok即可克隆出一个新的仓库。
+![GitClone LocalDir.jpg](https://upload-images.jianshu.io/upload_images/11810589-c48cdf1536f8ae41.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 7.设置代理服务器
+TortoiseGit -> Settings -> Network
+勾选Enable Proxy Server,
+设置代理服务器的地址和端口，
+输入用于认证的用户名和密码。
+![TGitNetwork.jpg](https://upload-images.jianshu.io/upload_images/11810589-bc9678b5ea872ae6.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 8.使用Beyond Compare替换默认代码比较工具
+TortoiseGit -> Settings -> Diff Viewer
+勾选External,选择Beycond Compare可执行程序。
+![SetBeyondCompare.jpg](https://upload-images.jianshu.io/upload_images/11810589-17592036fe28faf2.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)

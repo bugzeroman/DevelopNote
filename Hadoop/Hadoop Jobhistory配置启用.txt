@@ -1,0 +1,40 @@
+Hadoop Jobhistory记录下已运行完的MapReduce作业信息并存放在指定的HDFS目录下，
+默认情况下是没有启动的，需要配置完后手工启动服务。
+
+# 1.修改hadoop的配置文件mapred-site.xml如下
+```
+<property>
+  <name>mapreduce.jobhistory.address</name>
+  <value>zdh-9:10020</value>
+  <description>MapReduce JobHistory Server IPC host:port</description>
+</property>
+
+<property>
+  <name>mapreduce.jobhistory.webapp.address</name>
+  <value>zdh-9:19888</value>
+  <description>MapReduce JobHistory Server Web UI host:port</description>
+</property>
+
+<property>
+    <name>mapreduce.jobhistory.done-dir</name>
+    <value>/history/done</value>
+</property>
+
+<property>
+    <name>mapreduce.jobhistory.intermediate-done-dir</name>
+    <value>/history/done_intermediate</value>
+</property>
+```
+
+# 2.启动history-server
+mr-jobhistory-daemon.sh start historyserver
+停止history-server
+mr-jobhistory-daemon.sh stop historyserver
+
+# 3.通过浏览器访问Hadoop Jobhistory的WEBUI
+http://zdh-9:19888
+
+# 4.参考文章
+Hadoop JobHistory
+http://www.cnblogs.com/luogankun/p/4019303.html
+

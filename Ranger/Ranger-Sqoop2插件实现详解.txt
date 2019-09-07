@@ -1,0 +1,438 @@
+# 1.组件和插件介绍
+
+## 1.1.Ranger介绍
+Apache Ranger能够监控和管理整个Hadoop平台的综合数据安全，
+目前作为Apache Top Level Project(TLP顶级项目)，
+最新版本是2.0.0。它主要提供如下特性:
+基于策略(Policy-based)的访问权限模型
+通用的策略同步与决策逻辑，方便控制插件的扩展接入
+内置常见系统(如HDFS、YARN、HBase等12个)的控制插件，且可扩展
+内置基于LDAP、File、Unix的用户同步机制，且可扩展
+统一的中心化的管理界面，包括策略管理、审计查看、插件管理等
+
+本文主要详细分析RangerSqoop2插件，介绍开发一个定制插件的详细步骤，
+分析Ranger提供的插件鉴权的通用公共模块，实现Ranger对Sqoop2的访问权限控制。
+
+## 1.2.Sqoop2介绍
+Sqoop是一款开源的工具，主要用于在Hadoop和传统的数据库(MySQL、postgresql等)进行数据的转换，
+可以将一个关系型数据库（例如：MySQL、Oracle等）中的数据导入到Hadoop的HDFS中，
+也可以将HDFS的数据导入到关系型数据库中。  
+Sqoop中一大亮点就是可以通过Hadoop的mapreduce把数据从关系型数据库中导入数据到HDFS。    
+Sqoop目前版本已经到了1.99.7，是属于Sqoop2的，Sqoop1的最高版本为1.4.6。
+
+Sqoop2对应第三方权限控制的支持：
+[High Level Design of Role Based Access Controller](https://cwiki.apache.org/confluence/display/SQOOP/High+Level+Design+of+Role+Based+Access+Controller)
+
+## 1.3.相关架构图
+![Ranger架构图.png](https://upload-images.jianshu.io/upload_images/11810589-9489c4a3c56caec9.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![Sqoop2架构图.png](https://upload-images.jianshu.io/upload_images/11810589-e694c150cc9267f0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![Ranger-Sqoop2插件架构图.png](https://upload-images.jianshu.io/upload_images/11810589-85a16d96ee6b6b60.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 1.4.RangerSqoop2插件权限管理完整流程
+1.Usersync初始化用户
+2.RangerAdmin创建服务Service
+3.RangerAdmin创建策略Policy
+4.Sqoop2启动时初始化Ranger插件
+5.SqoopPlugin插件拉取策略
+6.SqoopPlugin对用户访问请求鉴权
+7.SqoopPlugin插件记录审计日志Audit
+8.RangerAdmin查看审计日志Audit
+
+# 2.定义服务模型
+
+## 2.1.权限模型
+访问权限无非是定义了”用户-资源-权限“这三者间的关系，Ranger基于策略来抽象这种关系，进而延伸出自己的权限模型。”用户-资源-权限”的含义详解：
+- 用户：由User或Group来表达，User代表访问资源的用户，Group代表用户所属的用户组。
+- [资源]()：由Resource来表达，不同的组件对应的业务资源是不一样的，比如HDFS的File Path，HBase的Table。
+- [权限]()：由(AllowACL, DenyACL)来表达，类似白名单和黑名单机制，AllowACL用来描述允许访问的情况，DenyACL用来描述拒绝访问的情况。不同的组件对应的权限也是不一样的。
+
+Ranger中的访问权限模型可以用下面的表达式来描述，从而抽象出了”用户-资源-权限“这三者间的关系：
+[Service]() = List<Policy>
+Policy =  List<[Resource]()> + AllowACL + DenyACL
+AllowACL = List<AccessItem> allow + List<AccssItem> allowException
+DenyACL = List<AccessItem> deny + List<AccssItem> denyException
+AccessItem = List<User/Group> + List<[AccessType]()>
+
+下表列出了Ranger支持的所有系统的模型实体枚举值:
+|Service |Resource |Access Type |
+-----------|--------------|------------------|
+|HDFS |Path |Read,Write,Execute |
+|HBase |Table,Column-family,Column |Read,Write,Create,Admin |
+|Hive | Database,Table,UDF,Column,URL |Select,Update,Create,Drop,Alter,Index,Lock,Write,Read,ALL|
+|[Sqoop]() |[Connector,Link,Job]() | [READ,WRITE]() |
+|Storm |Topology |Submit Topology,File Upload,File Download,Kill Topology,Rebalance,Activate,Deactivate,Get Topology Conf, Get Topology,Get User Topology,Get Topology Info,Upload New Credential |
+|Solr |Collection |Query,Update,Others,Solr Admin |
+|Kafka |Topic |Publish,Consume,Configure,Describe,Create,Delete,Kafka Admin |
+|Knox |Topology,Service |Allow |
+|Kylin |Project |QUERY,OPERATION,MANAGEMENT,ADMIN |
+|YARN |Queue |submit-app,admin-queue |
+|Atlas |Type Catagory,Type Name,Entity Type,Entity Classification,Entity ID,Atlas Service |Create Type,UpdateType,Delete Type,Read Entity,Create Entity,Update Entity,Delete Entity,Read Classification,Add Classification,Update Classification,Remove Classification,Admin Export,Admin Import |
+|Nifi |NiFi Resource |Read,Write |
+
+## 2.2.定义服务类型(Service-type)
+### 2.2.1.创建一个JSON格式的文件，包含以下内容
+- 连接服务的配置(Service)：Sqoop URL, Username 
+- 资源(Resource)：Connector, Link, Job
+- 访问类型(Access Type)：READ, WRITE
+- 其他自定义配置：在策略计算时的自定义的一些条件（IP range等）
+
+### 2.2.2.加载JSON文件到RangerAdmin中
+一般RangerAdmin第一次启动的时候，会自动加载所有的服务的json文件到元数据库中。也能调用RangerAdmin提供的Restful API手动加载。
+
+## 2.3.ranger-servicedef-sqoop.json
+参考文件：[ranger-servicedef-sqoop.json in github](https://github.com/apache/ranger/blob/master/agents-common/src/main/resources/service-defs/ranger-servicedef-sqoop.json)
+
+## 2.4.注册定义的服务类型，加载json文件
+服务类型注册必须使用Ranger Admin提供的RESTFUL API来进行。 服务类型一旦注册成功，Ranger Admin就会提供一个创建服务的UI页面(在以前的发行版中叫做repositories)以及该服务的策略。 Ranger插件使用服务定义和策略来确定一个访问请求应该被允许还是被拒绝。 Ranger Admin提供的REST API可以通过curl这个小命令行工具调用:
+```
+curl -u admin:admin -X POST -H "Accept: application/json" -H "Content-Type: application/json" –d @ranger-servicedef-sqoop.json http://ranger-admin-host:port/service/plugins/definitions
+```
+
+## 2.5.RangerAdmin查看Sqoop服务注册结果
+![1_SqoopServiceManager.jpg](https://upload-images.jianshu.io/upload_images/11810589-39cc0700b83727a0.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![2_EditSqoopService.jpg](https://upload-images.jianshu.io/upload_images/11810589-eee930f113b3cc0b.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![3_ListSqoopPolicies.jpg](https://upload-images.jianshu.io/upload_images/11810589-93477d18a29ce22b.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![4_EditSqoopPolicy.jpg](https://upload-images.jianshu.io/upload_images/11810589-d62a7037f1ceb214.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+## 2.6.ranger-servicedef-sqoop.json
+```
+"id":14,
+"name": "sqoop",
+"implClass": "org.apache.ranger.services.sqoop.RangerServiceSqoop",
+"label": "SQOOP",
+"description": "SQOOP",
+"guid": "6c63d385-5876-4a4c-ac4a-3b99b50ed600"
+```
+以上主要是定义SQOOP服务的基本信息，实现效果如下：
+![](https://upload-images.jianshu.io/upload_images/11810589-be769eda1134c7e2.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 2.7.ranger-servicedef-sqoop.json
+```
+"itemId": 2,
+"name": "sqoop.url",
+"type": "string",
+"mandatory": true,
+"defaultValue": "",
+"validationRegEx":"",
+"validationMessage": "",
+"uiHint":"{\"TextFieldWithIcon\":true, \"info\": \"eg. 'http://&lt;ipaddr&gt;:12000'\"}",
+"label": "Sqoop URL"
+```
+以上主要定义Service中的configs配置项，用来连接服务,注意上面的提示需要转义，实现效果如下：
+![](https://upload-images.jianshu.io/upload_images/11810589-b9a501143da6dff1.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 2.8.ranger-servicedef-sqoop.json
+```
+"itemId": 1,
+"name": "connector",
+"type": "string",
+"level": 10, //多个资源按照level从小到大排序，level相同则为下拉单选框
+"parent": "",// 配合level排序，有父子关系
+"mandatory": true,	 // 是否必填项
+"lookupSupported": true, // 支持资源联想
+"recursiveSupported": false, // 支持资源递归
+"excludesSupported": false,// 支持排除这个资源，表达式取非运算，类似黑名单
+"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+"matcherOptions": { "wildCard":true, "ignoreCase":true},
+"validationRegEx":"",
+"validationMessage": "",
+"uiHint":"",
+"label": "Connector",
+"description": "Sqoop Connector"
+```
+以上主要是定义resources中的connector这个资源及其策略的基本信息，实现效果如下：
+![](https://upload-images.jianshu.io/upload_images/11810589-3febaeb2ea373c64.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+参考ranger-servicedef-hive.json文件，使用level和parent两个字段互相配合，
+同时注意recursiveSupported和excludesSupported字段的使用，
+可以使hive服务实现如下的复杂效果：
+参考文件：![](https://upload-images.jianshu.io/upload_images/11810589-0fb8314fb3c4623f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+------
+![](https://upload-images.jianshu.io/upload_images/11810589-951fc2be206ac3ec.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+------
+![](https://upload-images.jianshu.io/upload_images/11810589-b02149d8c64f98a4.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+参考文件：[ranger-servicedef-hive.json in github](https://github.com/apache/ranger/blob/master/agents-common/src/main/resources/service-defs/ranger-servicedef-sqoop.json)
+
+## 2.9.ranger-servicedef-sqoop.json
+```
+"accessTypes":
+[
+	{
+		"itemId": 1,
+		"name": "READ",
+		"label": "READ"
+	},
+	{
+		"itemId": 2,
+		"name": "WRITE",
+		"label": "WRITE"
+	}
+]
+```
+以上主要是定义accessTypes访问类型的枚举值，实现效果如下：
+![](https://upload-images.jianshu.io/upload_images/11810589-5c6b1efc5288b84f.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 2.10.ranger-servicedef-sqoop.json
+```
+"options": { "enableDenyAndExceptionsInPolicies": "false" }
+```
+以上白名单排除，黑名单，黑名单排除的开关，一旦打开之后就不能关闭，实现效果如下：
+![](https://upload-images.jianshu.io/upload_images/11810589-bda8dd83001e3950.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 3.插件后台开发
+RangerSqoop2插件后台开发，主要分为以下三个方面：
+- 资源查找
+- 实现Ranger Authorizer鉴权
+- 安装和配置插件
+
+## 3.1.资源查找
+在Ranger Admin中构建策略的时候，用户会输入需要保护的资源的名字。为了让用户使用更方便，Ranager Admin提供了资源的联想自动完成功能，该功能会根据输入的内容查询服务中可用的匹配资源。
+Resource Lookup的实现是针对被访问的资源中的服务。它涉及服务提供的API以及检索可用的资源。为了完成autocomplete特性，Ranger Admin要求插件提供RangerBaseService的一个具体实现。这个实现类必须在Ranger的服务类型中注册，并且要保证该类库已经放置到了Ranger Admin的类路径下。
+```
+public class RangerServiceSqoop extends RangerBaseService {
+	 public HashMap<String, Object> validateConfig() throws Exception { }
+	 public List<String> lookupResource(ResourceLookupContext context) throws Exception {}
+}
+```
+
+## 3.2.实现Ranger Authorizer鉴权
+这是Ranger实现权限控制最核心的部分，一般系统在实现时都有考虑功能扩展性的问题，会为访问控制模块暴露出可扩展的接口，
+Ranger插件通过实现访问控制接口，将自己的逻辑嵌入到系统中，从而实现对权限的控制。
+
+这里Ranger Sqoop2插件的org.apache.ranger.authorization.sqoop.authorizer.RangerSqoopAuthorizer
+类实现了Sqoop2中的接口org.apache.sqoop.security.AuthorizationValidator的鉴权方法：
+```
+public void checkPrivileges(MPrincipal principal, List<MPrivilege> privileges) throws SqoopException {}
+```
+Ranger Kylin插件实现的接口的参考：
+```
+public boolean checkPermission(String user, List<String> groups, String entityType, String entityUuid,Permission permission) {}
+```
+鉴权方法的定义一定会体现出权限模型的三要素：用户，资源，权限
+如果方法返回类型是void的，则插件通过抛异常来通知组件鉴权失败。
+如果方法返回类型是boolean的，则插件通过返回false来通知组件鉴权失败。
+
+下表列出了Ranger插件对所有支持的系统的扩展接口：
+|Service |Extensible Interface |Ranger Implement Class |
+|-----------|---------------------------|----------------------------------|
+|HDFS |org.apache.hadoop.hdfs.server.namenode.INodeAttributeProvider |org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer |
+|HBase |org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos.AccessControlService.Interface |org.apache.ranger.authorization.hbase.RangerAuthorizationCoprocessor |
+|Hive |org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthorizerFactory |org.apache.ranger.authorization.hive.authorizer.RangerHiveAuthorizerFactory |
+|[Sqoop]() | [org.apache.sqoop.security.AuthorizationValidator]()| [org.apache.ranger.authorization.sqoop.authorizer.RangerSqoopAuthorizer]() |
+|Storm |org.apache.storm.security.auth.IAuthorizer |org.apache.ranger.authorization.storm.authorizer.RangerStormAuthorizer |
+|Solr |org.apache.solr.security.AuthorizationPlugin |org.apache.ranger.authorization.solr.authorizer.RangerSolrAuthorizer |
+|Kafka |kafka.security.auth.Authorizer |org.apache.ranger.authorization.kafka.authorizer.RangerKafkaAuthorizer |
+|Knox |org.apache.knox.gateway.deploy.ProviderDeploymentContributorBase |org.apache.ranger.authorization.knox.deploy.RangerPDPKnoxDeploymentContributor |
+|Kylin |org.apache.kylin.rest.security.ExternalAclProvider |org.apache.ranger.authorization.kylin.authorizer.RangerKylinAuthorizer |
+|YARN |org.apache.hadoop.yarn.security.YarnAuthorizationProvider |org.apache.ranger.authorization.yarn.authorizer.RangerYarnAuthorizer |
+|Atlas |org.apache.atlas.authorize.AtlasAuthorizer |org.apache.ranger.authorization.atlas.authorizer.RangerAtlasAuthorizer |
+|Nifi |NA |NA |
+
+RangerSqoopAuthorizer主要的两个方法详细实现如下：
+
+```
+public void init() {
+	RangerSqoopPlugin plugin = sqoopPlugin;
+	if (plugin == null) {
+		synchronized (RangerSqoopAuthorizer.class) {
+			plugin = sqoopPlugin;
+			if (plugin == null) {
+				plugin = new RangerSqoopPlugin();
+				plugin.init();
+				sqoopPlugin = plugin;
+				clientIPAddress = getClientIPAddress();
+			}
+		}
+	}
+}
+```
+
+```
+public void checkPrivileges(MPrincipal principal, List<MPrivilege> privileges) throws SqoopException {
+	RangerSqoopPlugin plugin = sqoopPlugin;
+	String clusterName = sqoopPlugin.getClusterName();
+	if (plugin != null) {
+		for (MPrivilege privilege : privileges) {
+			RangerSqoopAccessRequest request = 
+				new RangerSqoopAccessRequest(principal, privilege, clusterName,clientIPAddress);
+			RangerAccessResult result = plugin.isAccessAllowed(request);
+			if (result != null && !result.getIsAllowed()) {
+				throw new SqoopException(SecurityError.AUTH_0014, "principal=" + principal + 
+										" does not have privileges for : " + privilege);
+			}
+		}
+	}
+}
+```
+
+## 3.3.安装和配置插件
+
+以下的实现了Ranger插件的jar文件必须保证已经放置在了服务的类路径下classpath：
+```
+ranger-sqoop-plugin-shim-<version>.jar
+ranger-plugin-classloader-<version>.jar
+ranger-sqoop-plugin-impl目录：
+	ranger-sqoop-plugin-<version>.jar
+	ranger-plugins-common-<version>.jar 
+	......
+```	
+Ranger插件在初始化的时候会读取以下文件，确保以下文件放置在Sqoop2能够读取到的地方：
+ranger-sqoop-audit.xml
+ranger-sqoop-security.xml
+ranger-policymgr-ssl.xml
+
+Ranger插件配置文件ranger-sqoop-security.xml重要配置项说明：
+|配置	    |建议值	|备注 |
+|----------------|----------------|------|
+|ranger.plugin.sqoop.service.name 		|sqoopdev	|Name of the service containing policies for the plugin. |
+|ranger.plugin.sqoop.policy.source.impl |org.apache.ranger.admin.client.RangerAdminRESTClient	|Name of the class used to retrieve policies. |
+|ranger.plugin.sqoop.policy.rest.url	 |http://policymanagerhost:port	|URL to Ranger Admin |
+|ranger.plugin.sqoop.policy.cache.dir	 |/etc/ranger/sqoopdev/policycache. If no valid value is specified, local caching of policies will not be done.	|Directory where Ranger policies are cached after successful retrieval from the source. |
+|ranger.plugin.sqoop.policy.pollIntervalMs |30000 (unit ms)	|How often to poll for changes in policies? |
+
+### 3.3.1.插件安装脚本enable-sqoop-plugin.sh
+#### 3.3.1.1.拷贝Ranger插件jar包到组件的classpath类路径（软连接ranger-plugins-*.jar）
+#### 3.3.1.2.修改配置文件
+##### 3.3.1.2.1配置组件的配置文件开启Ranger插件权限控制功能
+sqoop.properties：	
+org.apache.sqoop.security.authorization.validator=
+org.apache.ranger.authorization.sqoop.authorizer.RangerSqoopAuthorizer
+##### 3.3.1.2.2修改Ranger插件的xml文件，拷贝到组件的conf文件目录（ranger-*.xml）
+
+### 3.3.2.插件卸载脚本disable-sqoop-plugin.sh
+修改组件的配置文件关闭Ranger插件权限控制功能
+sqoop.properties：	
+“org.apache.sqoop.security.authorization.validator=”
+将上面的配置项置位空，Sqoop2就不会加载Ranger的插件了。
+
+### 3.3.3.插件安装卸载框架脚本
+enable-sqoop-plugin.sh和disable-sqoop-plugin.sh实际上都是同一个脚本，
+源文件/agents-common/scripts/enable-agent.sh在打包时重命名而成，
+是一个插件安装卸载的框架脚本，所以不需要每个插件都写一套自己的安装脚本，
+只需要少量的配置文件的模板即可。
+ranger-policymgr-ssl-changes.cfg 	->	ranger-policymgr-ssl.xml
+ranger-sqoop-audit-changes.cfg		->	ranger-sqoop-audit.xml
+ranger-sqoop-security-changes.cfg	->	ranger-sqoop-security-changes.cfg
+注意：插件安装完毕之后，一定要重启组件，否则权限控制无法生效。
+
+参考文件：[enable-agent.sh in github](https://github.com/apache/ranger/blob/master/agents-common/scripts/enable-agent.sh)
+
+顺便提一下，sqoop由于sqoop.properties不是xml文件，需要在enable-agent.sh中特殊处理，
+如果是hdfs还会有个文件hdfs-site-changes.cfg -> hdfs-stie.xml，就不需要脚本特殊处理了。
+
+各个系统插件安装节点:
+|Service |Install Node |
+|-----------|-----------------|
+|HDFS |Name Node |
+|HBase |Master,Regional Server |
+|Hive |HiveServer2 |
+|[Sqoop]() | [ALL/Stand-alone]() |
+|Storm |ALL/Cluster |
+|Solr |ALL/Cluster |
+|Kafka |ALL/Cluster |
+|Knox |Knox gateway |
+|Kylin |ALL/Stand-alone |
+|YARN |Resource Manager |
+|Atlas |ALL/Stand-alone |
+|Nifi |NA |
+
+### 3.3.3.RangerAdmin查看Sqoop插件安装结果
+![5_SqoopAuditLog.jpg](https://upload-images.jianshu.io/upload_images/11810589-353e91f7a689c274.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![6_SqoopPlugins.jpg](https://upload-images.jianshu.io/upload_images/11810589-5d4b350a6c7c6f90.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![7_SqoopPluginStatus.jpg](https://upload-images.jianshu.io/upload_images/11810589-6c60549816327fab.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 4.插件核心功能分析
+Ranger插件主要负责三件事：
+- 定期从RangerAdmin拉取策略
+- 根据策略执行访问决策树
+- 实时记录访问审计
+
+	以上执行逻辑是通用的，可由所有系统插件引用，因此剩下的问题是如何把这些逻辑嵌入到各个系统的访问决策流程中去。
+实现可扩展接口：多数的系统在实现时都有考虑功能扩展性的问题，一般会为核心的模块暴露出可扩展的接口，访问控制模块也不例外。Ranger通过实现访问控制接口，将自己的逻辑嵌入各个系统。
+
+## 4.1.Ranger插件拉取策略
+组件启动时，会加载Ranger插件，然后插件主动到RangerAdmin拉取策略，而非RangerAdmin把策略下发给各个插件，插件将拉取到的策略保存到内存中的鉴权引擎，同时保存一份备份json文件在本地，最后启动一个定时任务，每隔一段时间去RangerAdmin拉取一次策略；
+如果策略没有变化，则RangerAdmin返回为空；
+如果策略有变化，则拉取新的策略更新内存中的鉴权引擎，并且同时更新本地的备份json文件；
+如果RangerAdmin挂掉后，而且组件也重启时，插件无法到RangerAdmin拉取策略，可以使用本地的备份继续鉴权。
+如果删除RangerAdmin上面的service，会使插件鉴权不可用,即所有用户都没有访问权限了。
+
+![插件拉取策略流程图](https://upload-images.jianshu.io/upload_images/11810589-39700d6281997dd8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 4.2.根据策略执行访问决策树
+关于权限这个部分,为什么AllowACL和DenyACL需要分别对应两组AccessItem？这是由具体使用场景引出的设计：
+以AllowACL为例，假定我们要将资源授权给一个用户组G1，但是用户组里某个用户U1除外，这时只要增加一条包含G1的AccessItem到AllowACL_allow，同时增加一条包含U1的AccessItem到AllowACL_allowException即可。
+类似的原因可反推到DenyACL。
+既然现在一条Policy有(allow, allowException, deny, denyException)这么四组AccessItem，那么判断用户最终权限的决策过程是怎样的？
+总体来说，这四组AccessItem的作用优先级由高到低依次是：
+```
+denyException > deny > allowException > allow
+```
+访问决策树可以用以下流程图来描述：
+![](https://upload-images.jianshu.io/upload_images/11810589-7770bf805ab5b1cc.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+总结一下就是黑名单优先级高于白名单，黑名单排除优先级高于黑名单，白名单排除优先级高于白名单。
+决策下放：如果没有policy能决策访问，一般情况是认为没有权限拒绝访问，然而Ranger还可以选择将决策下放给系统自身的访问控制层，比如HDFS的ACL，这个和每个Ranger插件以及应用系统自己的实现有关。
+
+## 4.3.插件性能优化
+
+### 4.3.1.使用上的优化
+在策略中关闭audit审计日志
+减少配置的策略的数量
+关闭插件的业务和性能DEBUG日志
+
+### 4.3.1.1.在策略中关闭audit审计日志
+![disableAudit.jpg](https://upload-images.jianshu.io/upload_images/11810589-5f9ed46836d80a14.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+### 4.3.1.2.减少配置的策略的数量
+考虑100条策略和1000条策略，在命中策略进行匹配过程中，
+肯定策略越少要好，匹配的速度就快，插件就能更快的得出结果。
+详细的策略数量和鉴权性能的关系可以进行测试量化。
+另外，对应用户配置的一条策略，在插件加载之后可能会生成多条策略，
+所有不仅仅是用户配置的策略要少，策略中配置的参数也要尽量简单，
+不需要的冗余的配置尽量去除，减少对性能的影响。
+
+### 4.3.1.3.关闭插件的业务和性能DEBUG日志
+可以通过配置log4j文件来关闭下面两类日志：
+```
+if (LOG.isDebugEnabled()) {
+	LOG.debug("==> RangerSqoopAuthorizer.init()");}
+```
+
+```
+RangerPerfTracer perf = null;
+if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_INIT_LOG)) {
+	perf = RangerPerfTracer.getPerfTracer(...);
+	long freeMemory = Runtime.getRuntime().freeMemory();
+	long totalMemory = Runtime.getRuntime().totalMemory();
+	PERF_POLICYENGINE_INIT_LOG.debug("In-Use memory: " + (totalMemory - freeMemory) + ", Free memory:" + freeMemory);}
+RangerPerfTracer.log(perf);
+```
+
+### 4.3.2.Ranger插件本身设计上的优化
+插件鉴权引擎初始化的时候，会对策略按照一定的规则打分，然后对策略按照打分结果进行排序，优先匹配高命中的策略（比如带*通配的）；
+插件会对每一次请求得出结果后（不管是允许访问还是拒绝访问），给匹配到的策略的使用次数加1，如果开启了审计日志，则加2，会影响鉴权时查找策略的返回结果的优先级。
+
+# 5.结语
+Ranger Sqoop2 插件开发主要实现前台和后台两部分，
+前台通过配置json文件避免了前台js的开发，
+后台通过高度抽象，代码可以重复使用，
+相对来说仅需要少量的开发就可以实现一个可用的插件。
+随着Ranger覆盖更多的系统，希望能被广泛的使用，
+从而一统江湖成为事实上的标准。
+
+# 6.参考文档：
+[Ranger自定义插件开发](http://www.lpnote.com/2017/01/23/how-to-add-a-custom-plugin-in-ranger/)
+
+[Ranger Stacks - How to add a custom plugin?](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=53741207)

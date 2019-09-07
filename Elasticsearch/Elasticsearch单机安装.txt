@@ -1,0 +1,126 @@
+Elasticsearch单机安装，
+基于Elasticsearch6.2.2版本，
+在Linux上安装Elasticsearch单机。
+
+# 1.安装规划
+vi /etc/hosts
+10.43.159.7 zdh-7
+useradd -g hadoop -s /bin/bash -md /home/elasticsearch elasticsearch
+elasticsearch/zdh1234
+
+# 2.登陆elasticsearch用户，获取并且解压安装包
+tar -zxvf elasticsearch-6.2.2.tar.gz 
+
+# 3.配置环境变量
+安装jdk，修改.bashrc文件，配置jdk目录
+export JAVA_HOME=/usr/java/jdk1.8.0_151
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+
+# 4.修改配置文件config/elasticsearch.yml
+集群名称,建议修改成自己的，防止误用默认集群
+cluster.name: yuwenes
+
+配置外网可以访问
+network.host: 0.0.0.0
+配置访问端口
+http.port: 9200
+
+# 5.使用root用户修改相应的配置
+
+## 5.1配置sysctl.conf
+
+vim /etc/sysctl.conf
+添加如下配置
+vm.max_map_count=262144
+
+让配置生效
+sysctl -p
+查看配置的数目
+sysctl -a|grep vm.max_map_count
+
+## 5.2配置limits.conf
+vim /etc/security/limits.conf
+```
+#*代表所有用户，也可以指定用户名elasticsearch
+* hard nofile 65536
+* soft nofile 65536
+* soft nproc 4096
+* hard nproc 4096
+```
+重新登录elasticsearch,查看是否生效
+ulimit -Hn
+
+## 5.3修改90-nproc.conf 配置文件
+
+vi /etc/security/limits.d/90-nproc.conf
+修改为如下内容：
+```
+* soft nproc 4096
+```
+# 6.启动elasticsearch
+
+启动elasticsearch服务
+./bin/elasticsearch
+
+后台启动elasticsearch服务
+./bin/elasticsearch -d
+
+注意默认是不允许使用root用户启动的。
+
+停止elasticsearch服务
+grep找到elasticsearch对应的进程，kill掉即可
+
+# 7.客户端验证
+
+jps查看到如下进程
+7324 Elasticsearch
+
+## 7.1本地验证
+curl localhost:9200
+返回如下结果表示成功：
+{
+  "name" : "AP0JICY",
+  "cluster_name" : "yuwenes",
+  "cluster_uuid" : "EBzjGRp0RrCbFKdqAJSiiQ",
+  "version" : {
+    "number" : "6.2.2",
+    "build_hash" : "10b1edd",
+    "build_date" : "2018-02-16T19:01:30.685723Z",
+    "build_snapshot" : false,
+    "lucene_version" : "7.2.1",
+    "minimum_wire_compatibility_version" : "5.6.0",
+    "minimum_index_compatibility_version" : "5.0.0"
+  },
+  "tagline" : "You Know, for Search"
+}
+
+## 7.2浏览器访问,查看外网是否能访问
+10.43.159.7:9200
+返回同上的结果表示成功。
+
+Chrome浏览器可以安装ElasticSearch Head插件，实现可视化访问。
+
+# 8.错误解决
+1.问题：
+[2016-11-06T16:27:21,712][WARN ][o.e.b.JNANatives ] unable to install syscall filter:
+
+Java.lang.UnsupportedOperationException: seccomp unavailable: requires kernel 3.5+ with CONFIG_SECCOMPandCONFIG_SECCOMP_FILTERcompiledinatorg.elasticsearch.bootstrap.Seccomp.linuxImpl(Seccomp. ~[elasticsearch-5.0.0.jar:5.0.0]
+
+at org.elasticsearch.bootstrap.Seccomp.init(Seccomp. ~[elasticsearch-5.0.0.jar:5.0.0]
+
+原因：报了一大串错误，大家不必惊慌，其实只是一个警告，主要是因为你Linux版本过低造成的。
+
+解决方案：
+1、重新安装新版本的Linux系统
+2、警告不影响使用，可以忽略
+
+2.报错：
+ERROR: bootstrap checks failed
+system call filters failed to install; check the logs and fix your configuration or disable system call filters at your own risk
+原因：
+这是在因为Centos6不支持SecComp，而ES5.6.4默认bootstrap.system_call_filter为true进行检测，所以导致检测失败，失败后直接导致ES不能启动。
+解决：
+在elasticsearch.yml中配置bootstrap.system_call_filter为false，注意要在Memory下面:
+bootstrap.memory_lock: false
+bootstrap.system_call_filter: false

@@ -1,0 +1,27 @@
+生成patch补丁包，把最近的一个提交打成patch
+git format-patch -n HEAD
+
+先检查patch文件：
+git apply --stat 0001-RANGER-1672-Ranger-supports-plugin-to-enable-monitor.patch
+
+打补丁查看能否应用成功：
+git am --signoff 0001-RANGER-1672-Ranger-supports-plugin-to-enable-monitor.patch
+
+将git的状态恢复到之前状态就可以继续提交patch了
+git am --abort
+
+还原git工程
+git reset --hard origin/master
+
+git apply检查空白字符时输出所有错误日志
+git config --global apply.whitespace error-all
+
+git clone本地仓库
+git clone F:\Code\Ranger\patch\ranger
+
+添加file://前缀把本地仓库当成远程仓库
+git clone --progress -v  --depth 1 "file://F:\Code\Ranger\ranger" "F:\Code\Ranger\patch\ranger3"
+
+查找git文件是何时被删除的
+git log -S usersync
+

@@ -1,0 +1,41 @@
+# 安装版本
+zookeeper-3.5.1-alpha.tar.gz
+
+# 安装规划
+zookeeper安装到zdh-12上面，单机模式
+10.43.159.12 zdh12 ZDH.COM
+
+# 安装用户
+zookeeper/zdh1234
+useradd -g hadoop -s /bin/bash -md /home/zookeeper zookeeper
+
+# 1.获取并且解压Zookeeper安装包
+scp root@10.43.159.7:/home/backup/zookeeper-3.5.1-alpha.tar.gz .
+tar -zxvf zookeeper-3.5.1-alpha.tar.gz
+
+# 2.获取并且修改配置文件
+在zookeeper-3.5.1-alpha/conf/目录执行
+mv zoo_sample.cfg zoo.cfg
+修改zoo.cfg文件：
+dataDir=/home/zookeeper/zookeeper-3.5.1-alpha/dataDir
+clientPort=2181
+
+# 3.在zookeeper-3.5.1-alpha下面创建目录dataDir
+mkdir dataDir
+
+# 4.配置环境变量方便以后操作
+```
+export ZOOKEEPER_HOME=:~/zookeeper-3.5.1-alpha
+export PATH=$PATH:$ZOOKEEPER_HOME/bin:$ZOOKEEPER_HOME/conf
+```
+
+# 5.启动zookeeper
+zkServer.sh start
+
+# 6.其他命令
+查看状态： 
+zkServer.sh status
+停止zookeeper:
+zkServer.sh stop 
+客户端登陆
+zkCli.sh -server zdh-12:2181

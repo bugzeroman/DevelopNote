@@ -1,0 +1,25 @@
+# 说明
+VNC (Virtual Network Console)是虚拟网络控制台的缩写。它是能远程连入Linux进行图形化操作。
+VNC百度百科介绍：
+https://baike.baidu.com/item/VNC/2906305
+
+# 使用root用户安装服务端和客户端
+rpm -ivh tigervnc-server-1.1.0-5.el6_4.1.x86_64.rpm
+rpm -ivh tigervnc-1.1.0-5.el6_4.1.x86_64.rpm
+yum install tigervnc
+yum install tigervnc-server
+
+# 安装完毕后启动服务，端口号为1
+vncserver :1
+
+# 使用VNC 连接服务
+在Windows里面双击vncviewer.exe启动客户端，
+输入服务器IP和端口：
+10.43.159.41:1
+然后再输入vncserver启动时设置的密码zdh1234,
+点击确认后即可成功登陆。
+
+# 停止：
+vncserver -kill :1
+# 查看：
+vncserver -list

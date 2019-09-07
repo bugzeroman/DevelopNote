@@ -1,0 +1,135 @@
+MySQL数据库版本：
+mysql-5.7.22-linux-glibc2.12-x86_64
+
+Linux服务器系统：
+CentOS 7.4 64bit
+
+MySQL安装用户:
+mysql/aliyun-1
+
+# 1.MySQL数据库安装包下载
+下载地址：
+https://dev.mysql.com/downloads/mysql/5.7.html#downloads
+选择 Linux - Generic 64bit : 
+![](https://upload-images.jianshu.io/upload_images/11810589-f4c3edf4b3981162.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+进入下载页面需要注册Oracle的用户，可以使用如下Oracle账号 ： 
+用户名：1772885836@qq.com 
+密码： 	 OracleTest1234
+下载的安装包：mysql-5.7.22-linux-glibc2.12-x86_64.tar.gz
+
+
+# 2.将安装包上传到服务器
+ftp /home/package
+
+# 3.创建MySQL的安装用户
+创建hadoop用户组
+groupadd hadoop
+创建mysql用户
+useradd -g hadoop -s /bin/bash -md /home/mysql mysql
+修改mysql密码
+passwd mysql
+
+# 4.登录mysql用户，解压安装包
+tar -zxvf mysql-5.7.22-linux-glibc2.12-x86_64.tar.gz -C /home/mysql/
+
+# 5.检查库文件是否存在
+rpm -qa | grep -i mysql
+CentOS一般没有，可以忽略。
+如果存在，需要先删除：
+rpm -e mysql-libs-5.1.52.x86_64 --nodeps
+
+# 6.在mysql下创建data目录
+ mkdir -p /home/mysql/mysql-5.7.22-linux-glibc2.12-x86_64/data/
+
+# 7.安装和初始化数据库
+```
+bin/mysqld --initialize --user=mysql --basedir=/home/mysql/mysql-5.7.22-linux-glibc2.12-x86_64/ --datadir=/home/mysql/mysql-5.7.22-linux-glibc2.12-x86_64/data/
+```
+
+如果报错：
+bin/mysqld: error while loading shared libraries: libaio.so.1: cannot open shared object file: No such file or directory
+使用root用户执行如下命令：
+yum install -y libaio
+
+# 8.拷贝启动文件
+sudo cp -a ./support-files/mysql.server  /etc/init.d/mysqld
+并且修改/etc/init.d/mysqld的配置如下：
+```
+basedir=/home/mysql/mysql-5.7.22-linux-glibc2.12-x86_64/
+datadir=/home/mysql/mysql-5.7.22-linux-glibc2.12-x86_64/data/
+```
+
+# 9.启动mysql安全线程
+bin/mysqld_safe --user=mysql &
+
+# 10.重启mysql服务
+/etc/init.d/mysqld restart
+
+/etc/init.d/mysqld start
+/etc/init.d/mysqld stop
+
+# 11.修改.bashrc文件，添加path路径
+export MYSQL_HOME=/home/mysql/mysql-5.7.22-linux-glibc2.12-x86_64
+export PATH=$PATH:$MYSQL_HOME/bin
+使配置生效：
+source .bashrc
+
+# 12.初始化密码
+mysql5.7会生成一个初始化密码，而在之前的版本首次登陆不需要登录。
+cat /home/mysql/.mysql_secret
+记住下面的密码：
+```
+# Password set for user 'root@localhost' at 2018-06-17 20:10:10 
+&NKDQJsg;q-4
+```
+使用mysql的root用户登录数据库：
+mysql -uroot -p
+
+输入如下密码：
+&NKDQJsg;q-4
+
+如果报错：
+ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
+先关闭mysql:
+/etc/init.d/mysqld stop
+再安全启动：
+mysqld_safe --user=mysql --skip-grant-tables --skip-networking &
+登录：
+mysql -u root mysql
+修改密码：
+update mysql.user set authentication_string=password('password_1') where user='root';
+FLUSH PRIVILEGES;
+quit
+
+使用新密码重新登录：
+mysql -uroot -ppassword_1
+重新登录后需要先设置密码：
+set password=password("password_2");
+flush privileges;
+
+# 13.添加远程访问权限
+mysql -uroot -ppassword_2
+use mysql; 
+update mysql.user set host = '%' where user = 'root';
+select host, user from user;
+
+重启后生效：
+/etc/init.d/mysqld restart
+
+# 14.切换到root用户，设置MySQL服务开机启动
+将mysql设为linux服务
+chkconfig --add mysqld
+查看mysql是否在相应的级别打开自启动
+chkconfig --list | grep mysql
+打开自启动
+chkconfig --level 345 mysql on
+
+# 15.MySQL连接配置和root用户：
+47.100.98.240:3306
+root/password_2
+
+#16.其他：
+## 1.关于配置文件的说明：
+官网说：从5.7.18开始不在二进制包中提供my-default.cnf文件。参考：https://dev.mysql.com/doc/refman/5.7/en/binary-installation.html
+经过测试，在5.7.18版本中，使用tar.gz安装时，也就是压缩包解压出来安装这种，已经不再需要my.cnf文件也能正常运行。

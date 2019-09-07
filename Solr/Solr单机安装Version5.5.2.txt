@@ -1,0 +1,46 @@
+Solr安装单机模式，基于Solr的安装版本为5.5.2。
+
+# 安装规划
+|IP/机器名  |安装软件  |运行进程 |
+|--------------|--------------|-------------|
+|zdh-9        |solr 	   |jar |
+
+# 安装用户
+solr/zdh1234 hadoop
+useradd -g hadoop -s /bin/bash -md /home/solr solr
+
+# 1.获取安装包，上传解压
+tar -zxvf solr-5.5.2.tgz
+
+# 2.配置环境变量 JAVA_HOME
+```
+export JAVA_HOME=/usr/java/jdk1.7.0_80
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+```
+配置solr环境变量，方便使用
+```
+export SOLR_HOME2=/home/solr/solr-5.5.2/bin
+export PATH=$PATH:$SOLR_HOME2/bin
+```
+不要使用SOLR_HOME，会导致solr脚本无法启动。
+
+修改bin目录下solr.in.sh配置jvm运行内存大小
+```
+SOLR_HEAP="2048m"
+```
+
+# 3.启动solr
+./solr start
+jps查看启动进程为jar
+[solr@zdh-7 logs]$ jps
+27875 jar
+
+# 4.访问solr的web管理页面
+http://10.43.159.9:8983
+
+# 5.其他
+查看solr帮助
+./solr -help
+启动参数帮助
+./solr start -help

@@ -1,0 +1,109 @@
+Eclipse导入Elasticsearch源码的步骤，
+基于Elasticsearch 6.2.2的源码版本。
+
+# 1.安装JDK1.9
+Elasticsearch 6.2.2需要JDK1.9编译，否则后面步骤会报错。
+
+Java SE Downloads 地址：
+http://www.oracle.com/technetwork/java/javase/downloads/index.html
+
+# 2.下载Elasticsearch源码，并且切换到6.2.2分支
+Elasticsearch github源码托管地址：
+https://github.com/elastic/elasticsearch.git
+
+# 3.下载gradle的安装包
+查看elasticsearch\gradle\wrapper\gradle-wrapper.properties发现如下配置：
+distributionUrl=https\://services.gradle.org/distributions/gradle-4.5-all.zip
+
+Elasticsearch 6.2.2需要安装gradle-4.5，官方下载地址：
+https://services.gradle.org/distributions/gradle-4.5-all.zip
+
+注意如果在国内无法下载，则需要自己挂代理，或者百度搜索从其他渠道下载gradle-4.5-all.zip。
+
+# 4.拷贝文件
+将下载的gradle-4.5-all.zip包放到elasticsearch\gradle\wrapper目录下，
+确保和elasticsearch\gradle\wrapper\gradle-wrapper.properties在同级目录，
+然后修改elasticsearch\gradle\wrapper\gradle-wrapper.properties配置如下：
+distributionUrl=gradle-4.5-all.zip
+
+# 5.修改源码Maven仓库地址
+由于国内无法下载国外仓库的jar包，需要替换Maven地址，设置为本地或者国内可用的Maven仓库。
+
+elasticsearch\benchmarks\build.gradle
+elasticsearch\client\benchmark\build.gradle
+elasticsearch\distribution\build.gradle
+elasticsearch\test\logger-usage\build.gradle
+修改源码中上面4个build.gradle文件里面的repositories-maven-url的值，
+配置为可用的仓库地址，修改示例如下：
+buildscript {
+    repositories {
+        maven {
+            url 'http://maven.aliyun.com/nexus/content/groups/public/'
+        }
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.2'
+    }
+}
+
+其中http://maven.aliyun.com/nexus/content/groups/public/是阿里云的Maven仓库。
+
+# 6.修改全局Maven仓库地址
+在USER_HOME/.gradle/下面创建新文件 init.gradle，输入下面的内容并保存。
+
+allprojects{
+    repositories {
+        def REPOSITORY_URL = 'http://maven.aliyun.com/nexus/content/groups/public/'
+        all { ArtifactRepository repo ->
+            if(repo instanceof MavenArtifactRepository){
+                def url = repo.url.toString()
+                if (url.startsWith('https://repo.maven.org/maven2') || url.startsWith('https://jcenter.bintray.com/')) {
+                    project.logger.lifecycle "Repository ${repo.url} replaced by $REPOSITORY_URL."
+                    remove repo
+                }
+            }
+        }
+        maven {
+            url REPOSITORY_URL
+        }
+    }
+}
+
+其中USER_HOME/.gradle/是自己的gradle安装目录，示例值：C:\Users\Administrator\.gradle，
+如果没有.gradle目录，可用自己创建，或者先执行第7步，等gradle安装后再回来修改。
+上面脚本把url匹配到的仓库都替换成了阿里云的仓库，
+如果有未匹配到的导致编译失败，可用自己仿照着添加匹配条件。
+
+# 7.gradle编译源码
+windows运行cmd，进入DOS命令行，
+然后切换到elasticsearch源码的根目录，
+执行如下命令，把elasticsearch编译为eclipse工程：
+gradlew eclipse
+
+编译失败则按照错误信息解决问题，可用使用如下命令帮助定位问题：
+gradlew eclipse -info
+gradlew eclipse -debug
+一般是Maven仓库地址不可用导致jar包无法下载，从而编译失败，
+此时请参考步骤5和6修改相关的仓库地址。
+
+编译成功后打印日志：
+BUILD SUCCESSFUL in 8m 30s
+
+# 8.eclipse导入elasticsearch工程
+依次点击：
+File: Import: Existing Projects into Workspace，
+注意选中Search for nested projects，否则无法看到所有工程，
+然后把出现的工程导入eclipse即可。
+
+# 问题解决：
+1.gradle内存不够，进程无法启动问题： 
+修改gradle.properties这个文件，在其中配置合适的JVM内存：
+org.gradle.jvmargs=-Xmx512m
+
+2.eclipse导入elasticsearch工程，部分工程不存在：
+因为存在部分依赖包下载失败，需要重新下载：
+gradlew eclipse
+反复执行上面的命令，直到所有的jar包下载成功，
+反复在eclipse中refresh，clean对应的工程。
+必要时删除USER_HOME\.gradle\caches目录下相应jar包文件目录，
+重复执行gradlew eclipse下载对应的jar包。

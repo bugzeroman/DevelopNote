@@ -1,0 +1,91 @@
+Sqoop2开启Kerberos安全模式，
+基于版本sqoop-1.99.7，
+在已经安装好的sqoop2环境上配置kerberos。
+
+# 1.安装规划
+10.43.159.9 zdh-9
+sqoop2krb/zdh1234
+
+10.43.159.11 zdh-11 
+kerberos server
+
+# 2.创建keytab
+在zdh-11上，登陆root用户在/root/keytabs目录下，
+创建sqoop2krb和HTTP的principal，并导出到sqoop.keytab:
+```
+kadmin.local
+addprinc -randkey HTTP/zdh-9@ZDH.COM
+addprinc -randkey sqoop/zdh-9@ZDH.COM
+xst -k HTTPzdh9.keytab HTTP/zdh-9@ZDH.COM
+xst -k sqoopzdh9.keytab sqoop/zdh-9@ZDH.COM
+exit
+```
+
+# 3.分发keytab
+将sqoop.keytab复制到sqoop2krb相应目录下：
+scp HTTPzdh9.keytab sqoop2krb@zdh-9:/home/sqoop2krb/sqoop-1.99.7-bin-hadoop200/keytabs
+scp sqoopzdh9.keytab sqoop2krb@zdh-9:/home/sqoop2krb/sqoop-1.99.7-bin-hadoop200/keytabs
+修改为用户只读权限：
+chmod 400 HTTPzdh9.keytab
+chmod 400 sqoopzdh9.keytab
+
+需要kinit初始化principal,否则sqoop2无法启动：
+kinit -kt HTTPzdh9.keytab HTTP/zdh-9@ZDH.COM
+kinit -kt sqoopzdh9.keytab sqoop/zdh-9@ZDH.COM
+
+# 4.修改配置文件
+登陆sqoop2krb，修改conf/sqoop.properties文件：
+```
+org.apache.sqoop.security.authentication.type=KERBEROS
+org.apache.sqoop.security.authentication.handler=org.apache.sqoop.security.authentication.KerberosAuthenticationHandler
+org.apache.sqoop.security.authentication.kerberos.principal=sqoop/_HOST@ZDH.COM
+org.apache.sqoop.security.authentication.kerberos.keytab=/home/sqoop2krb/sqoop-1.99.7-bin-hadoop200/keytabs/sqoopzdh9.keytab
+org.apache.sqoop.security.authentication.kerberos.http.principal=HTTP/_HOST@ZDH.COM
+org.apache.sqoop.security.authentication.kerberos.http.keytab=/home/sqoop2krb/sqoop-1.99.7-bin-hadoop200/keytabs/HTTPzdh9.keytab
+org.apache.sqoop.security.authentication.enable.doAs=true
+```
+注意：sqoop/_HOST@ZDH.COM中的_HOST不用修改，运行时会自动改为sqoop/zdh-9@ZDH.COM之类的。
+
+# 5.配置环境变量
+export SQOOP2_HOST=$(hostname -f)
+SQOOP2_HOST（zdh-9）的值会被用来替换上面_HOST
+
+# 6.启动sqoop2
+sqoop2-server start
+
+停止sqoop2:
+sqoop2-server stop
+
+启动成功并且开启kerberos可以在sqoop.log看到如下日志：
+```
+2018-03-09 10:35:12,376 INFO  [org.apache.sqoop.security.authentication.KerberosAuthenticationHandler.secureLogin(KerberosAuthenticationHandler.] Using Kerberos authentication, principal [sqoop/_HOST@ZDH.COM] keytab [/home/sqoop2krb/sqoop-1.99.7-bin-hadoop200/keytabs/sqoopzdh9.keytab]
+
+2018-03-09 10:35:16,744 INFO  [org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler.init(KerberosAuthenticationHandler.] Login using keytab /home/sqoop2krb/sqoop-1.99.7-bin-hadoop200/keytabs/HTTPzdh9.keytab, for principal HTTP/zdh-9@ZDH.COM
+```
+
+# 7.客户端验证
+先初始化凭据：
+kinit -kt sqoopzdh9.keytab sqoop/zdh-9@ZDH.COM
+
+客户端登陆：
+sqoop2-shell
+展示所有的connector:
+show connector
+
+sqoop2客户端执行命令时，会使用sqoop作为用户去sqoop2服务查询，
+如果kinit -kt HTTPzdh9.keytab HTTP/zdh-9@ZDH.COM，
+则会用HTTP用户作为请求的用户，即会使用最近一次的kinit的用户作为
+登陆用户去服务端查询结果。
+
+查询结果正确，且可以在sqoop.log看到如下日志：
+```
+2018-03-09 10:46:08,377 INFO  [org.apache.sqoop.audit.FileAuditLogger.logAuditEvent(FileAuditLogger.] user=sqoop ip=10.43.159.9  op=get  obj=connectors  objId=all
+```
+
+# 8.Rest服务验证
+其他服务通过HTTP请求访问rest接口,
+比如RangerAdmin使用rangerlookup用户进行testConnection测试，
+测试连接成功可以在sqoop.log看到如下日志：
+```
+2018-03-09 10:49:13,085 INFO  [org.apache.sqoop.audit.FileAuditLogger.logAuditEvent(FileAuditLogger.] user=rangerlookup ip=10.43.159.9  op=get  obj=connectors  objId=all
+```

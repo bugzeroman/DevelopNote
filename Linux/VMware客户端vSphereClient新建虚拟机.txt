@@ -1,0 +1,266 @@
+# 1.说明
+VMware客户端工具vSphere Client，
+用来连接和管理ESX或ESXi主机（下面称为**宿主机**），
+可以方便的创建、管理**虚拟机**，并分配相应的资源。
+**宿主机**就是使用虚拟化软件运行虚拟机的计算机，
+这里是安装了VMware服务端ESXi5的单板服务器， 
+使用的安装包为ESXi-5.5.0-1331820-standard。
+单板服务器安装ESXi5请参考：
+[Vmware vSphere 5.0系列教程之二 Vmware vSphere 5.0安装](http://blog.51cto.com/andygao/810756)
+
+**宿主机**提供虚拟机使用的CPU和内存资源，
+同时为虚拟机提供存储器访问权限和网络连接。
+注意安装好ESXi5的宿主机不能直接**新建虚拟机**，
+必须通过VMware客户端工具来管理宿主机。
+这里使用vSphere Client 5.5来管理宿主机，
+在Windows上面安装VMware客户端工具vSphere Client 5.5，
+使用的安装包为VMware-viclient-all-5.5.0-1281650.exe，
+客户端的安装很简单，一路Next即可完成。
+![](https://upload-images.jianshu.io/upload_images/11810589-64216c697f277d7f.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+注意VMware客户端的版本要高于或等于服务端的版本，
+否则会导致客户端无法连接到服务端等各种问题。
+
+**新建虚拟机**需要安装操作系统，比如Windows或Linux，
+下面以安装Linux Red Hat 6.5系统为例，
+详细说明vSphere Client新建虚拟机的步骤，
+使用的操作系统镜像为rhel-server-6.5-x86_64-dvd.iso。
+
+# 2.登陆宿主机
+**宿主机**环境：
+10.43.159.246
+root/passowrd12345
+
+双击打开vSphere Client 5.5，
+输入**IP地址**，**用户名**和**密码**，
+注意不要勾选**使用Windows会话凭据**，
+点击**登陆**：
+![](https://upload-images.jianshu.io/upload_images/11810589-f8d8ad8518aba1a2.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+跳出来**安全警告**，选择**忽略**：
+![](https://upload-images.jianshu.io/upload_images/11810589-7efc20cb6a94df7b.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+登陆成功后可以看到**宿主机**清单：
+```
+10.43.159.256
+```
+如果看不到**宿主机**，
+请通过**主页** -> **清单**进入。
+点开**宿主机**前面的**+**号可以看到它的**虚拟机**。
+![](https://upload-images.jianshu.io/upload_images/11810589-ce9c9b462a218b84.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+同时可以看到**宿主机**的详细信息，
+zdh246 VMware ESXi,5.5.0,1331820下有各种选项卡，
+点击**摘要**可以看到**宿主机**的硬件信息，
+CPU为16个物理内核，32个逻辑处理器，
+内存为128GB,存储器为12块512G的SSD组成。
+
+# 3.新建虚拟机
+
+## 3.1.新建虚拟机
+右键**宿主机**10.43.159.256，
+点击**新建虚拟机**：
+![](https://upload-images.jianshu.io/upload_images/11810589-3b65303a97ba0fae.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+## 3.2.配置
+进入**新建虚拟机**导航页面，
+**配置**默认为**典型**，
+点击**下一步**：
+![](https://upload-images.jianshu.io/upload_images/11810589-b9394bb07abab993.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 3.3.名称
+**名称**填写dap143-159，
+虚拟机**名称**可以是自定义的，
+建议和后面安装Linux系统主机名保持一致，
+点击**下一步**：
+![](https://upload-images.jianshu.io/upload_images/11810589-9f4776a7967f861e.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 3.4.存储器
+**存储器**选择246datastore6，
+建议选择可用空间较大，性能较好的磁盘，
+点击**下一步**：
+![](https://upload-images.jianshu.io/upload_images/11810589-0565c424cd4c46f7.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 3.5.客户机操作系统
+**客户机操作系统**选择**Linux**，
+版本选择**Red Hat Enterprise Linux 6(64位)**，
+点击**下一步**：
+![](https://upload-images.jianshu.io/upload_images/11810589-29f363842ae170cb.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 3.6.网络
+**网络**使用默认值即可，
+点击**下一步**：
+![](https://upload-images.jianshu.io/upload_images/11810589-63c7234f0e6eca75.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 3.7.创建磁盘
+磁盘246datastore6可用空间为396GB，
+修改**虚拟磁盘大小**为300GB，
+空间设置大一点比较好，
+但也不要用完了，留一点备用空间给交换区，
+备用空间需要大于虚拟机设置的内存，
+否则会导致虚拟机无法启动，报swap交换区错误。
+如果后期磁盘不够还可用另外挂载磁盘。
+**创建磁盘**选择**厚置备置零**，性能是最好的。
+[VMware vSphere中三种磁盘规格说明](http://blog.51cto.com/lookingdream/2113902)
+点击**下一步**：
+![](https://upload-images.jianshu.io/upload_images/11810589-250a1951385fabaf.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 3.8.即将完成
+这里可以确认**新建虚拟机的设置**，
+不要急着点击**完成**，
+勾选**完成前编辑虚拟机设置**，
+点击**继续**：
+![](https://upload-images.jianshu.io/upload_images/11810589-b9692d42b1ebbd29.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 3.9.虚拟机属性设置
+进入编辑**虚拟机属性**的页面，
+需要修改**硬件**选项卡下的**内存**，**CPU**，**新的CD/DVD**，
+总的CPU为16个物理内核，
+总的内存为128GB，
+现在分配给4个虚拟机，
+每个虚拟机的内存为32GB，
+即CPU为4个物理内核。
+
+### 3.9.1.内存
+**内存**设置为32GB。
+![](https://upload-images.jianshu.io/upload_images/11810589-83530bff5381f7d2.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+### 3.9.2.CPU
+从上面的宿主机摘要可以看到，
+宿主机**处理器插槽**2个，
+**每个插槽的内核数**8个。
+这里设置**虚拟插槽数**2个，
+**每个插槽的内核数**2个，
+因此虚拟机CPU物理**内核总数**为4个。
+![](https://upload-images.jianshu.io/upload_images/11810589-0bfd0cf38e781edf.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+### 3.9.3.新的CD/DVD
+**设备类型**选择**数据存储ISO文件**，
+点击**浏览**选择已经上传的RedHat6.5镜像，
+具体上传镜像的方法请参考本文第7章节,
+**设备状态**中勾选**打开电源时连接**，
+这样在虚拟机第一次启动时会加载到镜像文件，
+并且进入Linux操作系统安装界面。
+![](https://upload-images.jianshu.io/upload_images/11810589-5a9ab9a157b89053.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+如果**设备类型**选择**客户端设备**，
+则不需要上传镜像，
+可以使用本地Windows上面的镜像直接安装，
+但是不建议这样做，
+一是网络不稳的会导致安装过慢等失败情况，
+二是镜像上传后有安装第2台虚拟机等其他用途。
+
+### 3.9.4.完成创建
+点击**完成**即可创建新的虚拟机，
+**近期任务**下面会有一个**创建虚拟机**的进度条，
+是在执行系统磁盘的初始化等工作，
+等到**已完成**状态即可。
+![](https://upload-images.jianshu.io/upload_images/11810589-3db06d8b57a83fa3.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 4.安装操作系统
+
+## 4.1.打开电源
+右键新建的虚拟机dap143-159，
+选择**电源**，点击**打开电源**：
+![](https://upload-images.jianshu.io/upload_images/11810589-9598cd1bd8a1a2f2.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 4.2.安装操作系统
+**虚拟机**第一次**打开电源**，
+会加载光驱上的镜像文件，
+点击**控制台**选项卡，
+可以看到操作系统安装选项。
+![](https://upload-images.jianshu.io/upload_images/11810589-6dca5293202e9960.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+鼠标点击控制台里面的任意一处，
+鼠标和键盘的焦点会切换到控制台，
+如果想回到外面的Windows界面，
+使用组合件**Ctrl+Alt**可以退出来。
+下面完全是操作系统安装了，
+这里安装的是RedHat6.5系统，
+请参考[Linux操作系统RedHat6.5安装](https://www.jianshu.com/p/9b3eeadcefac)
+
+## 4.3.找不到操作系统
+**虚拟机**第一次**启动**的时候，
+会扫描所有的磁盘，
+如果发现没有操作系统，
+会从光驱加载到镜像文件，
+从而进入Linux操作系统安装的步骤。
+如果在编辑**新的CD/DVD**设置时，
+没有勾选**设备状态**中**打开电源时连接**，
+可能会找不到操作系统。
+![](https://upload-images.jianshu.io/upload_images/11810589-aded5cb8b69780a3.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+注意有的服务器需要手动在BIOS里设置成从光驱启动。
+
+# 5.安装验证
+安装完毕后，登陆系统验证，
+使用SSH远程终端工具连接**虚拟机**，
+这里使用MobaXterm工具登陆，
+**ssh root@10.43.159.256**，
+**ifconfig**查看网络连接正常，
+**ping**其他主机也能正常返回，
+至此**新建虚拟机**成功。
+![](https://upload-images.jianshu.io/upload_images/11810589-ee9b357bd0cb6d32.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 6.其他功能
+对于虚拟机还可以进行更多的操作，
+右键新建的虚拟机dap143-159，
+可以看到**关闭电源**，**快照**，
+**打开控制台**，**编辑设置**等功能。
+![](https://upload-images.jianshu.io/upload_images/11810589-1210ec0c3bfda37d.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 6.1关闭电源
+**关闭电源**可以关闭虚拟机，
+建议关闭前用shutdown命令安全地将系统关机，
+**打开电源**可以启动虚拟机，
+虚拟机第二次启动时会自动进入安装好的操作系统。
+
+## 6.2.快照
+对虚拟机**执行快照**，
+能够保存虚拟机的当前状态，
+虽然会消耗掉一点硬盘空间，
+但是在虚拟机发生错误时能够快速恢复。
+
+## 6.3.控制台
+点击**打开控制台**，
+会弹出一个单独的控制台对话框，
+提供一些简单的控制菜单。
+![](https://upload-images.jianshu.io/upload_images/11810589-030cbf11df6e7fbc.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 6.4.编辑设置
+编辑设置能够修改**虚拟机属性**，
+比如**CPU**和**内存**等等，
+修改完毕后重启**虚拟机**即可生效。
+
+# 7.上传镜像文件到宿主机
+上传镜像文件到宿主机有三种方法，
+通过VMware上传，ftp上传，scp拷贝。
+
+## 7.1.VMware上传
+进入**宿主机**10.43.159.256的配置页面，
+查看**硬件**下面的**存储器**，
+右键246datastore1，点击**浏览数据存储**，
+![](https://upload-images.jianshu.io/upload_images/11810589-c7cc529c0ed378a9.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击**将文件上载到此数据存储**，
+![](https://upload-images.jianshu.io/upload_images/11810589-6ca06e30213a3fa3.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+选择本地的镜像文件上传，
+镜像比较大，上传需要时间，请耐心等待：
+![](https://upload-images.jianshu.io/upload_images/11810589-104106f073f6592d.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+上传成功可以看到目录下操作系统镜像：
+rhel-server-6.5-x86_64-dvd.iso
+![](https://upload-images.jianshu.io/upload_images/11810589-6e826e21f7581d60.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 7.2.ftp上传
+直接通过ftp工具连接到宿主机，
+然后把本地的镜像文件上传即可。
+
+## 7.3.scp拷贝
+ssh登陆到宿主机，
+ssh root@10.43.159.256
+从其他宿主机上面拷贝已有的镜像文件，
+scp root@10.43.159.247:/vmfs/volumes/5227a2a2-47197266-5e6a-4c09b4b0aefd/rhel-server-6.5-x86_64-d
+vd.iso .
+由于VMware的安全限制，scp会失败，
+查看**宿主机** -> **配置**  ->  **安全配置文件** -> **防火墙**，
+点击**属性**修改配置：
+![](https://upload-images.jianshu.io/upload_images/11810589-e806a7a917df73b0.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+在**防火墙属性**中，勾选**SSH客户端**，
+打开**出站端口22**，点击**确定**即可。
+![](https://upload-images.jianshu.io/upload_images/11810589-57e1b85604be6360.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)

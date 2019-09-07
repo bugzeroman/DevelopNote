@@ -1,0 +1,36 @@
+以Ranger项目为例，说明开源社区合入patch的详细步骤。
+
+# 1.reviews页面下载patch
+进入到review页面：
+https://reviews.apache.org/r/67919/
+点击Download Diff下载patch,
+Chrome浏览器会下载0001-Ranger-2152.patch文件到下载目录:
+C:\Users\Administrator\Downloads
+
+# 2.拷贝patch到ranger代码目录
+将下载0001-Ranger-2152.patch文件放到如下目录：
+F:\Code\Ranger\rangerPush
+上面的rangerPush代码是clone的下面这个地址：
+git clone https://git-wip-us.apache.org/repos/asf/ranger.git
+而非https://github.com/apache/ranger.git。
+
+# 3.合入下载的patch
+在rangerPush目录右键，
+点击TortoiseGit->Apply Path Serial...
+勾选下面所有的复选框，注意选中Add "Signed-off-by"，
+然后点击右边的按钮Add,选则上面的patch0001-Ranger-2152.patch
+点击apply完成合入。
+
+或者使用命令行合入patch的方法：
+git am --signoff patch0001-Ranger-2152.patch
+
+# 4.提交记录到开源
+点击TortoiseGit->Push...
+推送代码到Ranger远程仓库，
+
+或者使用命令：
+git push
+在弹出的对话框中对应的输入用户名和密码：
+yuwen/zdh1234
+注意上面的用户需要有提交远程仓库的权限。
+
