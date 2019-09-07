@@ -8,9 +8,15 @@
 颜色1(L)  -> 选择其它
 将如下颜色添加到自定义颜色：
 ```
-色调(E)   设为84
-饱和度(S) 设为91
-亮度(L)   设为205
+色调(E)         84
+饱和度(S)      91
+亮度(L)          205
+```
+或者
+```
+红(R)     204
+绿(G)    232
+蓝(U)    207
 ```
 之后点击确定即可。
 ![ProtectEyeColor.jpg](https://upload-images.jianshu.io/upload_images/11810589-5198b2e6a82a2b86.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
