@@ -1,0 +1,186 @@
+#1.Two Sum
+Given an array of integers, return indices of the two numbers such that they add up to a specific target.
+You may assume that each input would have exactly one solution, and you may not use the same element twice.
+
+Example:
+Given nums = [2, 7, 11, 15], target = 9,
+Because nums[0] + nums[1] = 2 + 7 = 9,
+return [0, 1].
+
+#2.两数之和
+给定一个整数数组，返回两个数字的索引，要求两个数字加起来等于一个特定的目标值。
+你可以假定每个输入只有一个解决方案，并且不能使用同一个元素两次。
+
+例子：
+给定nums = [2，7，11，15]，target=9，
+因为nums[0] + nums[1] = 2 + 7 = 9，
+返回[0, 1]。
+
+#3.说明
+这道Two Sum的题目作为LeetCode的开篇之题，
+乃是经典中的经典，
+正所谓"平生不识TwoSum，刷尽LeetCode也枉然"。
+下面我将分析几种常见的解法，
+循序渐进的写出越来越优的解法，
+并且给出Java实现代码，
+同时分析算法的时间复杂度。
+
+#4.穷举法
+遍历所有的两个数字的组合，然后计算两数和，
+两个for循环搞定，简单暴力，比较费时的解法，
+这个算法的时间复杂度是O(n^2)。
+```
+public int[] twoSumV1(int[] nums, int target) {
+	int[] results = new int[2];
+
+	for (int i = 0; i < nums.length; i++) {
+		// 注意j从i的下一个位置开始，同一个元素不能重复使用
+		for (int j = i + 1; j < nums.length; j++) {
+			// 两数和等于目标值即可退出查找
+			if (nums[i] + nums[j] == target) {
+				results[0] = i;
+				results[1] = j;
+				return results;
+			}
+		}
+	}
+
+	return results;
+}
+```
+
+#5.排序双指针夹逼法
+先从小到大对数组进行排序，
+再用双指针夹逼求出，
+左边的指针left指向数组开始位置，对应数组的最小值，
+右边的指针right指向数组结束位置，对应数组的最大值，
+两数相加后sum和目标值target比较，
+如果sum<target，则指针left向右边较大的数移动一位，
+如果sum>target，则指针right向左边较小的数移动一位，
+直到sum=target，获得题目所需要的解，
+注意需要使用Map记录原来的数字对应的索引位置。
+这个算法的时间复杂度是O(n)。
+```
+public int[] twoSumV2(int[] nums, int target) {
+	int[] results = new int[2];
+
+	//记录原来的数对应的索引位置
+	Map<Integer, Integer> value2index = new HashMap<>();
+	for (int i = 0; i < nums.length; i++) {
+		value2index.put(nums[i], i);
+	}
+
+	// 从小到大对数组进行排序
+	Arrays.sort(nums);
+
+	int left = 0;
+	int right = nums.length - 1;
+	while (left < right) {
+		int sum = nums[left] + nums[right];
+		// 两数和等于目标值即可退出查找
+		if (sum == target) {
+			// 获取当前两个数在原数组索引位置
+			results[0] = value2index.get(nums[left]);
+			results[1] = value2index.get(nums[right]);
+			return results;
+		}
+		// 两数和小于目标值，则指针left向右边较大的数移动一位
+		if (sum < target) {
+			left++;
+		}
+		// 两数和大于目标值，则指针right向左边较小的数移动一位			
+		if (sum > target) {
+			right--;
+		}
+	}
+
+	return results;
+}
+```
+
+# 6.Map空间换时间法
+这个解法相对于上一个解法更进一步，
+Map不仅用来查找数值对应的索引位置，
+而且能够用来判断数值是否存在于数组中，
+由于使用的是HashMap，不会增加算法的时间复杂度。
+首先使用Map记录数字对应的索引位置，
+然后我们只需要遍历一遍数字a，
+另外一个数字b通过target-a得到，
+然后在Map中查找是否存在b，
+如果存在，则使用当前数字a的索引,
+以及在Map中找出b的索引即可。
+注意查找到的数字b不能是第一个数字a，
+即两个数字ab对应的索引位置不能相同。
+这个算法的时间复杂度是O(n)。
+```
+public int[] twoSumV3(int[] nums, int target) {
+	int[] results = new int[2];
+
+	// 记录数字对应的索引位置
+	Map<Integer, Integer> value2index = new HashMap<>();
+	for (int i = 0; i < nums.length; i++) {
+		value2index.put(nums[i], i);
+	}
+
+	// 只遍历一个数字a
+	for (int i = 0; i < nums.length; i++) {
+		Integer a = nums[i];
+		Integer b = target - a;
+		// 判断数字b是否存在，且b的索引不和a相同
+		if (value2index.containsKey(b) && value2index.get(b) != i) {
+			results[0] = i;
+			// 获取b在数组中的索引位置
+			results[1] = value2index.get(b);
+			break;
+		}
+	}
+
+	return results;
+}
+```
+
+# 7.Map空间换时间法优化
+把两个for循环合并成一个，
+一边遍历a，一边初始化Map，
+由于当前遍历的a还没有加入到Map中，
+所以不会出现b和a的索引相同的情况，
+而且能够正好穷尽a和b的组合，
+为了更好的理解该算法优化，
+下面举例，仅作参考，而非实际实现，
+算法改进前：
+[1,2,3]对应的组合[1,2],[1,3],[2,1],[2,3],[3,1],[3,2]
+算法改进后：
+[1,2,3]对应的组合[2,1],[3,1],[3,2]
+所以该算法仍然能够正确工作。
+这个算法的时间复杂度仍然是O(n)。
+程序输出的结果正好和上面的相反，
+假设nums=[1,2,3]，target=3,
+算法改进前：
+results=[0,1]，对应组合[1,2]；
+算法改进后：
+results=[1,0]，对应组合[2,1]；
+```
+public int[] twoSumV4(int[] nums, int target) {
+	int[] results = new int[2];
+	Map<Integer, Integer> value2Index = new HashMap<>();
+
+	for (int i = 0; i < nums.length; i++) {
+		Integer a = nums[i];
+		Integer b = target - a;
+		// 判断数字b是否存在,存在即可退出查找
+		if (value2Index.containsKey(b)) {
+			results[0] = i;
+			results[1] = value2Index.get(b);
+			break;
+		}
+		// 在判断之后再把a加入map
+		value2Index.put(a, i);
+	}
+
+	return results;
+}
+```
+
+# 8.参考
+[[LeetCode] 1. Two Sum 两数之和](https://www.cnblogs.com/grandyang/p/4130379.html)
+[求和问题总结(leetcode 2Sum, 3Sum, 4Sum, K Sum)](https://blog.csdn.net/vanturman/article/details/80343555)
