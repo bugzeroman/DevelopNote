@@ -1,0 +1,52 @@
+# 1.介绍
+Lombok是一个可以大量减少代码的工具，
+通过Pluggable Annotation Processing API的方式解析注解，
+在编译期为class文件注入getter,setter,
+以及toString等等诸如此类的代码。
+Lombok通过为Java代码添加一些"处理程序"，
+让代码变得更简洁、更优雅。
+
+# 2.好处
+Lombok最大的好处就在于通过注解的形式来简化Java代码。
+减少大量的模板代码，一定程度提高代码可读性，可以专注于查看类的属性。
+
+# 3.坏处
+## 3.1 额外的环境配置
+作为IDE插件+jar包，需要对IDE进行一系列的配置。
+目前在IDEA中配置还算简单，在Eclipse下配置会复杂不少。
+并且无法很好的配合Maven Groovy等。
+JDK和IDE升级后，Lombok能否有足够的人力和资源继续支持。
+
+## 3.2 传染性
+一般来说，对外打的jar包最好尽可能地减少三方包依赖，
+这样可以加快编译速度，也能减少版本冲突。
+一旦在resource包里用了lombok，别人想看源码也不得不装插件。
+
+## 3.3 降低代码可读性
+定位方法调用时，对于自动生成的代码，getter/setter还好说，
+找到成员变量后find usages，再根据上下文区分是哪种；
+equals()这种，想找就只能写段测试代码再去find usages了。
+目前主流IDE基本都支持自动生成getter/setter代码，
+和Lombok注解相比不过一次键入还是一次快捷键的区别，
+而且Lombok无法为自动生成的代码增加相应的注释，
+在代码重构的时候也会很不方便，
+实际减轻的工作量十分微小。
+
+# 4.使用建议
+## 4.1.用或者不用
+新项目可以用，老项目可以不用，收益可能不大。
+在自己的项目中可以随自己的喜好用或者不用。
+在项目中投票，团队一致同意就可以用。
+在项目中使用后发现有问题了可以不用，Lombok去掉也方便。
+我个人并不主张使用lombok，其带来的代价足以抵消其便利。
+
+## 4.2.使用替代品
+试试Kotlin，你会爱上Kotlin，比Lombock更强劲。
+还有很多人推荐Scala，大家感兴趣就都试一试吧。
+
+# 5.参考
+[lombok踩坑与思考](https://www.cnblogs.com/wuyuegb2312/p/9750462.html)
+[使用lombok的利弊](https://blog.csdn.net/mediocre117/article/details/83141208)
+[Lombok 到底应不应该使用？](https://www.v2ex.com/t/562185)
+[Is it safe to use Project Lombok?](https://stackoverflow.com/questions/3852091/is-it-safe-to-use-project-lombok)
+[Don’t use Lombok](https://medium.com/@vgonzalo/dont-use-lombok-672418daa819)
