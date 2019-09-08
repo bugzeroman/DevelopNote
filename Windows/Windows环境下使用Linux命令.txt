@@ -1,0 +1,49 @@
+# 1.说明
+如何在Windows环境下使用Linux命令，
+这是一个屡见不鲜的问题，
+而且已经有很多解决方法，
+下面仅推荐几个我觉得好用的工具，
+这些工具可能就是我们常用的软件，
+而且已经在Windows环境下安装好了，
+只是没有发现居然能够这样使用。
+
+# 2.Git Bash命令行
+Git Bash是Git For Windows工具集提供的，
+在Windows下的使用Linux命令行的工具，
+主要是用来执行Git命令，管理Git工程项目，
+这是我们安装这个工具的主要目的，
+由于是基于msys GNU环境的，
+它在Windows下提供了完善的Linux命令。
+![](https://upload-images.jianshu.io/upload_images/11810589-7be689e6c1b60a19.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-5fbf17dd3109f7c4.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 3.Cygwin
+Cygwin是一个在Windows平台上运行的类Unix模拟环境。
+它对于学习Linux/Unix操作环境，
+或者从Unix到Windows的应用程序移植，
+或者进行某些特殊的开发工作，
+尤其是使用GNU工具集在Windows上进行嵌入式系统开发，非常有用。
+
+# 4.MobaXterm
+MobaXterm是一款增强型终端、X服务器和Unix命令集(GNU/Cygwin)工具箱。
+通常我们使用MobaXterm登陆Linux远程服务器。
+通过Start local termianl，
+我们还可以在本机使用Linux命令行。
+![](https://upload-images.jianshu.io/upload_images/11810589-e6125d2f6f9de2ad.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-14fd8c724c2b64f7.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 5.总结
+通过使用上面这些工具，
+可以在Windows环境下使用Linux命令，
+不仅有tar，grep，awk等，
+而且有安装编译环境gcc，make等。
+你甚至可以把Windows当成一个(伪)Linux服务器，
+不仅可以对Windows下的文件进行各种操作(tar，grep等)，
+还可以和远程的Linux服务器交互（ssh,scp等），
+更可以在上面安装运行hadoop，zookeeper之类的服务。
+
+# 6.参考文章
+[GitForWindows工具集(GitBash命令行)](https://www.jianshu.com/p/4c54855bf15f)
+[Windows终端好难用? 试试git bash吧!](https://www.jianshu.com/p/a317debc28ea)
+[Cygwin_百度百科](https://baike.baidu.com/item/Cygwin/151477?fr=aladdin)
+[MobaXtermP:"十项全能"的远程终端登录软件](https://segmentfault.com/a/1190000000483148)
