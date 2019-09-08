@@ -1,0 +1,162 @@
+# 1.说明
+在Java中，经常遇到需要List与数组互相转换的场景。
+List转换成数组，可以使用List的toArray()或者toArray(T[] a)方法。
+数组转换成List，可以使用Arrays.asList()或者Collections.addAll()方法。
+如果仅仅为了打印数组，不需要把数组转换成List，
+可以使用Arrays.toString()方法。
+
+# 2.List转换成数组
+List转换成数组可以调用toArray方法，
+这里有两个重载的方法，
+一般使用第2个带泛型参数的方法：
+```
+Object[] toArray();
+<T> T[] toArray(T[] a);
+```
+## 2.1.无参数toArray方法
+```
+Object[] toArray();
+```
+这个方法将List直接转为Object[]数组。
+Java初学者喜欢用这个方法，
+没有参数使用起来很方便，
+而且代码编译也没有报错，
+错误使用的示例代码如下：
+```
+List<String> strList = new ArrayList<>();
+strList.add("list-a");
+strList.add("list-b");
+String[] strArray = (String[]) strList.toArray();
+```
+结果一运行，直接报错，
+不能将Object[]转化为String[]：
+```
+Exception in thread "main" java.lang.ClassCastException: 
+[Ljava.lang.Object; cannot be cast to [Ljava.lang.String;
+```
+正确使用代码如下：
+```
+List<String> strList = new ArrayList<>();
+Object[] strArray = strList.toArray();
+```
+得到了一个通常情况下没啥用的Object[]。
+
+## 2.2.支持泛型的toArray方法
+```
+<T> T[] toArray(T[] a);
+```
+这个方法接收一个类型为 T 的数组，
+注意基本类型是不能作为泛型参数的。
+如果是使用int[] 类型数组，
+需要把 int[] 换成 Integer[] 。
+使用的示例代码如下：
+```
+List<String> strList = new ArrayList<>();
+strList.add("list-a");
+strList.add("list-b");
+String[] strArray = strList.toArray(new String[strList.size()]);
+```
+
+## 2.3.toArray方法入参的数组大小
+针对如下代码，
+分析一下初始化的String数组的大小size，
+和List的大小strList.size()的关系，
+对于返回值产生的不同影响:
+```
+List<String> strList = new ArrayList<>();
+strList.add("list-a");
+strList.add("list-b");
+String[] strArray1 = new String[size];
+String[] strArray2 = strList.toArray(strArray1);
+```
+
+### 2.3.1.size < strList.size()
+现在设置size=0，
+小于strList.size()=2，
+代码修改部分如下：
+```
+String[] strArray1 = new String[0];
+```
+返回的strArray2和strArray1不是同一个对象。
+
+### 2.3.2.size = strList.size()
+现在设置size=strList.size()，
+代码修改部分如下：
+```
+String[] strArray1 = new String[strList.size()];
+```
+返回的strArray2和strArray1是同一个对象。
+所以下面两块代码是等价的，
+得到的strArray都是我们期望的结果：
+```
+String[] strArray = strList.toArray(new String[strList.size()]);
+```
+```
+String[] strArray = new String[strList.size()];
+strList.toArray(strArray);
+```
+
+### 2.3.3.size > strList.size()
+现在设置size=strList.size()+1，
+代码修改部分如下：
+```
+String[] strArray1 = new String[strList.size()+1];
+```
+返回的strArray2和strArray1是同一个对象，
+但是数组的最后一个元素是null，
+如果数组中的元素多于List中的元素，
+列表复制完后紧接着的数组末尾被设置为null,
+即strArray1[strList.size()]=null,
+这对于调用方确定数组的真实长度很有用，
+如果使用strList.size()+2初始化数组，
+则数组的倒数第二个元素是null。
+
+# 3.数组转换成List
+可以使用Arrays.asList()或者Collections.addAll()方法,
+推荐使用Collections.addAll()方法，
+这样得到的返回对象可以往里面添加新的元素。
+
+# 3.1.使用Arrays.asList()方法
+示例代码如下：
+```
+String[] strArray = { "array-a", "array-b" };
+List<String> strList = Arrays.asList(strArray);
+```
+注意该方法的返回值是java.util.Arrays类中一个私有静态内部类java.util.Arrays.ArrayList，
+它并非java.util.ArrayList类。
+java.util.Arrays.ArrayList类具有set()，get()，contains()等方法，
+但是不支持添加add()或删除remove()方法,调用这些方法会报错。
+
+如果直接往返回的list添加一个新元素：
+```
+strList.add("array-c");
+```
+
+运行会报错UnsupportedOperationException：
+```
+Exception in thread "main" java.lang.UnsupportedOperationException
+	at java.util.AbstractList.add(AbstractList.java:148)
+	at java.util.AbstractList.add(AbstractList.java:108)
+```
+
+解决方法是新建一个List对象,
+并且加入返回的strList，
+然后再add新元素：
+```
+List<String> strListNew = new ArrayList<>(strList);
+strListNew.add("array-c");
+```
+
+# 3.2.使用Collections.addAll()方法
+```
+String[] strArray = { "array-a", "array-b" };
+List<String> strList = new ArrayList<>(strArray.length);
+Collections.addAll(strList, strArray);
+strListNew.add("array-c");
+```
+得到的返回对象可以直接添加新的元素。
+
+# 4.参考文章
+[深入理解List的toArray()方法和toArray(T[] a)方法](https://blog.csdn.net/mucaoyx/article/details/86005283)
+[ArrayList的toArray](https://www.cnblogs.com/ihou/archive/2012/05/10/2494578.html)
+[Java数组转List的三种方式及对比](https://blog.csdn.net/x541211190/article/details/79597236)
