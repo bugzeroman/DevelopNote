@@ -107,6 +107,8 @@ du -sh 统计所有文件大小的总和
 du -sh * 分开列出各个文件的大小
 S排除子目录的大小
 du -shS hdfs
+查看当前目录下每个文件的大小，不输出子目录：
+du * -d 0 -h
 
 查找文件：
 find . -name hdfs-default.xml
