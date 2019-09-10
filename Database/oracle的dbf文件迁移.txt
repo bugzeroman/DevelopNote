@@ -1,0 +1,68 @@
+# 1.背景说明
+在Oracle数据库中插入了1.5亿条数据，
+并且创建了主键索引，
+又插入了1.5亿条数据到另外一张表，
+导致数据库表空间暴涨到28G,
+由于根目录下只有50G的空间，
+数据库文件所在磁盘空间不够，
+已经撑爆，完全无法写入任何新的文件，
+所以需要将数据库dbf迁移到有空间的磁盘。
+
+# 2.登录Oracle的system用户
+```
+sqlplus / as sysdba
+system/123456
+```
+
+#3 .关闭数据库
+```
+shutdown immediate;
+```
+有可能无法关闭，报错说system用户没有权限，
+实际上是有权限的，只是因为磁盘没有空间，
+无法写日志导致无法进行操作，
+可以备份或者删除掉一些无用的文件，
+空出一点空间。
+
+# 4.以mount形式加载数据库
+```
+startup mount;
+```
+启动的时候可能也会报错说initorcl.ora文件找不到，
+请参考另外一篇文章。
+
+# 5.找到需要迁移的dbf文件路径
+例如：/data/oracle/oradata/orcl/users01.dbf，
+执行如下查询语句可以看到所有dbf文件：
+```
+select tablespace_name, file_id,file_name, round(bytes/(1024*1024),0) total_space from dba_data_files order by tablespace_name;
+```
+
+# 6.修改路径，执行
+```
+alter database rename file '/data/oracle/oradata/orcl/users01.dbf' to '/home/oracle/oradata/orcl/users01.dbf';
+```
+
+注：此处路径根据实际情况进行更改,
+并且需要提前将/data/oracle/oradata/orcl/users01.dbf文件
+复制到新的目录下。
+
+# 7.恢复介质
+```
+recover datafile '/home/oracle/oradata/orcl/users01.dbf';
+```
+如果不做这一步会报ora-01113，ora-01110错误。
+
+# 8.打开数据库
+```
+alter database open;
+```
+
+# 9.删除原路径下文件
+```
+rm  /data/oracle/oradata/orcl/users01.dbf
+```
+删除后，该文件占用的空间就能释放出来，
+基本上Oracle服务就能够正常使用了。
+
+
