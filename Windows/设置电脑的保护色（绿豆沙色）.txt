@@ -21,7 +21,7 @@
 之后点击确定即可。
 ![ProtectEyeColor.jpg](https://upload-images.jianshu.io/upload_images/11810589-5198b2e6a82a2b86.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-# 2.设置文档背景
+# 2.设置文档背景颜色
 txt文档在做完第1步后一般就会自动变成绿豆沙色。
 如果第1步后word、pdf背景仍是白色，
 可以按照第1步的方法，
@@ -29,21 +29,27 @@ txt文档在做完第1步后一般就会自动变成绿豆沙色。
 ![ProgramColor.jpg](https://upload-images.jianshu.io/upload_images/11810589-403c49a50b6de1ce.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 或者在word、pdf里寻找菜单设置各自的背景色。
 
-# 3.设置Eclipse背景
+# 3.设置Eclipse背景颜色
 Eclipse -> Window -> Preferences -> General -> Editors -> Text Editors -> Appearance color options
 选择Background color，
 勾选右边的System Defautl。
 这样Eclipse就是使用系统设置的保护色了。
 ![](https://upload-images.jianshu.io/upload_images/11810589-b1a3a167e25d8a4b.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-# 4.设置IE背景
+# 4.设置IE背景颜色
 打开IE，点击工具，点INTERNET选项，
 点右下角的辅助功能，然后勾选不使用网页中指定的颜色。
 缺点是和网站配色不一致看着别扭，
 或者好多图片和内容都不能显示，
 所以网页还是不设置的好。
 
-# 5.设置桌面背景
+# 5.设置Chrome背景颜色
+推荐使用护眼色插件：眼睛护航，
+此款插件可以随时改变网页的背景颜色，
+针对特定网站开启和关闭插件非常方便，
+详细请参考[护眼色插件：眼睛护航](http://chromecj.com/accessibility/2014-11/292.html)
+
+# 6.设置桌面背景
 桌面背景也可以设置类似绿色的壁纸，
 推荐一个言叶之庭的经典壁纸：
 ![](https://upload-images.jianshu.io/upload_images/11810589-3e821b7e1a42203d.jpeg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
