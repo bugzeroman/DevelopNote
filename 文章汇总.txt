@@ -1,7 +1,16 @@
 1.文章发布网站
-简书：
-CSDN:
-新浪博客：
-2.待写作文章：
+简书：           https://www.jianshu.com/u/669b3db8f6fe
+CSDN:           https://blog.csdn.net/bugzeroman
+新浪博客：   http://blog.sina.com.cn/u/1914861954
 
-3.
+2.待写作文章：
+Windows\Chrome插件推荐.txt
+Linux\X-manager(X-shell)介绍
+
+3.待发布文章
+Database\oracle的dbf文件迁移.txt
+Tool\Git创建本地仓库.txt
+
+4.待更新的文章
+Windows\设置电脑的保护色（绿豆沙色）.txt
+Linux\Linux常用命令.txt
