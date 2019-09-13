@@ -1,0 +1,207 @@
+# 1.说明
+对于显示器接口类型，
+常见的接口有VGA、DVI、HDMI、DP这四种，
+当然还有其他类型接口，
+本文主要介绍上面四种接口，
+介绍接口的基本规格参数和外形等，
+以及这四种接口之间的联系和区别。
+![](https://upload-images.jianshu.io/upload_images/11810589-ace89b2463c6da16.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 2.VGA
+VGA接口Video Graphics Array，
+即视频图形阵列，
+又被称为D-Sub接口。
+![](https://upload-images.jianshu.io/upload_images/11810589-9055f873c4b44cac.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+VGA接口传输的是模拟信号，
+该接口目前几乎已经被淘汰了，
+只有个别的投影或仪器设备还在使用。
+VGA接口是一种D型接口，
+共有15个针脚，分成3排，每排5个。
+![](https://upload-images.jianshu.io/upload_images/11810589-40c9d7d9385db13d.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 2.1.VGA缺点
+早期计算机和外部显示设备的连接都是通过VGA接口的，
+计算机内部以数字方式生成的显示图像信息，
+被显卡中的D/A(数字/模拟)转换器转变为RGB三原色信号和行场同步信号，
+信号通过电缆传输到显示设备中。
+对于模拟显示设备，如[CRT显示器](https://baike.baidu.com/item/CRT%E6%98%BE%E7%A4%BA%E5%99%A8/331814?fr=aladdin)，
+信号被直接送到相应的处理电路，
+驱动控制显像管生成图像；
+而对于数字显示设备，如LCD、DLP等，
+显示设备中需配置相应的A/D(模拟/数字)转换器，
+将模拟信号转变为数字信号。
+在经过D/A和A/D这两次转换后，
+同时模拟信号抗干扰能力很弱，
+不可避免地造成了一些图像细节的损失。
+VGA接口应用于CRT显示器无可厚非，
+但用于连接液晶之类的显示设备，
+会导致部分信号丢失，造成画面质量下降。
+
+# 3.DVI
+DVI接口Digital Visual Interface，
+即数字视频接口。
+![](https://upload-images.jianshu.io/upload_images/11810589-7b7713cd666c4aa8.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 3.1.DVI接口类型
+DVI接口有3大类型5种规格，
+DVI接口在传输数字信号时又分为
+单连接(Single Link)和双连接(Dual Link)两种方式。
+3大类型：DVI-A，DVI-D，DVI-I。
+5种规格：DVI-A，DVI-D单连接，DVI-D双连接，
+DVI-I单连接，DVI-I双连接。
+![](https://upload-images.jianshu.io/upload_images/11810589-22bacab3175cf4fe.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 3.1.1.DVI-A
+DVI-A，Analog模拟，
+纯模拟接口仅支持模拟信号的传输，
+针脚规格(12+5)。
+![](https://upload-images.jianshu.io/upload_images/11810589-b2526b2cd775d055.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+DVI-A接口传递的仍是模拟信号，
+因此与VGA接口并没有本质的区别。
+
+## 3.1.2.DVI-D
+DVI-D，Digital数字，
+纯数字接口仅支持数字信号的传输。
+### 3.1.2.1.DVI-D单连接
+针脚规格(18+1)。
+![](https://upload-images.jianshu.io/upload_images/11810589-f3382aab3e9101c5.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+### 3.1.2.2.DVI-D双连接
+针脚规格(24+1)。
+![](https://upload-images.jianshu.io/upload_images/11810589-091f878ac0cdd32e.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+## 3.1.3.DVI-I
+DVI-I，Integrated混合，
+接口同时支持模拟信号和数字信号的传输，
+是一个过渡性的产品。
+### 3.1.3.1.DVI-I单连接
+针脚规格(18+5)。
+![](https://upload-images.jianshu.io/upload_images/11810589-5baf27863d9a2a6f.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+### 3.1.3.2.DVI-I双连接
+针脚规格(24+5)。
+![](https://upload-images.jianshu.io/upload_images/11810589-9f9c95a1ff9ddf50.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+目前使用较多的是DVI-I双连接接口。
+
+## 3.1.4.单连接和双连接区别
+单连接DVI接口的传输速率只有双连接的一半，
+最大的分辨率和刷新率只能支持到1920x1200,60hz 。
+双连接的DVI接口的最大的分辨率和刷新率，
+可以支持到2560x1600,60Hz模式，
+也可以支持1920x1080,120Hz的模式。
+液晶显示器要达到3D效果必须拥有120Hz的刷新率，
+所以3D方案中使用DVI接口连接时，
+必须要使用双连接DVI接口的线缆。
+
+## 3.2.DVI缺点
+DVI接口的明显缺点是不支持传输音频信号，
+并且接口的体积很大。
+
+# 4.HDMI
+HDMI接口High Definition Multimedia Interface，
+即高清多媒体接口。
+![](https://upload-images.jianshu.io/upload_images/11810589-f9169abdfd705896.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+HDMI是一种全数字化视频和声音发送接口，
+而且可以同时发送音频和视频信号，
+由于音频和视频信号采用同一条线材，
+可以大大简化系统线路。
+
+HDMI不仅可以满足1080P的分辨率，
+还能支持DVD Audio等数字音频格式，
+支持八声道96kHz或立体声192kHz数码音频传送，
+可以传送无压缩的音频信号及视频信号。
+HDMI支持EDID、DDC2B，
+因此具有HDMI的设备具有"即插即用"的特点，
+信号源和显示设备之间会自动进行“协商”，
+自动选择最合适的视频/音频格式。
+与DVI相比HDMI接口的体积更小，
+HDMI/DVI的线缆长度最佳距离均不超过8米。
+
+## 4.1.HDMI接口类型
+HDMI接口目前有四种类型：
+Type A, Type B, Type C,Type D.
+**Type A**是全尺寸标准HDMI接口，有19个针脚，
+是最常见使用最多的接口。
+**Type B**接口支持更高分辨率，有29针脚，
+但目前仍无任何厂商使用Type B接头。
+**Type C**和**Type D**接口在尺寸上进行缩小，
+又称为Mini和Micro接口,
+这两个接口更多应用于便携式产品中。
+![](https://upload-images.jianshu.io/upload_images/11810589-be430e47dc02181d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-4395a5cce7540432.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 4.2.HDMI缺点
+使用HDMI接口需要支付版权专利费，
+版权费分为年会费和产品销售费，
+提高了成本开支，也就提升了产品的售价。
+HDMI接口对于高画质的输出，支持能力还不是特别的好，
+虽然新的HDMI接口协议可以支持4K，
+但是市面上销售的显示器的HDMI接口大多没有升级，
+因此对于高分辨率有需求的用户，可以考虑别的接口。
+
+# 5.DP
+DP接口DisplayPort，
+是一个标准化的数字式视频接口标准。
+![](https://upload-images.jianshu.io/upload_images/11810589-cdbecffe0981affa.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+DP的设计是为了取代传统的VGA、DVI接口,
+可以看做是HDMI接口的升级版,
+该接口免认证、免授权金。
+主要用于视频源与显示器等设备的连接，
+并也支持携带音频、USB和其他形式的数据。
+除实现设备与设备之间的连接外，
+DP还可用作设备内部的接口，
+甚至是芯片与芯片之间的数据接口。
+DisplayPort可用于同时传输音频和视频，
+其中每一个都可以在没有另外一个的基础上单独传输。
+
+得益于DP接口良好的性能和先进的技术以及免费特性，
+在目前的高端显示器中几乎都标配了DP接口，
+同时很多显卡也都标配了一个甚至多个DP接口。
+
+## 3.1.DP接口类型
+DP接口有两种类型:
+第1种是标准型Standard ，类似USB、HDMI等接头;
+第2种是迷你型Mini，主要针对连接面积有限的应用，
+比如超薄笔记型电脑。
+![](https://upload-images.jianshu.io/upload_images/11810589-304776b1ed95cf90.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-f5ee174f1122d5f9.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+# 6.总结
+四种常用的显示器接口就介绍完成了，
+现在对于显卡器输入接口的选择总结如下：
+
+## 6.1.20寸以下显示器
+若使用20寸以下的显示器使用，
+虽然会有图像细节的损失，
+VGA接口还是适用的；
+
+## 6.2.1920*1200以下显示器
+若使用1920*1200以下分辨率显示器，
+可以选用DVI-I，DVI-D，HDMI，DP接口，
+显示器屏幕尺寸影响较小；
+
+## 6.3.超高分辨率显示器
+若使用超高分辨率显示器，
+比如2560*1600或搭建多屏显示输出系统情况下，
+可以选用DVI-D双连接，HDMI，DP接口；
+
+## 6.4.3D显示器
+若采用的是3D显示器，
+在1920\*1080分辨率以下，
+可以选用DVI-D、HDMI和DP接口，
+在2560\*1600分辨率以上，
+最好选用HDMI和DP输出接口。
+
+## 6.5.接口适配原则
+最好是选择跟主板、显卡相对应的视频接口的显示器，
+比如显卡有HDMI接口就用带HDMI接口的显示器，
+两边的接口一一对应是最好的，
+实在不行再考虑接口转换（不推荐）。
+
+# 7.参考文章
+[VGA接口](https://baike.baidu.com/item/VGA%E6%8E%A5%E5%8F%A3)
+[DVI接口](https://baike.baidu.com/item/DVI%E6%8E%A5%E5%8F%A3)
+[HDMI接口](https://baike.baidu.com/item/HDMI)
+[DP接口](https://baike.baidu.com/item/DisplayPort%E6%8E%A5%E5%8F%A3)
+[电脑显卡4种接口类型：VGA、DVI、HDMI、DP](http://blog.sina.com.cn/s/blog_68274d0f01017ik2.html)
+[VGA/DVI/HDMI/DP/Type-C等常用显示接口对比介绍](https://blog.csdn.net/LEON1741/article/details/79609689)
