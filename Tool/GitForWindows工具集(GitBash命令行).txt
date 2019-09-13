@@ -1,0 +1,91 @@
+# 1.Git For Windows工具集
+Git For Windows专注于提供一套轻量级的本地工具集，
+它将Git SCM的完整功能集引入Windows，
+同时为Git用户提供适当的用户界面，
+方便用户在Windows下使用Git。
+Git For Windows主要提供两个工具：
+一个是Git Bash命令行，
+另一个Git GUI图形用户界面。
+
+## 1.1.Git SCM
+SCM（Software Configuration Management），软件配置管理。
+SCM通常被称为版本控制，诸如CVS之类的工具都实现了版本控制功能。
+对于任何想要实际开发和支持的软件项目来说，SCM都是关键。
+Git是一个开源的分布式版本控制系统，即Git实现了SCM。
+详情请参考如下文章：
+[Git分布式版本控制系统](https://www.jianshu.com/p/d2a53c8ff961)
+
+# 2.Git Bash命令行
+Git Bash是Windows下的命令行工具，
+基于msys GNU环境，提供了Git分布式版本控制工具，
+主要用于执行Git命令，
+从而用户能够在Windows下管理Git工程项目，
+这也是我们安装这个工具的主要目的。
+![](https://upload-images.jianshu.io/upload_images/11810589-91c9d258f30c2b0f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+GNU环境里有我们熟悉的Linux工具，
+不仅有tar，grep，awk等，
+而且有安装编译环境gcc，make等。
+也就是说通过Git Bash，
+我们可以在Windows下模拟Linux/Unix的环境。
+其功能与Cygwin大致相当，
+因此有了Git Bash一般不用另外安装Cygwin了。
+
+## 2.1.Bash
+Bash是一个命令处理器，通常运行于文本窗口中，
+并能执行用户直接输入的命令。
+Bash还能从文件中读取命令，这样的文件称为脚本。
+Git Bash就是Git For Windows提供的一个BASH仿真，
+用于从命令行运行Git。 
+BASH仿真的行为使得Windows下的用户使用Git时，
+就像在Linux/Unix下使用Git命令一样简单方便。
+
+## 2.2.Cygwin
+Cygwin是一个在Windows平台上运行的类Unix模拟环境。
+它对于学习Linux/Unix操作环境，
+或者从Unix到Windows的应用程序移植，
+或者进行某些特殊的开发工作，
+尤其是使用GNU工具集在Windows上进行嵌入式系统开发，非常有用。
+
+# 3.Git GUI图形用户界面
+由于Windows用户通常期望图形用户界面，
+Git for Windows因此提供了Git GUI，
+一个强大的Git Bash替代品，
+提供几乎所有Git命令行功能的图形版本，
+以及全面的可视化差异比较工具。
+![](https://upload-images.jianshu.io/upload_images/11810589-a27dc1ca03575a81.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-36fec12e8f1238dc.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 3.1.TortoiseGit图形用户界面
+TortoiseGit是一个开放的Git图形化客户端，
+是Git GUI的替代品，和TortoiseSVN一样好用。
+可以认为TortoiseGit是Git的一个插件，
+Git程序本身还是要安装的。
+详细安装使用请参考：
+[Tortoisegit图文使用教程](https://www.cnblogs.com/maojunyi/p/7735723.html)
+
+## 3.2.GUI
+GUI（Graphical User Interface），图形用户界面，
+是指采用图形方式显示的计算机操作用户界面。
+通常在Windows操作系统上，
+我们可以通过鼠标对图形用户界面进行操作，
+比如打开文件夹，浏览网页等，
+大部分情况下GUI能做的事情，命令行也可以做。
+
+# 4.Git For Windows下载安装使用
+## 4.1.下载
+在[Git For Windows官网](https://gitforwindows.org/)官网可以找到下载链接，
+下面是一个32位Windows系统可用的安装包：
+https://github.com/git-for-windows/git/releases/download/v2.21.0.windows.1/Git-2.21.0-32-bit.exe
+
+## 4.2.安装
+双击下载的安装包，一路Next即可。
+或者参考如下文章：
+[windows下Git BASH安装](https://blog.csdn.net/weixin_41714277/article/details/79399270)
+
+## 4.3.使用
+在Windows任意目录下右键，
+弹出右键菜单：
+**Git Bash Here**
+**Git GUI Here**
+![](https://upload-images.jianshu.io/upload_images/11810589-a21abad69283efa0.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
