@@ -1,0 +1,80 @@
+# 1.介绍
+JSON Viewer是Notepad++的JSON插件，
+Notepad++的Plugins Admin可以安装管理插件，
+它不仅可以格式化JSON字符串，
+还可以打开JSON查看器查看结构化的JSON。
+![](https://upload-images.jianshu.io/upload_images/11810589-70f7b8f7b3e8a0fd.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 2.安装插件
+**插件(P) -> Plugins Admin ...**
+弹出的Plugin Admin窗口，
+在Available可用插件中，
+Search搜索框中输入JSON，
+找到JSON Viewer插件，
+![](https://upload-images.jianshu.io/upload_images/11810589-e546d17a09c3ed69.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+勾选JSON Viewer的复选框，
+点击右上角的Install安装插件。
+
+安装插件时会关闭Notepad++，
+安装好后自动打开Notepad++，
+在插件(P)菜单下面可用看到新增的JSON Viewer功能：
+![](https://upload-images.jianshu.io/upload_images/11810589-fc00d63aee3b30f2.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 2.1.安装失败
+如果安装失败，可能是网络连接问题，
+可以配置代理后，重新安装。
+**菜单? -> 设置更新代理服务器...**
+填写代理服务器的地址和端口：
+![](https://upload-images.jianshu.io/upload_images/11810589-180aaa748db0cd26.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 3.使用插件
+插件主要提供两个功能，
+一个是格式化JSON字符串，
+另一个是打开JSON查看器。
+
+## 3.1.格式化JSON字符串
+**插件(P) -> JSON Viewer -> Format JSON**
+
+格式化之前的JSON：
+```
+{"startIndex":0,"pageSize":25,"totalCount":1,"resultSize":1,"sortType":"asc","sortBy":"id","queryTimeMS":1553232540936,"vXGroups":[{"id":1,"createDate":"2018-12-12T06:59:53Z","updateDate":"2018-12-12T06:59:53Z","owner":"Admin","updatedBy":"Admin","name":"public","description":"public group","groupType":0,"groupSource":0,"isVisible":1}]}
+```
+
+格式化之后的JSON：
+```
+{
+    "startIndex": 0,
+    "pageSize": 25,
+    "totalCount": 1,
+    "resultSize": 1,
+    "sortType": "asc",
+    "sortBy": "id",
+    "queryTimeMS": 1553232540936,
+    "vXGroups": [
+        {
+            "id": 1,
+            "createDate": "2018-12-12T06:59:53Z",
+            "updateDate": "2018-12-12T06:59:53Z",
+            "owner": "Admin",
+            "updatedBy": "Admin",
+            "name": "public",
+            "description": "public group",
+            "groupType": 0,
+            "groupSource": 0,
+            "isVisible": 1
+        }
+    ]
+}
+```
+
+## 3.3.打开JSON查看器
+**插件(P) -> JSON Viewer -> Show JSON Viewer**
+将JSON字符串复制到新建的文件中，
+使用Show JSON Viewer可用查看其树形层次结构：
+![](https://upload-images.jianshu.io/upload_images/11810589-f860113c82b6090f.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+注意新建的文件中不能有非JSON格式的文本，
+否则会导致JSON报错。
+
+# 4.参考文章
+[Notepad++的json 格式化](https://www.cnblogs.com/yadongliang/p/8204605.html)
+
