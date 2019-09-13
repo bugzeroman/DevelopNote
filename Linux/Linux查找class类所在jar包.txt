@@ -1,0 +1,203 @@
+# 1.说明
+写代码或者定位问题的时候，
+经常发生只知道类名不知道其所在jar包的问题，
+在Eclipse中可以使用Ctrl+Shift+T查找类，
+但是如果类所在的jar包不在Build Path中，
+则是找不到的。
+另一种方法是到网上搜索或者专门的网站去查找，
+但只能查找公共仓库上的类所在jar包，
+如果是自己编写的私有的类就找不到了。
+还有的人自己写代码去查找指定的类，
+这些都是可以参考的方法。
+本文介绍在Linux服务器上面，
+使用Shell命令查找指定class类所在jar包的方法。
+
+# 2.示例
+下面以jdk1.8的lib包为例，
+查找Integer.class类所在的jar包。
+本文所有命令在如下目录执行：
+/usr/java/jdk1.8.0_151/jre/lib
+下面先介绍几个基本Shell的命令,
+然后通过组合这些命令实现查找功能，
+而且进一步做一些小的修改优化，
+最后给出一个推荐的常用命令。
+
+# 3.查看jar包
+查看当前目录下的jar包，不包括子目录：
+```
+ls *.jar
+```
+
+查看当前目录下的所有jar包，会递归查找所有子目录：
+```
+find . -iname "*.jar"
+```
+
+# 4.查看jar包中的类名
+```
+jar -tf rt.jar
+```
+该命令会显示jar包中的内容列表，
+但是不会把jar包解压到当前的目录中，
+只是用来查看jar包中类名的，
+所以不会有副作用。
+
+# 5.找到Integer.class所在的jar包
+# 5.1.使用ls命令版本1
+```
+ls *.jar | while read jarfile; do
+    echo "$jarfile"
+    jar -tf $jarfile | grep "Integer.class"
+done
+```
+
+在Linux终端命令行输入如下命令，
+然后直接回车即可：
+```
+[root@dap211-159 lib]# ls *.jar | while read jarfile; do
+>     echo "$jarfile"
+>     jar -tf $jarfile | grep "Integer.class"
+> done
+```
+命令输出结果如下：
+```
+charsets.jar
+deploy.jar
+javaws.jar
+jce.jar
+jfr.jar
+jfxswt.jar
+jsse.jar
+management-agent.jar
+plugin.jar
+resources.jar
+rt.jar
+com/sun/org/apache/bcel/internal/classfile/ConstantInteger.class
+com/sun/xml/internal/bind/v2/runtime/reflect/PrimitiveArrayListerInteger.class
+com/sun/xml/internal/bind/v2/runtime/reflect/opt/FieldAccessor_Integer.class
+com/sun/xml/internal/bind/v2/runtime/reflect/opt/MethodAccessor_Integer.class
+com/sun/xml/internal/bind/v2/runtime/reflect/opt/TransducedAccessor_field_Integer.class
+com/sun/xml/internal/bind/v2/runtime/reflect/opt/TransducedAccessor_method_Integer.class
+sun/java2d/xr/MutableInteger.class
+java/math/SignedMutableBigInteger.class
+java/math/MutableBigInteger.class
+java/math/BigInteger.class
+sun/misc/FDBigInteger.class
+java/util/concurrent/atomic/AtomicInteger.class
+java/lang/Integer.class
+```
+可以看到Integer.class上一条输出的jar包是rt.jar，
+所以Integer.class是在rt.jar包中的。
+
+# 5.2.使用ls命令版本2
+上一个命令输出的结果太多，不方便查看，
+修改为只有找到找到Integer.class类，
+才打印其所在的jar包。
+```
+ls *.jar | while read jarfile; do
+    jar -tf $jarfile | grep  "Integer.class"
+    if [ $? -eq 0 ]
+    then
+        echo "find class in jar : "$jarfile
+    fi
+done
+```
+
+命令输出结果如下：
+```
+com/sun/org/apache/bcel/internal/classfile/ConstantInteger.class
+com/sun/xml/internal/bind/v2/runtime/reflect/PrimitiveArrayListerInteger.class
+com/sun/xml/internal/bind/v2/runtime/reflect/opt/FieldAccessor_Integer.class
+com/sun/xml/internal/bind/v2/runtime/reflect/opt/MethodAccessor_Integer.class
+com/sun/xml/internal/bind/v2/runtime/reflect/opt/TransducedAccessor_field_Integer.class
+com/sun/xml/internal/bind/v2/runtime/reflect/opt/TransducedAccessor_method_Integer.class
+sun/java2d/xr/MutableInteger.class
+java/math/SignedMutableBigInteger.class
+java/math/MutableBigInteger.class
+java/math/BigInteger.class
+sun/misc/FDBigInteger.class
+java/util/concurrent/atomic/AtomicInteger.class
+java/lang/Integer.class
+find class in jar : rt.jar
+```
+
+# 5.3.使用ls命令版本3
+上一个命令输出的结果还是有点多，
+输出了其他包含Integer.class的类，
+可以把grep条件改为/Integer.class，
+如果我们知道Integer.class的类全限定名称，
+可以把grep条件改为java/lang/Integer.class：
+```
+ls *.jar | while read jarfile; do
+    jar -tf $jarfile | grep "java/lang/Integer.class"
+    if [ $? -eq 0 ]
+    then
+        echo "find class in jar : "$jarfile
+    fi
+done
+```
+
+命令输出结果如下：
+```
+java/lang/Integer.class
+find class in jar : rt.jar
+```
+
+# 5.4.使用find命令版本
+如果要查找的jar包不仅在当前目录下面，
+而且在各个子目录下面，
+自己并不清楚具体要在那个目录查找，
+比如在Maven本地仓库，或者是自己安装的应用服务中查找，
+这个时候就可以切换到家目录或者/目录下，
+使用find命令在所有jar包中查找指定类：
+```
+find . -iname "*.jar" | while read jarfile; do
+    jar -tf $jarfile | grep "java/lang/Integer.class"
+    if [ $? -eq 0 ]
+    then
+        echo "find class in jar : "$jarfile
+    fi
+done
+```
+命令输出结果同上。
+大部分情况下使用这个命令就可以了。
+
+# 6.找到Integer.class所在的jar包方法2
+下面再提供一个结合awk和sh的方法：
+```
+find . -name "*.jar"| awk '{print "jar -tf "$1}'| sh -x | grep -i "/Integer.class"
+```
+命令输出结果如下：
+```
++ jar -tf ./jfr.jar
++ jar -tf ./deploy.jar
++ jar -tf ./management-agent.jar
++ jar -tf ./javaws.jar
++ jar -tf ./plugin.jar
++ jar -tf ./charsets.jar
++ jar -tf ./rt.jar
+java/lang/Integer.class
++ jar -tf ./resources.jar
++ jar -tf ./security/policy/limited/local_policy.jar
++ jar -tf ./security/policy/limited/US_export_policy.jar
++ jar -tf ./security/policy/unlimited/local_policy.jar
++ jar -tf ./security/policy/unlimited/US_export_policy.jar
++ jar -tf ./jsse.jar
++ jar -tf ./ext/sunec.jar
++ jar -tf ./ext/dnsns.jar
++ jar -tf ./ext/cldrdata.jar
++ jar -tf ./ext/jfxrt.jar
++ jar -tf ./ext/jaccess.jar
++ jar -tf ./ext/nashorn.jar
++ jar -tf ./ext/zipfs.jar
++ jar -tf ./ext/sunpkcs11.jar
++ jar -tf ./ext/localedata.jar
++ jar -tf ./ext/sunjce_provider.jar
++ jar -tf ./jce.jar
++ jar -tf ./jfxswt.jar
+```
+可以看到在查看rt.jar时找到了Integer.class类。
+
+# 7.参考文章
+[找到class 所在的jar](https://blog.csdn.net/taozhen1987/article/details/80287841)
+[使用命令行快速找出class文件所在的jar文件](https://blog.csdn.net/iihero/article/details/7331284)
