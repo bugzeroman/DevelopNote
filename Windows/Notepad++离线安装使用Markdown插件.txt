@@ -1,0 +1,88 @@
+# 1.介绍
+MarkdownViewerPlusPlus是Notepad++的Markdown插件,
+这个Markdown插件可以在Notepad++中实时动态渲染，
+可以同步查看使用Markdown的文章排版效果，
+还可以把文章导出为HTML和PDF格式的文件。
+![](https://upload-images.jianshu.io/upload_images/11810589-43311642d53177ad.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 2.安装插件
+这里我们使用的是离线安装包安装的方法，
+在线安装的方法请参考如下文章：
+[Notepad++在线安装使用JSON插件](https://www.jianshu.com/p/f24b4d5ab429)
+![](https://upload-images.jianshu.io/upload_images/11810589-f036f30249af731c.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 2.1.下载插件包
+MarkdownViewerPlusPlus官网下载地址
+https://nea.github.io/MarkdownViewerPlusPlus/
+有32位和64位两个插件包，
+因为我的Notepad++安装的是32位的，
+所以这里下载32位的插件包：
+MarkdownViewerPlusPlus-0.8.2-x86.zip
+
+## 2.2.解压插件包
+将下载的zip包解压，
+可以看到如下安装文件：
+MarkdownViewerPlusPlus.dll
+
+## 2.3.离线安装插件
+**设置(T) -> 导入 -> 导入插件...**
+![](https://upload-images.jianshu.io/upload_images/11810589-230f559126d99c66.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+选择刚才解压出来的插件安装文件：
+![](https://upload-images.jianshu.io/upload_images/11810589-90bf596d62e8ac78.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击确认，弹出对话框，
+提示安装完插件后需要重启Notepad++使插件生效。
+![](https://upload-images.jianshu.io/upload_images/11810589-99088f9775f57900.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 3.使用插件
+Notepad++重启后能在**插件(P)**菜单下看到**MarkdownViewer++**插件，
+说明插件安装成功。
+该插件主要提供两个功能，
+一个是查看实时动态渲染markdown文章的排版效果，
+另一个是将排版好的文章导出为HTML和PDF格式的文件。
+
+## 3.1.查看实时markdown排版效果
+这个功能和大部分支持Markdown的工具都是一样的，
+打开后左边是编辑文本，右边是渲染后的排版效果。
+
+首先我们打开一个markdown文件，
+然后打开MarkdownViewer++视图：
+**插件(P) -> MarkdownViewer++ -> MarkdownViewer++**
+![](https://upload-images.jianshu.io/upload_images/11810589-c54e2ee4e519a5de.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+可以看到右边对应的排版效果：
+![](https://upload-images.jianshu.io/upload_images/11810589-1c857d28e1b75c7d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 3.2.导出HTML和PDF格式文件
+在右边的MarkdownViewer++预览视图中，
+点击Export as，选择导出文件的格式为HTML或PDF。
+![](https://upload-images.jianshu.io/upload_images/11810589-1a09da072da1f7b7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 4.自定义CSS样式
+MarkdownViewerPlusPlus插件是可以自定义排版样式的:
+**插件(P) -> MarkdownViewer++ -> Options**
+选择HTML，编辑Custom CSS可以自定义CSS样式。
+另外为了方便查看导出的HTML页面，
+可以勾选Export下的Open HTML after export。
+![](https://upload-images.jianshu.io/upload_images/11810589-cc1f51633e18a3cb.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+刚装好插件时Custom CSS是空的，
+所以渲染出来的表格是没有边框的，
+看着非常不习惯，
+在Custom CSS添加如下样式，
+将表格边框折叠为单一边框，
+并且设置1像素的实线黑色边框。
+```
+table
+{
+  border-collapse:collapse;
+}
+table,th, td
+{
+  border: 1px solid black;
+}
+```
+设置完成后保存，渲染表格效果如下：
+![](https://upload-images.jianshu.io/upload_images/11810589-65388e428eef8346.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+更多CSS样式的设置请参考如下w3school教程：
+[CSS-样式:CSS-表格](http://www.w3school.com.cn/css/css_table.asp)
