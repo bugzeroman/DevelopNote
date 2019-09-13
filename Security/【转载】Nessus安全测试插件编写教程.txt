@@ -1,0 +1,508 @@
+Nessus安全测试插件编写教程
+作者：Renaud Deraison 
+翻译：nixe0n 
+
+# 1.怎样编写一个高效的Nessus安全测试插件 
+在Nessus安全测试系统中，
+所有的安全测试都是由nessusd进程发动的。
+在测试期间，
+一个好的测试插件必须能够有效地利用其它测试插件的测试结果。
+例如：一个测试插件需要打开一个到FTP服务器的连接，
+而在这之前它应该首先检查端口扫描测试插件的结果，
+确定FTP端口是否打开。
+在一般情况下，这样只会节约一点点时间，
+但是如果被测试主机位于防火墙之后，
+这样做会节省由于防火墙丢弃到21端口的TCP报文造成的漫长等待时间。 
+
+## 1.1.确定端口是否打开 
+get_port_state(〈portnum〉)函数用于获得端口的状态。
+如果端口为开，这个函数就返回TRUE；
+反之，则返回FALSE；
+如果这个端口没有被扫描过，
+也就是其状态为未知(unknown)，
+函数也将返回TRUE。
+这个函数只消耗很少的CPU资源，
+因此你可以尽可能地使用它，
+来提高测试插件的效率。 
+
+## 1.2.基础信息(Knowledge Base,KB) 
+在测试过程中，
+Nessus会为每个主机维护一份由扫描测试插件获得的基本信息
+(Knowledge Base，这个词本来应该是基础知识的意思，
+但是这里似乎翻译作基本信息更为恰当^_^)。
+各种其它的测试插件应该尽可能地利用这些信息，
+以提高测试效率。
+实际上，端口的状态就保存在这里。 
+
+KB被分为好几类。
+Service类包含每个已知的服务和为其分配的端口号。
+例如，在大多数情况下，Server/smtp的值为25。
+但是，如果远程主机的SMTP服务被隐藏于2500端口，
+这个值就改为2500。 
+
+有关基本信息各个元素的细节请参考附录B。 
+在NASL中，有两个有关节本信息(KB)的函数。
+使用get_kb_item(〈name〉)函数可以获得基本信息的〈name〉项的值，
+这个函数是匿名函数；
+而函数set_kb_item(name:〈name〉,value:〈value〉)能够把〈name〉项的值设置为〈value〉。 
+
+注意：你不能获得刚刚加入的基本信息条目的值。
+例如，以下代码将无法象你所期待的那样执行： 
+```
+set_kb_item(name:"attack",value:TRUE); 
+if(get_kb_item("attack")) 
+{ 
+　　#这里的代码不可能执行 
+　　#因为attack基本信息项并没有更新 
+} 
+```
+之所以会这样，是出于安全和代码稳定性的考虑。
+在安全测试期间，
+Nessus服务器会为每个安全测试插件维护一份基本信息(KB)拷贝，
+安全测试插件只是从自己的基本信息(KB)拷贝中获得信息。
+而set_kb_item()函数只更新原始的基本信息(KB)拷贝，
+不对当前安全测试插件使用的拷贝进行更新操作。 
+
+# 2.NASL脚本结构 
+每个安全测试插件需要向Nessus服务器进行注册后，才能使用。
+注册信息包括名字、描述、作者等。
+每个NASL脚本都需要有以下结构： 
+```
+# 
+#NASL基本基本结构 
+# 
+if(description) 
+{ 
+    #这里是注册信息 
+    # 
+    #这里可以叫做注册部分(register section) 
+    # 
+    exit(0); 
+} 
+# 
+#这里是脚本代码。我们可以称为攻击部分(attack section) 
+# 
+```
+description是一个全局变量，
+值可以是TRUE或者FALSE，
+取决于脚本是否需要注册。 
+
+##2.1.注册部分 
+在脚本的注册部分，必须调用以下函数： 
+script_name(language1:〈name〉,[...]) 
+
+设置在Nessus客户程序窗口中显示的名称。 
+script_description(language1:〈desc〉,[...]) 
+
+设置在Nessus客户程序中显示的描述信息。 
+script_summary(language1:〈summary〉,[...]) 
+
+设置总结信息，必须在一行之内总结描述信息的内容。 
+script_category(〈category〉) 
+
+设置脚本的类别。
+必须是ACT_ATTACK、ACT_GATHER_INFO、ACT_DENIAL和ACT_SCANNER之一。 
+ACT_GATHER_INFO 
+
+信息采集类脚本。
+这种脚本率先启动，不会对远程主机造成伤害。 
+ACT_ATTACK 
+
+这类脚本会尝试获得远程主机的某些权限，
+可能会危害远程主机(例如，如果运行缓冲区溢出测试插件) 
+ACT_DENIAL 
+
+这种脚本会发起拒绝服务攻击，
+试图造成远程主机宕机。 
+ACT_SCANNER 
+
+端口扫描脚本。 
+script_copyright(language1:〈copyright〉,[...]) 
+
+设置脚本的版权信息。 
+script_family(language1:〈family〉,[...]) 
+
+设置脚本所属的族(family)。
+NASL对此没有明确的规定，
+你可以任意定义脚本所属的族，
+例如：nixe0n's PowerTools"，
+不过我不建议这样做。
+当前使用的族名有： 
+```
+Backdoors 
+CGI abuses 
+Denial of Service 
+FTP 
+Finger abuses 
+Firewalls 
+Gain a shell remotely 
+Gain root remotely 
+Misc 
+NIS 
+RPC 
+Remote file access 
+SMTP problems 
+Useless services 
+```
+你可能注意到了，
+以上所有的函数都有一个叫做language1的参数。
+这个参数用于提供多语言支持。
+使用NASL编写的脚本都需要支持英语，
+因此这些函数的确切语法是： 
+script_fuction(english:english_text,[francais:french_text,deutsch:german_text,...]); 
+
+除了以上函数，
+还有一个用于解决安全测试插件依赖关系的函数script)dependencies()。
+它告诉nessusd服务器在某些脚本之后启动当前脚本。
+如果当前脚本需要其它脚本获得的结果，就需要使用这个函数。
+其原型为： 
+script_dependencies(filename1 [,filename2,...,filenameN]); 
+filename参数是脚本文件名。 
+
+## 2.2.攻击部分 
+脚本的攻击部分可以包括所有用于攻击测试的代码。
+一旦攻击完成，
+你可以使用security_warning()和security_hole()函数
+报告是否存在此类安全问题。
+这两个函数的用途基本相同，
+security_warning()用于攻击成功，
+但是问题不大的情况。
+它们的原型如下： 
+```
+security_warning(〈port〉 [,protocol:〈proto〉]); 
+security_hole(〈port〉 [,protocol:〈proto〉]); 
+security_warning(port:〈port〉,data:〈data〉 [,protocol:〈proto〉]); 
+security_hole(port:〈port〉,data:〈data〉 [,protocol:〈proto〉]); 
+```
+在上面的第一种情况下，
+客户程序显示的内容是脚本注册时script_description()函数提供的。
+由于能够支持多语言，因此非常方便。 
+
+在第二种情况下，客户程序将显示data参数的内容。
+如果你需要显示动态获得的数据，就必须使用这种形式。 
+
+## 2.3.CVE兼容性 
+CVE是麻省理工学院维护的一个数据库，
+主要是对安全相关的问题提供一个一般的描述。 
+详情请参考http://cve.mitre.org。 
+
+Nessus和CVE完全兼容，
+如果你要测试一个CVE定义过的安全问题，
+就可以在插件脚本的描述部分调用script_cve_id()函数。
+其原型如下： 
+script_cve_id(string); 
+例如： 
+script_cve_id("CVE-1999-0991"); 
+
+如果使用了这个函数，
+Nessus客户程序在生成报告时，
+会自动引用相关的CVE记录。 
+
+## 2.4.示例 
+除了安全测试外，
+NASL也可以用来编写一些用于维护的脚本。
+下面就是一个例子，
+用户可以使用这个脚本检查那些主机正在提供SSH服务。 
+```
+# 
+#检查SSH 
+# 
+if(description) 
+{ 
+    script_name(english:"Ensure the presence of ssh"); 
+    script_description(english:"This script makes sure that ssh is running"); 
+    script_summary(english:"connects ont remote tcp port 22"); 
+    script_category(ACT_GATHER_INFO); 
+    script_family(english:"Admiminstration toolbox"); 
+    script_copyright(english:"This script was Writtern by Joe U."); 
+    exit(0); 
+} 
+# 
+#SSH服务可能隐藏在别的端口 
+#因此我们需要依赖于find_service插件获得的结果 
+# 
+port=get_kb_item("Services/ssh"); 
+if(!port)port=22; 
+#首先声明SSH没有安装 
+ok=0; 
+if(get_port_state(port)) 
+{ 
+    soc=open_sock_tcp(port); 
+    if(soc) 
+    { 
+        #检查端口是否是由TCP_Wrapper封装的。 
+        data=recv(socket:soc,length:200); 
+        if("SSH"〉〈data)ok=1; 
+    } 
+    close(soc); 
+} 
+# 
+#报告不提供SSH服务的主机 
+# 
+if(!ok) 
+{ 
+    report="SSH is not running on this host!"; 
+    security_warning(port:22,data:report); 
+} 
+```
+
+# 3.脚本优化 
+在安全测试期间，
+nessusd服务器将启动200多个脚本。
+如果所有脚本编写的都不好，
+这个测试就会浪费大量的时间。
+因此，你必须尽量提高脚本的效率。 
+
+## 3.1.只在必要时运行 
+对于优化脚本，最有效的方法是告诉nessusd服务器什么时候不要启动它。
+例如，假设你的脚本需要建立到远程主机123/TCP端口的连接，
+如果nessusd知道这个端口已经被关闭，就没有必要启动你的脚本了。
+script_require_ports()、script_require_keys()和
+script_exclude_keys()就是用来实现上述目的。
+这些脚本需要在描述部分调用： 
+script_require_ports(〈port1〉,〈port2〉,...) 
+
+参数中的至少一个端口开放才启动脚本。
+参数可以是数字，也可以是基本信息(KB)中定义的符号，
+例如："Services/www"。
+注意：如果端口的状态是未知的(例如：还没有进行过端口扫描)，
+这个脚本也会执行。 
+script_require_keys(〈key1〉,〈key2〉,...) 
+
+只有参数中的关键词在基本信息(KB)都有定义时，
+才执行脚本。例如： 
+script_require_keys("ftp/anonymous","ftp/writeable_dir"); 
+
+表示只有远程FTP主机支持匿名用户以及存在可以写的目录时，
+才启动当前脚本。 
+script_exclude_keys(〈key1〉,〈key2〉,...) 
+
+参数表示的关键词至少有一个在基本信息(KB)中有定义，
+才执行当前脚本。 
+
+## 3.2.充分利用其它脚本的结果 
+充分利用基本信息拷贝中的信息，可以使脚本更高效。
+例如，如果在调用open_sock_tcp()函数之前，
+先调用get_port_state()函数，
+就可以避免由于目标端口是关闭的带来的时间上的浪费。 
+
+# 4.如何分享你的新脚本 
+如果你想让别人分享自己的成果，
+在编写测试脚本时要遵循以下原则： 
+
+- 你的脚本不能存在任何与用户交互的操作 
+- NASL安全测试脚本是在服务器端运行的，因此用户看不到任何的输出信息。 
+- 一个脚本只能测试一个漏洞 
+- 如果你知道如何测试好几个漏洞，那就为每个漏洞都编写自己的测试脚本。 
+- 你的脚本最好归入现有的种类 
+- 如果你计划分享自己的成果，最好避免建立Joe's Power Tools这样的新插件种类，尽量把插件划入已有的插件种类。 
+- 查询CVE中是否有相关漏洞的定义 
+- 如果你能够注意脚本的兼容性，可以节省Nessus维护者的很多时间。 
+- 把成果发给Nessus维护者 
+
+Nessus的维护者就是本文的作者。
+如果你不象独享自己的成果，
+就把它发给Nessus维护者。
+如果你的脚本被采用，
+它就会被分配一个唯一的ID。 
+
+# 5.结论 
+希望你能够喜欢这个教程。
+学习这个语言不会占用你太多的时间，
+你需要多多练习。
+在使用过程中，你会发现NASL解释器的一些BUGS，
+希望你能够及时把这些BUGS报告给我。 
+
+# 6.附录A.基本信息(Knowledge base) 
+所谓的基本信息是一些关键词，
+里面包含其它测试插件获得的信息。
+使用script_dependencies()、get_kb_item()和set_kb_item()函数，
+可以帮助你避免没有必要的重复测试。
+附录A中将罗列出这些关键词。 
+
+在基本信息(KB)中，
+每个项可以有几个值。
+例如，远程主机运行两个FTP服务：
+一个在端口21，另一个在端口2100。
+这样关键词Services/ftp就等于21和2100两个端口。
+在这种情况下，测试脚本将执行两次：
+第一次，get_kb_item("Services/ftp")函数将返回21，
+第二次这个函数将返回2100。
+不过，这是自动进行的，无须人工干预。
+对于脚本编写者来说，
+相当于每个基本信息关键词只有一个值。
+有些关键词目前没有多大用处，
+好多我就没有用过，但是有备无患。 
+
+Host/OS 
+定义文件：queso.nasl、nmap_wrapper.nasl 
+类型：字符串 
+含义：远程操作系统的类型 
+
+Host/dead 
+定义文件：ping_host.nasl和所有的DoS插件 
+类型：boolean 
+含义：远程主机关闭。如果这个项被设置，nessusd将终止针对这个主机的所有测试。 
+
+Services/www 
+定义文件：find_service.nes 
+类型：端口号 
+含义：目标主机WEB服务器监听的端口号。如果没有发现WEB服务器，就返回0。 
+
+Services/auth 
+定义文件：find_service.nes 
+类型：端口号 
+含义：identd服务使用的端口。如果没有这个服务，就返回0。 
+
+Services/echo 
+定义文件：find_service.nes 
+类型：端口号 
+含义：echo服务使用的端口。如果没有这个服务，就返回0。 
+
+Services/finger 
+定义文件：find_service.nes 
+类型：端口号 
+含义：finger服务使用的端口。如果没有这个服务，就返回0。 
+
+Services/ftp 
+定义文件：find_service.nes 
+类型：端口号 
+含义：ftp服务使用的端口。如果没有这个服务，就返回0。 
+
+Services/smtp 
+定义文件：find_service.nes 
+类型：端口号 
+含义：smtp服务使用的端口。如果没有这个服务，就返回0。 
+
+Services/ssh 
+定义文件：find_service.nes 
+类型：端口号 
+含义：ssh服务使用的端口。如果没有这个服务，就返回0。 
+
+Services/http_proxy 
+定义文件：find_service.nes 
+类型：端口号 
+含义：HTTP代理服务使用的端口。如果没有这个服务，就返回0。 
+
+Services/imap 
+定义文件：find_service.nes 
+类型：端口号 
+含义：imap服务使用的端口。如果没有这个服务，就返回0。 
+
+Services/pop1 
+定义文件：find_service.nes 
+类型：端口号 
+含义：pop1服务使用的端口。如果没有这个服务，就返回0。 
+
+Services/pop2 
+定义文件：find_service.nes 
+类型：端口号 
+含义：pop2服务使用的端口。如果没有这个服务，就返回0。 
+
+Services/pop3 
+定义文件：find_service.nes 
+类型：端口号 
+含义：pop3服务使用的端口。如果没有这个服务，就返回0。 
+
+Services/nntp 
+定义文件：find_service.nes 
+类型：端口号 
+含义：nntp服务使用的端口。如果没有这个服务，就返回0。 
+
+Services/linuxconf 
+定义文件：find_service.nes 
+类型：端口号 
+含义：linuxconf服务使用的端口。如果没有这个服务，就返回0。 
+
+Services/swat 
+定义文件：find_service.nes 
+类型：端口号 
+含义：SWAT服务使用的端口。如果没有这个服务，就返回0。 
+
+Services/wild_shell 
+定义文件：find_service.nes 
+类型：端口号 
+含义：shell服务使用的端口。如果没有这个服务，就返回0。 
+
+Services/telnet 
+定义文件：find_service.nes 
+类型：端口号 
+含义：telnet服务使用的端口。如果没有这个服务，就返回0。 
+
+Services/server 
+定义文件：find_service.nes 
+类型：端口号 
+含义：realserver服务使用的端口。如果没有这个服务，就返回0。 
+
+Services/netbus 
+定义文件：find_service.nes 
+类型：端口号 
+含义：NetBus服务使用的端口。如果没有这个服务，就返回0。 
+
+bind/version 
+定义文件：bind_version.nasl 
+类型：字符串 
+含义：远程BIND监控程序的版本 
+
+rpc/bootparamd 
+定义文件：bootparamd.nasl 
+类型：字符串 
+含义：bootparam RPC服务正在运行 
+
+Windows compatible 
+定义文件：ca_unicenter_file_transfer_service.nasl、ca_unicenter_transport_service.nasl、mssqlserver_detect.nasl和windows_detect.nasl 
+类型：boolean 
+含义：远程主机好象运行一种Windows兼容操作系统(只有相关的端口开放才进行这个测试) 
+
+finger/search.**@host 
+定义文件：cfinger_search.nasl 
+类型：boolean 
+含义：使用**进行finger查询能够得到用户列表。 
+
+finger/0@host 
+定义文件：finger_0.nasl 
+类型：boolean 
+含义：使用0进行finger查询能够得到用户列表 
+
+finger/.@host 
+定义文件：finger_dot.nasl 
+类型：boolean 
+含义：使用.进行finger查询能够获得用户列表 
+
+finger/user@host1@host2 
+定义文件：finger_0.nasl 
+类型：boolean 
+含义：finger监控程序能够用于重定向攻击 
+
+www/frontpage 
+定义文件：frontpage.nasl 
+类型：boolean 
+含义：远程WEB服务器使用frontpage扩展 
+
+ftp/anonymous 
+定义文件：ftp_anonymous.nasl 
+类型：boolean 
+含义：远程FTP服务器可以匿名登录 
+
+ftp/root_via_cmd 
+定义文件：ftp_cwd_root.nasl 
+类型：boolean 
+含义：使用CWD命令可以获得远程FTP服务器的root权限。参看CVE-1999-0082 
+
+ftp/microsoft 
+定义文件：ftp_overflow.nasl 
+类型：boolean 
+含义：远程主机是Micro$oft FTP服务器，不能处理太长的参数 
+
+ftp/false_ftp 
+定义文件：ftp_overflow.nasl 
+类型：boolean 
+含义：远程主机经过TCP封装，或者FTP端口开放而连接关闭。 
+
+# 7.附录B.nasl工具 
+libnasl软件包中有一个单独的解释器nasl，
+可以用于脚本的调试。
+更多细节可以参考man nasl
+
+# 8.原文链接
+[Nessus安全测试插件编写教程](https://www.cnblogs.com/xbitor/articles/31716.html)
