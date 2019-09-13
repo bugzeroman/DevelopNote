@@ -1,0 +1,99 @@
+Ranger-AdminServer安装，
+对应的Ranger版本2.0.0。
+
+# 1.安装规划
+RangerAdmin安装依赖如下组件：
+mysql
+solr
+
+|IP/机器名 |安装软件    |运行进程      |
+|----------|------------|--------------|
+|dap211-159|RangerAdmin	|EmbeddedServer|
+|dap211-159|MySQL       |mysql         |
+
+安装用户:
+rangeradmin/zdh1234
+/home/rangeradmin
+
+# 2.安装配置jdk1.8
+配置JAVA_HOME环境变量供root使用：
+```
+export JAVA_HOME=/usr/java/jdk1.8.0_151
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar 
+```
+
+拷贝mysql-connector-java.jar到/usr/share/java目录下：
+```
+scp root@10.43.159.211:/usr/share/java/mysql-connector-java-8.0.12.jar .
+```
+
+# 3.安装RangerAdmin，需要使用root用户
+安装rangerAdmin到/home/rangeradmin
+创建目录/home/rangeradmin，
+获取并上传安装包：
+```
+scp root@10.43.159.211:/home/compile/apache/ranger/target/ranger-2.0.0-SNAPSHOT-admin.tar.gz .
+```
+解压安装包
+```
+tar -zxvf ranger-2.0.0-SNAPSHOT-admin.tar.gz
+```
+
+修改配置文件install.properties参数如下：
+```
+#数据库类型选择MySQL
+DB_FLAVOR=MYSQL
+
+#指定MySQL的驱动，需要自己准备相应的jar包
+SQL_CONNECTOR_JAR=/usr/share/java/mysql-connector-java-8.0.12.jar
+
+#配置MySQL数据库的信息
+db_root_user=root
+db_root_password=zdh1234
+db_host=localhost
+
+#安装时会使用上面的root用户创建如下数据库
+db_name=rangeradmin
+db_user=rangeradmin
+db_password=zdh1234
+
+#配置RangerAdmin使用solr作为aduit审计日志
+audit_store=solr
+audit_solr_urls=http://10.43.159.9:8983/solr/ranger_audits
+
+unix_user=rangeradmin
+unix_user_pwd=zdh1234
+unix_group=hadoop
+
+RANGER_PID_DIR_PATH=/home/rangeradmin/pid
+```
+
+注意，需要在数据库创建配置的用户和数据库：
+```
+grant all on *.* to rangeradmin@'%' identified by 'zdh1234' with grant option;
+CREATE DATABASE rangeradmin;  
+```
+
+使用root用户执行如下脚本，安装RangerAdmin:
+./setup.sh
+
+安装完成后RangerAdmin目录属主变为"rangeradmin:hadoop"。
+
+# 4.启动和停止
+启动Ranger Admin：
+ranger-admin start
+停止Ranger Admin：
+ranger-admin stop
+
+# 5.安装验证
+web登陆验证是否安装成功：
+http://10.43.159.211:6080
+默认用户名密码 admin/admin
+
+# 6.其他
+设置目录别名，方便定位问题：
+```
+alias logs='cd /home/rangeradmin/ranger-2.0.0-SNAPSHOT-admin/ews/logs'
+alias conf='cd /home/rangeradmin/ranger-2.0.0-SNAPSHOT-admin/ews/webapp/WEB-INF/classes/conf'
+```
