@@ -1,0 +1,35 @@
+# 1.说明
+MySQL数据库大版本5.7的安装没有较大变化，
+所以MySQL数据库Version5.7.25安装请参考:
+[MySQL数据库安装Version5.7](https://www.jianshu.com/p/80b3deca31bf)
+上面文章中MySQL安装使用Version5.7.22，
+Version5.7.25安装请参考上面文章，
+并且结合参考下面的步骤，
+指出了Version5.7.25安装相对Version5.7.22的变化。
+
+# 2.初始化密码
+MySQL数据库初始化的时候就会生成一个临时密码，
+而不会另外保存在/home/mysql/.mysql_secret文件中。
+```
+bin/mysqld --initialize --user=mysql --basedir=/home/mysql/mysql-5.7.25-linux-glibc2.12-x86_64/ --datadir=/home/mysql/mysql-5.7.25-linux-glibc2.12-x86_64/data/
+2019-04-10T08:51:14.557235Z 1 [Note] A temporary password is generated for root@localhost: >yJfZ1Ejgagq
+```
+
+# 3.操作系统自带my.cnf文件
+启动MySQL安全线程时，
+由于读取了操作系统自带my.cnf文件，
+需要新建两个mysql有写权限的目录：
+````
+bin/mysqld_safe --user=mysql &
+/var/log/mariadb
+/var/lib/mysql
+````
+这两个路径可以在/etc/my.cnf里面修改，
+而且这个文件是redhat7操作系统自带的，
+由于我们已经修改/etc/init.d/mysqld的配置，
+且MySQL数据库现在不需要my.cnf也可以运行，
+所以这个配置文件可以直接删除:
+rm /etc/my.cnf
+
+# 4.参考文章
+[mysqld_safe Logging to '/var/log/mariadb/mariadb.log'](https://bugs.mysql.com/bug.php?id=77531)
