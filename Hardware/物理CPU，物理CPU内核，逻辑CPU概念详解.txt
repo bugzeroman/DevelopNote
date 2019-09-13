@@ -1,0 +1,59 @@
+# 1.说明
+CPU(Central Processing Unit)是中央处理单元，
+本文介绍物理CPU，物理CPU内核，逻辑CPU，
+以及他们三者之间的关系，
+一个物理CPU可以有1个或者多个物理内核，
+一个物理内核可以作为1个或者2个逻辑CPU。
+
+# 2.物理CPU 
+物理CPU就是计算机上实际安装的CPU，
+物理CPU数就是主板上实际插入的CPU数量。
+在Linux上查看/proc/cpuinfo，
+其中的physical id就是每个物理CPU的id，
+有几个不同的physical id就有几个物理CPU。
+
+# 3.物理CPU内核
+每颗物理CPU可以有1个或者多个物理内核，
+通常每颗物理CPU的内核数都是固定的，
+单核CPU就是有1个物理内核，
+双核CPU就是有2个物理内核。
+在Linux上查看/proc/cpuinfo，
+其中的core id就是每颗物理CPU的物理内核id，
+有几个不同的core id就有几个物理内核。
+总的CPU物理内核数 = 物理CPU数 * 每颗物理CPU的内核数 
+
+# 4.逻辑CPU 
+操作系统可以使用逻辑CPU来模拟真实CPU。
+在没有多核处理器的时候，
+一个物理CPU只能有一个物理内核，
+而现在有了多核技术，
+一个物理CPU可以有多个物理内核，
+可以把一个CPU当作多个CPU使用，
+为了与物理CPU区分开来，称其为逻辑CPU。
+没有开启超线程时，逻辑CPU的个数就是总的CPU物理内核数。
+然而开启超线程后，逻辑CPU的个数就是总的CPU物理内核数的两倍。
+在Linux上查看/proc/cpuinfo，
+其中的processor就是逻辑CPU，
+有几个processor就有几个逻辑CPU。
+总的逻辑CPU数 = 物理CPU个数 * 每颗物理CPU的核数 * 超线程数
+总的逻辑CPU数 = 总的CPU物理内核数 * 超线程数
+
+# 5.几核几线程
+基于上面的基本概念，
+理解一下常说的几核几线程。
+如果计算机有一个物理CPU，
+是双核的，支持超线程。
+那么这台计算机就是双核四线程。 
+实际上几核几线程中的线程数就是逻辑CPU数。
+对于两路四核超线程计算机，
+两路指计算机有2个物理CPU，
+每颗CPU中有4个物理内核，
+CPU支持超线程，
+就有2\*4\*2=16个逻辑CPU，
+这就是通常所谓的16核计算机。
+
+# 6.两路四核超线程
+实际能看到的2个物理CPU:
+![](https://upload-images.jianshu.io/upload_images/11810589-5bc0d8fdf19c3c68.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+实现16个逻辑CPU的原理图:
+![](https://upload-images.jianshu.io/upload_images/11810589-13aeadfa16ee1cec.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
