@@ -1,0 +1,101 @@
+# 1.问题说明
+Linux远程服务器突然无法SSH登录了，
+登陆报错：
+```
+ssh_exchange_identification: read: Connection reset by peer。
+```
+
+# 2.问题原因
+最近安装MySQL数据库，
+安装过程中修改了var目录的权限，
+偷懒直接chmod -R 777 /var。
+
+# 3.解决办法
+将SSH相关文件的权限改回来，
+确保权限为755，属主为root:root。
+
+## 3.1.查看sshd状态
+service sshd status
+```
+Redirecting to /bin/systemctl status sshd.service
+● sshd.service - OpenSSH server daemon
+   Loaded: loaded (/usr/lib/systemd/system/sshd.service; enabled; vendor preset: enabled)
+   Active: active (running) since 二 2019-04-09 23:36:09 CST; 18h ago
+     Docs: man:sshd(8)
+           man:sshd_config(5)
+  Process: 1357 ExecStart=/usr/sbin/sshd $OPTIONS (code=exited, status=0/SUCCESS)
+ Main PID: 1358 (sshd)
+   CGroup: /system.slice/sshd.service
+           ├─ 1358 /usr/sbin/sshd
+           ├─20443 sshd: root@pts/1
+           ├─20445 sshd: root@notty
+           ├─20447 /usr/libexec/openssh/sftp-server
+           ├─20594 -bash
+           ├─23794 sshd: mysql [priv]
+           ├─23796 sshd: mysql@pts/0
+           ├─23797 sshd: mysql [priv]
+           ├─23799 sshd: mysql@notty
+           ├─23800 /usr/libexec/openssh/sftp-server
+           ├─23991 -bash
+           ├─25381 vim /etc/init.d/mysqld
+           └─25739 /bin/systemctl status sshd.service
+
+4月 10 17:59:47 dap229-156 sshd[21516]: pam_unix(sshd:session): session closed for user mysql
+4月 10 18:00:05 dap229-156 sshd[23794]: Accepted password for mysql from 10.43.163.30 port 54797 ssh2
+4月 10 18:00:05 dap229-156 sshd[23794]: pam_unix(sshd:session): session opened for user mysql by (uid=0)
+4月 10 18:00:05 dap229-156 sshd[23797]: Accepted password for mysql from 10.43.163.30 port 54798 ssh2
+4月 10 18:00:05 dap229-156 sshd[23797]: pam_unix(sshd:session): session opened for user mysql by (uid=0)
+4月 10 18:26:00 dap229-156 sshd[25579]: fatal: /var/empty/sshd must be owned by root and not group or world-writable.
+4月 10 18:26:12 dap229-156 sshd[25580]: fatal: /var/empty/sshd must be owned by root and not group or world-writable.
+4月 10 18:26:29 dap229-156 sshd[25581]: fatal: /var/empty/sshd must be owned by root and not group or world-writable.
+4月 10 18:26:46 dap229-156 sshd[25590]: fatal: /var/empty/sshd must be owned by root and not group or world-writable.
+4月 10 18:30:11 dap229-156 sshd[25622]: fatal: /var/empty/sshd must be owned by root and not group or world-writable.
+```
+可以看到报错信息，
+提示/var/empty/sshd必须属于root用户，
+且所有其他用户都不能有写权限，
+所以文件权限可以改为755。
+
+## 3.2.修复文件权限
+chmod 755 /var/empty/sshd
+如果属主不对，还需要修改属主：
+chown root:root /var/empty/sshd
+
+## 3.3.重启sshd服务
+service sshd restart
+
+## 3.4.再次查看sshd状态
+service sshd status
+```
+Redirecting to /bin/systemctl status sshd.service
+● sshd.service - OpenSSH server daemon
+   Loaded: loaded (/usr/lib/systemd/system/sshd.service; enabled; vendor preset: enabled)
+   Active: active (running) since 三 2019-04-10 18:35:01 CST; 3s ago
+     Docs: man:sshd(8)
+           man:sshd_config(5)
+  Process: 25768 ExecStart=/usr/sbin/sshd $OPTIONS (code=exited, status=0/SUCCESS)
+ Main PID: 25769 (sshd)
+   CGroup: /system.slice/sshd.service
+           ├─20443 sshd: root@pts/1
+           ├─20445 sshd: root@notty
+           ├─20447 /usr/libexec/openssh/sftp-server
+           ├─20594 -bash
+           ├─23794 sshd: mysql [priv]
+           ├─23796 sshd: mysql@pts/0
+           ├─23797 sshd: mysql [priv]
+           ├─23799 sshd: mysql@notty
+           ├─23800 /usr/libexec/openssh/sftp-server
+           ├─23991 -bash
+           ├─25381 vim /etc/init.d/mysqld
+           ├─25769 /usr/sbin/sshd
+           └─25770 /bin/systemctl status sshd.service
+
+4月 10 18:35:01 dap229-156 systemd[1]: Starting OpenSSH server daemon...
+4月 10 18:35:01 dap229-156 systemd[1]: PID file /var/run/sshd.pid not readable (yet?) after start.
+4月 10 18:35:01 dap229-156 sshd[25769]: Server listening on 0.0.0.0 port 22.
+4月 10 18:35:01 dap229-156 sshd[25769]: Server listening on :: port 22.
+4月 10 18:35:01 dap229-156 systemd[1]: Started OpenSSH server daemon.
+```
+这个时候检查没有错误了，
+服务器可以SSH登录了，
+至此问题解决。
