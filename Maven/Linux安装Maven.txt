@@ -1,0 +1,70 @@
+使用Linux的root用户安装Maven，
+安装的Maven版本为3.5.4。
+
+# 1.下载并上传安装包
+下载安装包apache-maven-3.5.4-bin.tar.gz：
+[Maven官网下载](http://maven.apache.org/download.cgi)
+上传到服务器目录：
+/home/maven
+
+# 2.解压安装包
+tar -zxvf apache-maven-3.5.4-bin.tar.gz
+
+# 3.配置环境变量
+vi .bashrc 
+```
+export MAVEN_HOME=/home/maven/apache-maven-3.5.4
+export PATH=$PATH:$MAVEN_HOME/bin
+```
+使配置生效：
+source .bashrc
+
+# 4.修改配置文件
+cd /home/maven/apache-maven-3.5.4/conf
+vi settings.xml
+修改本地仓库地址：
+```
+<localRepository>/home/maven/repository</localRepository>
+```
+设置镜像仓库地址：
+```
+<mirrors>
+	<mirror>
+		<id>public</id>
+		<mirrorOf>central</mirrorOf>
+		<name>Repository</name>
+		<url>http://NexusServer:8081/nexus/content/groups/proxy-repositories</url>
+	</mirror>
+</mirrors>  
+```
+配置public访问远程仓库用户名密码。
+```
+<servers>
+	<server>
+		<id>public</id>
+		<username>admin</username>
+		<password>admin123</password>
+	</server>	
+</servers>
+```
+上面的步骤按照实际需求修改，
+可以选择跳过该步骤。
+
+# 5.验证安装
+mvn -v
+安装成功返回如下日志：
+```
+Apache Maven 3.5.4 (1edded0938998edf8bf061f1ceb3cfdeccf443fe; 2018-06-18T02:33:14+08:00)
+Maven home: /home/maven/apache-maven-3.5.4
+Java version: 1.8.0_151, vendor: Oracle Corporation, runtime: /usr/share/java/jdk1.8.0_151/jre
+Default locale: zh_CN, platform encoding: UTF-8
+OS name: "linux", version: "3.10.0-862.el7.x86_64", arch: "amd64", family: "unix"
+```
+
+对Maven项目使用编译命令:
+mvn clean install
+可以在本地仓库看到jar包：
+/home/maven/repository
+
+# 6.参考文章
+[[Java] Maven 安装和配置](https://www.cnblogs.com/yangyxd/p/5950007.html)
