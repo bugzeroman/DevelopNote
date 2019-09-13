@@ -1,0 +1,166 @@
+# 1.查看/proc/meminfo文件
+查看RAM使用情况最简单的方法是通过/proc/meminfo。
+这个动态更新的虚拟文件列出了详细的内存使用情况。
+
+cat /proc/meminfo
+命令输出结果如下：
+```
+MemTotal:       131792736 kB
+MemFree:        110845344 kB
+MemAvailable:   120877616 kB
+Buffers:            2132 kB
+Cached:         10666068 kB
+SwapCached:            0 kB
+Active:         15042280 kB
+Inactive:        4246612 kB
+Active(anon):    8874744 kB
+Inactive(anon):   240216 kB
+Active(file):    6167536 kB
+Inactive(file):  4006396 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:       4194300 kB
+SwapFree:        4194300 kB
+Dirty:                16 kB
+Writeback:             0 kB
+AnonPages:       8620816 kB
+Mapped:           202296 kB
+Shmem:            494268 kB
+Slab:             668612 kB
+SReclaimable:     484456 kB
+SUnreclaim:       184156 kB
+KernelStack:       12272 kB
+PageTables:        29540 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    70090668 kB
+Committed_AS:   31416932 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:      491540 kB
+VmallocChunk:   34290823164 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:   8333312 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+DirectMap4k:      223468 kB
+DirectMap2M:     7047168 kB
+DirectMap1G:    126877696 kB
+```
+
+# 2.free命令
+free命令是一个快速查看内存使用情况的方法，
+使用-h参数可以输出方便查看的结果。
+
+free -h
+命令输出结果如下：
+```
+              total        used        free      shared  buff/cache   available
+Mem:           125G        9.2G        105G        482M         10G        115G
+Swap:          4.0G          0B        4.0G
+```
+可以看到总的物理内存为125G,
+已经被使用的内存为9.2G,
+另外被系统缓存使用的内存为10G,
+还剩余105G的空闲内存，
+由于系统使用的10G缓存可以在需要时被回收，
+实际可用内存为115G。
+
+# 3.ps命令
+ps命令可以实时的显示各个进程的内存使用情况。
+查看内存使用信息，重要的参数说明如下：
+|参数 |英文说明 |中文说明 |
+|-----|---------|---------|
+|%MEM |percent of physical memory used |物理内存使用率 |
+|VSZ  |total amount of virtual memory used |总的虚拟内存使用量 |
+|RSS  |total amount of physical memory used |总的物理内存使用量 |
+
+可以使用"–sort"选项对进程进行排序，例如按RSS进行排序：
+ps aux --sort -rss
+命令输出结果如下：
+```
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root     22633  0.1  4.8 23799212 6425856 ?    Sl   Apr18  15:39 java -Dproc_rangeradmin
+mysql    32134  0.1  1.0 17463044 1364236 ?    Sl   Apr17  18:17 /home/mysql/mysql-5.7.25-linux-glibc2.12-x86_64/bin/mysqld --basedir=/home/mysql/m
+solr     10360  0.0  0.4 7340152 530224 ?      Sl   Apr16  13:35 /usr/java/jdk1.8.0_151/bin/java -server -Xms2g -Xmx2g -XX:NewRatio=3 -XX:SurvivorR
+root      8323  0.0  0.1 698056 231796 ?       Ssl  Mar25   6:03 /usr/sbin/rsyslogd -n
+root      1278  0.0  0.1 262704 156520 ?       Ss   Mar25   3:12 /usr/lib/systemd/systemd-journald
+gdm       2601  0.0  0.1 2157664 145200 ?      Sl   Mar25   9:58 /usr/bin/gnome-shell
+root      2494  0.0  0.0 417756 24700 tty1     Ssl+ Mar25   0:13 /usr/bin/X :0 -background none  
+......
+```
+
+# 4.top命令
+top命令提供了实时的运行中的程序的资源使用统计。
+你可以根据内存的使用和大小来进行排序。
+查看内存使用信息，重要的参数说明如下：
+|参数 |中文说明 |
+|-----|---------|
+|VIRT   |进程占用的虚拟内存 | 
+|RES    |进程占用的物理内存 | 
+|SHR    |进程使用的共享内存 | 
+|%CPU   |进程占用CPU的使用率 | 
+|%MEM   |进程使用的物理内存和总内存的百分比 |
+
+top命令输出结果如下：
+```
+top - 14:24:46 up 33 days, 21:22,  1 user,  load average: 0.00, 0.01, 0.05
+Tasks: 370 total,   1 running, 369 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  0.0 us,  0.5 sy,  0.0 ni, 99.5 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st, 99.4 id_exact,  0.0 hi_exact,  0.0 irq_exact
+KiB Mem : 13179273+total, 11080779+free,  9615360 used, 11369584 buff/cache
+KiB Swap:  4194300 total,  4194300 free,        0 used. 12084785+avail Mem
+
+  PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
+18185 root      20   0  157984   2452   1496 R   5.6  0.0   0:00.03 top
+    1 root      20   0  195988   9168   4084 S   0.0  0.0   9:13.49 systemd
+    2 root      20   0       0      0      0 S   0.0  0.0   0:00.94 kthreadd
+    3 root      20   0       0      0      0 S   0.0  0.0   0:01.21 ksoftirqd/0
+    5 root      20   0       0      0      0 S   0.0  0.0   0:00.00 kworker/0:0H
+    8 root      rt   0       0      0      0 S   0.0  0.0   0:00.55 migration/0
+    9 root      20   0       0      0      0 S   0.0  0.0   0:00.00 rcu_bh
+   10 root      20   0       0      0      0 S   0.0  0.0   6:44.59 rcu_sched
+   11 root      rt   0       0      0      0 S   0.0  0.0   0:12.11 watchdog/0
+   12 root      rt   0       0      0      0 S   0.0  0.0   0:10.40 watchdog/1
+```
+退出top命令使用Ctrl+C组合键。
+
+# 5.vmstat命令
+vmstat命令显示实时的和平均的统计，覆盖CPU、内存、I/O等内容。
+例如内存情况，不仅显示物理内存，也统计虚拟内存。
+vmstat -s
+命令输出结果如下：
+```
+    131792736 K total memory
+      9615604 K used memory
+     15133592 K active memory
+      4193128 K inactive memory
+    110806776 K free memory
+         2132 K buffer memory
+     11368224 K swap cache
+      4194300 K total swap
+            0 K used swap
+      4194300 K free swap
+      7590401 non-nice user cpu ticks
+        16543 nice user cpu ticks
+      1001961 system cpu ticks
+   9362676485 idle cpu ticks
+        15230 IO-wait cpu ticks
+            0 IRQ cpu ticks
+        17625 softirq cpu ticks
+            0 stolen cpu ticks
+      2396149 pages paged in
+     39214328 pages paged out
+            0 pages swapped in
+            0 pages swapped out
+    758920765 interrupts
+    609731270 CPU context switches
+   1553504530 boot time
+      3710939 forks
+```
+ 
+# 6.参考文章
+[Linux下查看内存使用情况方法总结](https://www.cnblogs.com/zhuiluoyu/p/6154898.html)
+[查看Linux磁盘及内存占用情况](https://blog.csdn.net/u014311799/article/details/78775175)
