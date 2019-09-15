@@ -1,0 +1,147 @@
+本文主要介绍PostgreSQL数据库的一些重要知识点，
+包括数据库、模式、表空间、用户/角色等概念和关系，
+帮助用户理解PostgreSQL数据库的重要概念，
+从而能够更好的使用PostgreSQL。
+
+# 1.ROLE/USER区别
+通常ROLE（角色）和USER（用户）是两个不同的概念，
+但是在PostgreSQL里没有区分用户和角色，
+这里容易和其他数据库的概念混淆，
+在PostgreSQL两者区别仅在于用户比角色多了登陆权限。
+
+下面分别是创建ROLE和USER的SQL：
+```sql
+CREATE ROLE kanon1 PASSWORD 'kanon1';
+CREATE USER kanon2 PASSWORD 'kanon2';
+```
+创建完成后ROLE kanon1不能登陆，
+但是USER kanon2能够登陆。
+
+为ROLE kanon1增加LOGIN权限：
+```sql
+ALTER ROLE kanon1 LOGIN;
+```
+然后kanon1也能够登陆了。
+
+CREATE USER除了默认具有LOGIN权限之外，
+其他与CREATE ROLE是完全相同的。
+下面两条SQL语句是等价的：
+```sql
+CREATE ROLE kanon PASSWORD 'kanon' LOGIN;
+CREATE USER kanon PASSWORD 'kanon';
+```
+
+角色（用户）可以拥有全局数据库对象，
+可以拥有数据库服务器全局范围内的权限，
+用于对数据库所有的对象进行管理。
+角色不特定于某个单独的数据库，
+如果需要管理数据库系统则必须连接到一个数据库上。
+
+# 2.DATABASE与SCHEMA的关系
+SCHEMA（模式）是对DATABASE（数据库）逻辑分割，
+SCHEMA可以理解为命名空间，
+SCHEMA就是数据库对象的集合。
+一个DATABASE至少有一个SCHEMA，
+在创建DATABASE时，
+自动创建一个默认SCHEMA public。
+这个DATABASE创建的所有对象（表、函数、视图、索引、序列等），
+如果没有指定SCHEMA，
+默认都是属于public。
+
+用户登录到PostgreSQL，连接到一个数据库后，
+由于一个DATABASE可以有多个SCHEMA，
+需要通过DATABASE的search_path来确定SCHEMA的搜索顺序,
+可以通过命令SHOW查看具体的顺序，
+也可以通过命令SET来设置顺序。
+查看当前数据库搜索路径:
+```sql
+SHOW search_path;
+```
+设置新的搜索路径:
+```sql
+SET search_path TO myschema,public;
+```
+
+**官方建议**：
+在管理员创建一个DATABASE后，
+应该为所有可以连接到该DATABASE的用户，
+分别创建一个与用户名相同的SCHEMA，
+然后将search_path设置为"$user"，
+这样当某个用户连接上来后，
+默认使用的是与之同名的SCHEMA，
+这是一个好的设计架构。
+
+# 3.为DATABASE对象指定SCHEMA
+数据库中一个对象的完整名称为SCHEMA.object，
+而不是USER.object。
+如果在操作对象时不指定SCHEMA，
+则使用登陆用户的默认SCHEMA。
+
+比如查询一个表时，
+没有指明该表所属的SCHEMA，
+系统自动在表上加上默认的SCHEMA名。
+查询freeoa用户的emp表：
+```sql
+select * from emp; 
+```
+假设freeoa用户默认的SCHEMA为freeoa，
+则实际上SQL语句的完整写法:
+```sql
+select * from freeoa.emp; 
+```
+
+创建schema kanon，属主为kanon：
+```sql
+CREATE SCHEMA kanon OWNER kanon;
+```
+创建表test，指定属于schema kanon：
+```sql
+CREATE TABLE kanon.test (id integer not null);
+```
+
+同一个对象名可以在不同的SCHEMA里使用而不会导致冲突， 
+比如schema1和schema2都可以包含叫做test的表,
+和DATABASE不同，SCHEMA不是严格分离的，
+一个用户只要有权限，
+可以访问一个DATABASE中的任意SCHEMA。
+
+用户可以允许别人在自己的SCHEMA里创建对象，
+需要赋予其他用户在该SCHEMA的CREATE权限。 
+默认每个人都在SCHEMA public上有CREATE权限，
+所以连接到数据库上的用户都可以在public创建对象。
+这个权限可以撤销：
+```sql
+REVOKE CREATE ON public FROM PUBLIC;
+```
+第一个public是SCHEMA，
+第二个PUBLIC是指所有用户。
+
+# 4.表空间
+在PostgreSQL中，表空间是一个目录，
+表空间是实际的数据存储的地方，
+存储的是它所包含的数据库的各种物理文件。
+一个数据库schema可能存在于多个表空间，
+一个表空间也可以为多个schema服务。
+
+创建数据库使用CREATE DATABASE dbname，
+默认的数据库所有者是当前创建数据库的用户，
+默认的表空间是系统的默认表空间pg_default。
+在PostgreSQL中，数据库的创建是通过克隆数据库模板来实现的。
+由于CREATE DATABASE dbname并没有指明数据库模板，
+所以默认使用template1数据库当作克隆模板，
+template1中的全部对象将被同步克隆到新的数据库中。
+由于template1数据库的默认表空间是pg_default，
+所以新的数据库也使用默认表空间是pg_default，
+pg_default这个表空间是在数据库初始化时创建的。
+
+创建数据库时指定数据库模板和表空间:
+```sql
+CREATE DATABASE dbname OWNER kanon TEMPLATE template1 TABLESPACE tablespacename;
+```
+
+**表空间的作用**:
+通过使用表空间，管理员可以控制磁盘的布局。
+表空间的最常用的作用是优化性能，
+比如一个最常用的索引可以建立在非常快的硬盘上，
+而不太常用的表可以建立在便宜的硬盘上，
+比如用来存储用于进行归档文件的表。
