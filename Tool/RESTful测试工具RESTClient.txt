@@ -1,0 +1,125 @@
+# 1.简介
+RESTClient是一个用于测试RESTful Web服务的客户端，
+是用Java Swing编写的基于Http协议的接口测试工具，
+它可以向服务器发送各种Http请求，并显示服务器响应。
+使用RESTClient可以方便的测试各种Web服务，
+便于Web开发时接口的调试。
+RESTClient有两个可执行文件：
+图形用户界面（对应restclient-ui-x.jar）
+CLI版本用于批处理执行.rcq文件（对应restclient-cli-x.jar）
+![](https://upload-images.jianshu.io/upload_images/11810589-409634faf3ad85e1.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 2.下载启动
+RESTClient下载地址：
+[GitHub下载](https://github.com/wiztools/rest-client/releases)
+[官网下载](https://www.wiztools.org/index.html)
+
+本文使用的是restclient-ui-3.7.1.zip，
+是带图形用户界面的绿色免安装版本，
+在Windows解压后双击restclient-ui.bat启动，
+启动脚本首先会打开一个cmd命令行：
+![](https://upload-images.jianshu.io/upload_images/11810589-fa4a3130d349f5ca.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+然后打开如下图形用户界面：
+![](https://upload-images.jianshu.io/upload_images/11810589-aa838359fe3b390b.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+简单介绍一下界面布局，
+界面上半部分为HTTP Request，
+用户可以填写各种HTTP的请求参数，
+界面下半部分为HTTP Response，
+展示服务器对请求的响应结果。
+
+# 3.使用示例
+## 3.1.查询接口
+下面使用RESTClient工具查询如下接口:
+```
+Method：Get
+URL: http://10.43.159.11:6080/service/plugins/policies/1
+用户名/密码：admin/admin
+```
+
+## 3.2.HTTP Request
+在HTTP Request下面填写URL的实际地址，
+Method选项卡里面选择Get方法，
+![](https://upload-images.jianshu.io/upload_images/11810589-ecb81305dc2ac1f7.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+然后切换到Auth选项卡，
+在下拉框中选择鉴权类型为BASIC,
+填写Username:admin，
+填写Password:admin，
+勾选Preemptive，
+![](https://upload-images.jianshu.io/upload_images/11810589-6c24819fcc20be42.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+HTTP的请求参数请求参数填写完成后，
+点击URL最右边的按钮**>>**调用接口。
+
+## 3.3.HTTP Response
+调用接口完成后，
+查看下半部分的HTTP Response窗口，
+在上图中给出的是一个成功调用的示例，
+可以看到Status为HTTP 200 OK，
+点击Body选项卡看到返回结果是json对象。
+
+## 3.4.保存以及加载请求和响应
+点击工具栏的File，
+可以保存请求或者响应，
+然后就可以加载请求或者响应，
+也可以把请求和响应打包保存，
+然后加载请求和响应包，
+还可以单独保存响应结果，
+然后可以用文件编辑器打开。
+![](https://upload-images.jianshu.io/upload_images/11810589-35d2e8bcbc8982e4.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+保存之后的请求可以在需要时打开，
+非常方便我们对接口的测试。
+![](https://upload-images.jianshu.io/upload_images/11810589-c74409cca6a10e8a.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 3.4.POST请求参数体
+如果测试的接口是POST方法，
+需要打开Body选项卡，
+下拉框选择String body，
+点击Edit Content-type&Charset，
+设置内容类型为application/json，
+字符编码格式为UFT-8，
+然后按照接口要求输入Json类型参数：
+```
+{
+  "id" : 1,
+  "guid" : "95b0df80-2715-4144-b420-8bfc69a195aa",
+  "isEnabled" : true,
+  "createdBy" : "Admin",
+  "createTime" : 1544606730000,
+  "version" : 1
+}
+```
+在Body文本框右键Formt->JSON，
+可以格式化Json文本。
+![](https://upload-images.jianshu.io/upload_images/11810589-e1473bfa141bf194.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+另外Body还支持File,URL Stream等各种参数类型，
+Content-type&Charset也支持多种内容格式和编码。
+
+# 5.其他功能
+## 5.1.设置Http Header
+![](https://upload-images.jianshu.io/upload_images/11810589-ee3788fa2b0e47a8.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 5.2.设置Cookie
+![](https://upload-images.jianshu.io/upload_images/11810589-54202bc93297510c.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 5.3.设置SSL
+![](https://upload-images.jianshu.io/upload_images/11810589-885f7446a8d6bed0.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 5.4.设置其他
+![](https://upload-images.jianshu.io/upload_images/11810589-f8dad37106b2b1a3.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 5.4.执行测试脚本
+![](https://upload-images.jianshu.io/upload_images/11810589-191894d8322abf9f.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 5.4.Base64加解密
+![](https://upload-images.jianshu.io/upload_images/11810589-76123e38dd13edbf.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 5.4.URL编解码
+![](https://upload-images.jianshu.io/upload_images/11810589-f08a595920c2675f.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+更多功能，请自行研究摸索，
+另外使用本工具需要一定的HTTP和REST知识。
+
+# 6.参考
+[RESTful Http接口测试工具](https://blog.csdn.net/HaHa_Sir/article/details/78786941)
+[Fielding博士的REST论文中文版（Rest开山作品）](https://blog.csdn.net/mypages/article/details/83325223)
