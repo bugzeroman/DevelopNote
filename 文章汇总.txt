@@ -8,7 +8,6 @@ Windows\Chrome插件推荐.txt
 Linux\X-manager(X-shell)介绍
 
 3.待发布文章
-Database\oracle的dbf文件迁移.txt
 
 4.待更新的文章
 Linux\Linux常用命令.txt

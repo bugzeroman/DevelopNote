@@ -38,7 +38,7 @@ startup mount;
 select tablespace_name, file_id,file_name, round(bytes/(1024*1024),0) total_space from dba_data_files order by tablespace_name;
 ```
 
-# 6.修改路径，执行
+# 6.修改dbf文件路径
 ```
 alter database rename file '/data/oracle/oradata/orcl/users01.dbf' to '/home/oracle/oradata/orcl/users01.dbf';
 ```
