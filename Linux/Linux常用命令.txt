@@ -38,6 +38,8 @@ scp root@10.43.159.11:/home/hadoop/bin/hadoop-2.7.1.tar.gz ./
 scp的第1个参数是数据源，第2个参数是目的地
 从本地复制文件到远程，-r可以复制目录,
 scp -r localDir pub@IP:remoteDir
+scp同时复制两个及以上的文件
+scp root@IP:"A_filepath B_filepath" .
 
 使环境变量立即生效
 source .bash_profile
@@ -112,8 +114,9 @@ du * -d 0 -h
 
 查找文件：
 find . -name hdfs-default.xml
-linux下如何查找当前目录下所有jar包中包含RangerRESTClient字符串的class文件名
-find . -name "*.jar"|awk '{print "jar -tvf "$1}'| sh |grep -i RangerRESTClient
+linux查找Integer.class类所在jar包，
+shell的debug参数（-x）打印所在jar包：
+find . -name "*.jar"| awk '{print "jar -tf "$1}'| sh -x | grep -i "/Integer.class"
 查找文件名忽略大小写
 find . -iname ranger-yarn-plugin*
 递归在所有文件查找hadoop,且忽略大小写
@@ -122,10 +125,15 @@ grep -Ri hadoop *
 grep -C 3 hadoop *
 grep 递归指定文件遍历方法,-R对单个文件没什么用，对目录有用
 find . -iname *.cpp | xargs -i grep "xxx" {} --color -RnH
-find . -name "*.cpp" -exec grep "xxx" --color -nH {} \;
-find . -iname "*.java" -exec grep "Unknown" --color -nH {} \;
+find . -name "*.cpp" -exec grep "xxx" -nH {} \;
+find . -iname "*.java" -exec grep "Unknown" -nH {} \;
 关键字需要加引号，特别是*通配符
 find . -iname "*.keytab"
+
+同时输出到标准输出(屏幕)和文件中：
+echo "hello1" | tee file.log
+输出到标准输出的同时，追加到文件中：
+echo "hello2" | tee -a file.log
 
 设置区域语言编码,让xshell命令行界面全部显示英文
 export LC_ALL=en_US.utf8
@@ -148,6 +156,10 @@ ps -eo pid,lstart,etime,cmd | grep cmdkeyword
 查看端口占用情况
 lsof -i:8080
 lsof -i | grep 8080
+
+找出监听对应端口号的进程
+lsof -n -P| grep ":8080"
+lsof -n -P| grep ":8080" | grep LISTEN  
 
 查看jvm进程占用的端口
 netstat -anp | grep 23740（Pid/java）
@@ -275,6 +287,13 @@ yum list *rz*
 安装上传下载文件小工具rz和sz
 yum install lrzsz
 
+查看yum已经安装的软件
+yum list installed | grep firefox
+卸载软件
+yum remove firefox
+更新软件
+yum update firefox
+
 从Linux向windows发送文件，然后在对话框中选择保存的文件夹
 sz file
 从Linux接收windows文件，然后在对话框中选择上传的文件
@@ -332,11 +351,43 @@ ifconfig
 sar -n DEV 1 8
 
 查看文件的详细信息：
-stat  test.log
+stat test.log
 
 普通用户修改自己的 Shell为/bin/bash：
 chsh
 然后输入/bin/bash
 管理员修改文件的方式：
- vi /etc/passwd
+vi /etc/passwd
 sqoop2:x:1003:33::/home/sqoop2:/bin/bash
+
+立刻关机：
+shutdown -h now
+poweroff -f
+
+关机重启：
+reboot
+shutdown -r now
+
+查看当前所有终端登录用户：
+who
+或者:
+w
+
+查看当前用户使用的终端：
+tty
+
+向所有终端登录用户发消息：
+wall "hello, everyone"
+
+向指定终端的用户发送消息，
+向/dev/pts/2的root发送消息：
+write root /dev/pts/2
+hello
+使用Ctrl+C或者Ctrl+D结束发送。
+
+禁止别人把信息显示在我的终端：
+mesg n
+但是超级用户可以给任何用户发送消息，
+即使用户使用mesg n命令。
+允许别人把信息显示在我的终端:
+mesg y
