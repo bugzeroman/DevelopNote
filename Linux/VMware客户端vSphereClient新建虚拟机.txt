@@ -99,7 +99,7 @@ CPU为16个物理内核，32个逻辑处理器，
 否则会导致虚拟机无法启动，报swap交换区错误。
 如果后期磁盘不够还可用另外挂载磁盘。
 **创建磁盘**选择**厚置备置零**，性能是最好的。
-[VMware vSphere中三种磁盘规格说明](http://blog.51cto.com/lookingdream/2113902)
+[【转载】VMware vSphere中三种磁盘规格的解释说明](https://www.jianshu.com/p/da056b414221)
 点击**下一步**：
 ![](https://upload-images.jianshu.io/upload_images/11810589-250a1951385fabaf.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
