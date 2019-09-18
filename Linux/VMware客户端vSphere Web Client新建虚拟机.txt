@@ -1,0 +1,231 @@
+# 1.说明
+vSphere Web Client是为管理员提供的一款通用的、
+基于浏览器的VMware管理工具，
+能够监控并管理VMware基础设施。
+由于需要登录的宿主机安装的是ESXi-6.5.0,
+对应安装包：
+VMware-VMvisor-Installer-6.5.0-4564106.x86_64.iso
+所以不能使用vSphere Client客户端登录宿主机了。
+如果你安装的是低版本的ESXi，请参考：
+[VMware客户端vSphereClient新建虚拟机](https://www.jianshu.com/p/0a0512b57a8e)
+
+在vSphere5.0以后，VMware逐渐弱化vSphere Client的作用，
+现在很多高级功能只能在vSphere Web Client里实现，
+VMware的设计趋势是用vSphere Web Client取代vSphere Client，
+ESXi 6.0还可以使用vSphere Client连接登陆，6.5开始就不支持了。
+详细请参考文章：
+[转换到vSphere Web Client有八个原因](http://server.zol.com.cn/431/4312982_all.html)
+
+# 2.服务器安装VMware vSphere 6.5
+WMware ESXi 6.5安装很简单，请参考：
+[vmware esxi6.5安装使用教程（图文安装）](https://www.cnblogs.com/yufusec/p/9181422.html)
+[VMware ESXi 6.7安装配置 ](https://blog.51cto.com/10802692/2409826)
+需要注意的是下载iso镜像后，
+使用使用UltraISO制作对应镜像的U盘启动盘，
+然后设置服务器从U盘启动即可。
+注意安装好后，需要配置网络，
+最好为宿主机设置静态IP地址，
+这样重启后IP地址也不会改变，
+方便远程管理宿主机。
+
+# 3.登录宿主机
+Chrome浏览器直接使用IP登录，
+出现登录页面：
+![](https://upload-images.jianshu.io/upload_images/11810589-fc09fcb953aabb9b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+输入用户名root和安装时设置的密码，
+不要按回车，直接用鼠标点击登录，
+否则登录后页面提示未异常，无法进一步操作。
+或者使用firefox登录就没问题，
+IE和Chrome浏览器都有这个问题。
+异常截图：
+![](https://upload-images.jianshu.io/upload_images/11810589-f2118e18726ee5d4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-1c1c7a93d96f194c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+参考文章：
+[ESXI 6.5 登陆提示“未处理异常”](https://blog.csdn.net/ziliaozainali/article/details/89578206)
+[ESXI web登录页面异常 unhandled exception](https://blog.csdn.net/h106140873/article/details/100170322)
+
+# 4.管理宿主机
+登录宿主机后，可以看到如下信息：
+![](https://upload-images.jianshu.io/upload_images/11810589-c7d8384559b011e0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+宿主机的名称为ai-11,
+登录信息为root@10.21.13.11,
+可以看到CPU,内存，存储和网络等信息，
+并且可以进行相应的操作，请自行研究。
+
+# 5.创建虚拟机
+点击**导航器**下面的**虚拟机**，
+点击**创建/注册虚拟机**，
+![](https://upload-images.jianshu.io/upload_images/11810589-c8d3355b25a408bd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+进入**新建虚拟机**导航页面。
+
+# 6.选择创建类型
+选择**创建新虚拟机**，
+点击**下一页**：
+![](https://upload-images.jianshu.io/upload_images/11810589-86fa1c083e3ce31a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 7.选择名称和客户机操作系统
+虚拟机**名称**可以是自定义的，
+这里**名称**填写ai-14，
+建议和要安装的Linux系统主机名保持一致，
+客户机操作系统为Linux，CentOS  7 (64位)，
+点击**下一页**：
+![2_CreateVMOS.png](https://upload-images.jianshu.io/upload_images/11810589-f06a826bb7900536.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 8.选择存储
+**数据存储磁盘**选择datastore-vm-21，
+建议选择可用空间较大，性能较好的磁盘，
+点击**下一页**：
+![](https://upload-images.jianshu.io/upload_images/11810589-0f18ee564ca1e479.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 9.自定义设置
+**CPU**设置8，
+**内存**设置16GB,
+**硬盘1**设置1TB:
+![](https://upload-images.jianshu.io/upload_images/11810589-8d657c031ba9a625.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 10.自定义设置硬盘
+点开**硬盘1**左边的小箭头，
+可以进一步选择磁盘置备类型，
+选择**厚置备置零**，性能是最好的，
+但是初始化时间是最长的，需要注意。
+磁盘置备类型详细请参考：
+[【转载】VMware vSphere中三种磁盘规格的解释说明](https://www.jianshu.com/p/da056b414221)
+点击**下一页**：
+![](https://upload-images.jianshu.io/upload_images/11810589-d72d9e16ad913236.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+需要注意磁盘空间设置大一点比较好，
+但也不要用完了，留一点备用空间给交换区，
+备用空间需要大于虚拟机设置的内存，
+否则会导致虚拟机无法启动，报swap交换区错误。
+如果后期磁盘不够还可用另外挂载磁盘。
+
+# 11.即将完成
+在完成向导之前查看您的选择，
+如果新建虚拟机的设置没有问题，
+点击**完成**：
+![](https://upload-images.jianshu.io/upload_images/11810589-d39266efdfd5bc38.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 12.查看新建虚拟机
+完成上面的创建虚拟机后，
+可以在**虚拟机**列表中看到**ai-14**,
+但是**状态**是**无效**。
+最下面的近期任务中，
+一个叫Create VM的任务正在初始化，
+等待初始化到100%，任务成功完成了，
+虚拟机**ai-14**的**状态**即可变为**正常**。
+![](https://upload-images.jianshu.io/upload_images/11810589-06e652364ade7495.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 13.上传Linux镜像文件到宿主机
+首先获取Linux镜像文件CentOS-7-x86_64-DVD-1810.iso，
+然后通过vSphere Web Client上传到宿主机的硬盘上，
+这里选择上传到**datastore1**。
+
+选择**导航器**下面的**存储**，
+在**数据存储**标签页下，
+点击**数据存储浏览器**：
+![](https://upload-images.jianshu.io/upload_images/11810589-89aaa17753a1306c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+弹出**数据存储浏览器**页面，
+选择**datastore1**，
+然后点击**上载**，
+选择本地的镜像文件上传，
+镜像比较大，上传需要时间，请耐心等待，
+上传成功可以看到根目录下Linux镜像：
+![](https://upload-images.jianshu.io/upload_images/11810589-7404ed440119d551.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 14.编辑虚拟机设置
+右键虚拟机**ai-14**,
+点击**编辑设置**：
+![](https://upload-images.jianshu.io/upload_images/11810589-71b048f5c5896a63.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 15.添加其他设备（CD/DVD驱动器）
+在弹出的**编辑设置**页面，
+在**虚拟硬件**标签页，
+点击**添加其他设备**：
+![](https://upload-images.jianshu.io/upload_images/11810589-fc525d5c93b97648.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+再点击**CD/DVD驱动器**:
+![](https://upload-images.jianshu.io/upload_images/11810589-366e96f37b811023.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 16.新的CD/DVD驱动器
+**设备类型**选择**数据存储ISO文件**，
+点击**浏览**选择已经上传的Linux镜像，
+![](https://upload-images.jianshu.io/upload_images/11810589-d16f02b72470ec4f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-917e9bd4b8fc3c83.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-dcf79b5e46e39056.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**状态**中勾选**打开电源时连接**，
+这样在虚拟机第一次上电启动时会加载镜像文件，
+并且进入Linux操作系统安装界面。
+
+# 17.安装操作系统
+
+## 17.1.打开电源
+选中虚拟机**ai-14**，
+点击上方工具栏的**打开电源**：
+![](https://upload-images.jianshu.io/upload_images/11810589-81bbbab3e4c598fa.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**虚拟机**第一次**打开电源**，
+会加载光驱上的镜像文件，
+
+## 17.2.安装操作系统
+进入控制台安装Linux操作系统，
+点击以打开次虚拟机的浏览器控制台：
+![](https://upload-images.jianshu.io/upload_images/11810589-c93a1a23df4fb76f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+下面完全是操作系统安装了，
+这里安装的是Linux Centos 7系统，
+可以参考[Linux操作系统RedHat6.5安装](https://www.jianshu.com/p/9b3eeadcefac)
+安装完系统，重启即可：
+![](https://upload-images.jianshu.io/upload_images/11810589-6ffcf27b796a84b9.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 17.3.找不到操作系统
+**虚拟机**第一次**启动**的时候，
+会扫描所有的磁盘，
+如果发现没有操作系统，
+会从光驱加载到镜像文件，
+从而进入Linux操作系统安装的步骤。
+如果在编辑**新的CD/DVD**设置时，
+没有勾选**设备状态**中**打开电源时连接**，
+可能会找不到操作系统。
+
+# 18.安装验证
+安装完毕后，登陆系统验证，
+可以使用虚拟机的浏览器控制台登录，
+也可以使用Xshell等工具连接**虚拟机**，
+**ssh root@10.21.13.14**，
+**ifconfig**查看网络连接正常，
+**ping**其他主机也能正常返回，
+至此**新建虚拟机**成功。
+
+# 19.管理虚拟机
+点击**导航器**下面的**虚拟机**，
+点击**ai-14**，可以管理虚拟机：
+![](https://upload-images.jianshu.io/upload_images/11810589-e157cd0692c2da88.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 20.关机/打开电源
+**关机**可以关闭虚拟机，
+**打开电源**可以启动虚拟机，
+虚拟机第二次启动时会自动进入安装好的操作系统。
+
+# 21.快照
+对虚拟机**执行快照**，
+能够保存虚拟机的当前状态，
+虽然会消耗掉一点硬盘空间，
+但是在虚拟机发生错误时能够快速恢复。
+
+# 22.控制台
+点击以打开次虚拟机的浏览器控制台，
+会弹出一个单独的控制台对话框，
+使用安装时的用户名密码登录后，
+就能像平常一样操作Linux系统了。
+
+# 23.编辑设置
+编辑设置能够修改**虚拟机属性**，
+比如**CPU**和**内存**等等，
+修改完毕后重启**虚拟机**即可生效。
+
+# 24.其他功能
+VMware提供了对虚拟机丰富的管理功能，
+请自行研究或者参考官网手册。
