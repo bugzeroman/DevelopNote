@@ -42,5 +42,6 @@ firefox浏览器就会在当前windows终端打开，
 
 # 其他：
 为了测试下是否能出现图形用户界面，还可以用xclock命令，看是否能出现一个时钟，
-xclock安装命令yum install xorg-x11-apps
+xclock安装命令：
+yum install xclock
 另外使用tigervnc也可以达到类似的目的，使用root用户在Linux上面安装服务，配合windows上面的vncview客户端即可。
