@@ -5,9 +5,16 @@ CSDN:           https://blog.csdn.net/bugzeroman
 
 2.待写作文章：
 Windows\Chrome插件推荐.txt
+Windows\Notepad插件推荐.txt
 Linux\X-manager(X-shell)介绍
+Xshell打开Linux图形化界面
+Linux 服务器重启oracle数据库
+Oracle数据库安装Version12c
 
 3.待发布文章
 
+
 4.待更新的文章
-Linux\Linux常用命令.txt
+
+
+5.待转载的文章
