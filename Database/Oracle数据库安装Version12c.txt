@@ -1,0 +1,585 @@
+# 1.安装规划
+Oracle数据库版本：
+Linuxamd64_12102_database 12c
+
+Linux服务器系统：
+CentOS Linux release 7.5.1804 (Core)   64bit
+
+Oracle安装用户:
+oracle/password
+
+# 2.Oracle数据库安装包下载
+向同事获取，或者从官网下载。
+
+# 3.将安装包上传到服务器
+这里开始使用的都是root用户:
+ftp /home/package
+
+# 4.解压安装包
+使用unzip命令解压：
+unzip linuxamd64_12102_database_1of2.zip
+unzip linuxamd64_12102_database_2of2.zip
+解压完成后会生成目录database。
+
+如果找不到命令，请先安装：
+yum install unzip
+
+# 5.检查硬件需求
+Oracle是个大型软件，
+如果你的硬件不能满足，
+肯定会导致安装失败。
+
+## 5.1.内存要求
+查看内存大小：
+grep MemTotal /proc/meminfo
+需要至少1GB的内存。
+
+查看交换分区大小：
+grep SwapTotal /proc/meminfo 
+
+内存与交换分区之间的要求：
+|内存	     |交换分区的大小   |
+|------------|------------------------ |
+|1--2GB   |	RAM大小的1.5倍 |
+|2--16GB |	等于RAM的大小 |
+|>16 GB  |	16 GB                  |
+
+## 5.2.硬盘要求
+确保/tmp目录要有1GB可用空间：
+df -h /tmp
+
+查看你系统可用硬盘空间：
+df -h 
+
+确定可用硬盘空间满足以下要求：
+|安装类型|软件文件要求 |数据文件要求 |
+|------------|--------------------|-------------------|
+|企业版	 |3.95GB             |1.7GB              |
+|标准版	 |3.88GB             |1.5GB              |
+
+# 6.检查软件包依赖
+注意这一步是重点了，
+包依赖的问题很可能导致安装失败。
+使用以下命令查看要求的软件包的版本是否安装：
+```
+rpm -q binutils compat-libstdc++ elfutils-libelf elfutils-libelf-devel elfutils-libelf-devel-static gcc gcc-c++ glibc glibc-common glibc-devel glibc-headers kernel-headers ksh libaio libaio-devel libgcc libgomp libstdc++ libstdc++-devel make sysstat unixODBC unixODBC-devel
+```
+如果都符合要求就没啥问题了，
+如果出现有未安装的软件包，
+可以单独安装缺失的软件包，
+也可以使用yum把软件包都更新一遍。
+```
+yum install binutils compat-libstdc++ elfutils-libelf elfutils-libelf-devel elfutils-libelf-devel-static gcc gcc-c++ glibc glibc-common glibc-devel glibc-headers kernel-headers ksh libaio libaio-devel libgcc libgomp libstdc++ libstdc++-devel make sysstat unixODBC unixODBC-devel
+```
+如果显示compat-libstdc++未安装,
+请使用如下命令：
+```
+yum install compat-libstdc++*
+```
+
+# 7.配置内核参数
+修改/etc/sysctl.conf文件，
+增加以下内核参数：
+```
+fs.aio-max-nr = 1048576
+fs.file-max = 6815744
+kernel.shmall = 2097152
+kernel.shmmax = 536870912
+kernel.shmmni = 4096
+kernel.sem = 250 32000 100 128
+net.ipv4.ip_local_port_range = 9000 65500
+net.core.rmem_default = 262144
+net.core.rmem_max = 4194304
+net.core.wmem_default = 262144
+net.core.wmem_max = 1048586
+```
+如果安装的Oracle用于企业生产环境，
+内核参数对于优化系统性能很重要，
+比如配置信号量，I/O，共享内存等参数配置，
+请参考官方文档进行详细配置。
+
+不重启系统使配置生效，
+请执行如下命令：
+/sbin/sysctl -p
+
+# 8.为Oracle用户添加shell配置
+为了提高Oracle软件性能，
+需要为Oracle用户增加以下shell配置：
+
+|Shell Limit	                              |在limits.conf中的项	|硬限制 |
+|---------------------------------------|-------------------------|----------|
+|打开文件描述符的最大数量 |nofile	                    |65536   |
+|单个用户可用的最大进程数 |nproc	                    |16384   |
+|进程堆栈段的最大大小	     |stack                       	|10240   |
+
+## 8.1.修改/etc/security/limits.conf文件
+增加如下参数：
+```
+oracle           soft    nproc   2047
+oracle           hard    nproc   16384
+oracle           soft    nofile  1024
+oracle           hard    nofile  65536
+```
+
+## 8.2.修改/etc/pam.d/login文件
+增加如下参数：
+```
+session    required     pam_limits.so
+```
+## 8.3.修改/etc/profile文件
+增加如下参数：
+```
+if [ $USER = "oracle" ]; then
+      if [ $SHELL = "/bin/ksh" ]; then
+            ulimit -p 16384
+            ulimit -n 65536
+      else
+            ulimit -u 16384 -n 65536
+      fi
+fi
+```
+
+# 9.创建Oracle用户与相关用户组
+创建oinstall和dba用户组:
+groupadd oinstall
+groupadd dba
+创建oracle用户:
+useradd -g oinstall -G dba -s /bin/bash -md /home/oracle oracle
+修改oracle密码:
+passwd oracle
+
+修改database的属主为oracle:
+chown -R  oracle:oinstall database/
+
+登录oracle用户，
+之后的操作都是使用oarcle用户。
+
+# 10.创建并配置环境变量
+修改 .bash_profile文件，
+添加如下环境变量：
+```
+export ORACLE_BASE=/home/oracle
+export ORACLE_HOME=$ORACLE_BASE/product/12c/dbhome_1
+export ORACLE_SID=oraclesid
+export PATH=$ORACLE_HOME/bin:$PATH
+```
+使环境变量生效：
+source .bash_profile
+
+如果上面的目录不存在，
+可以预先创建好。
+
+使用oracle用户的家目录/home/oracle作为ORACLE_BASE，
+安装Oracle是可能弹出提示需要确认，
+如果不想看到提示，
+可以使用/home/oracle/app之类的。
+
+# 11.安装数据库
+进入到之前解压的database目录，
+运行runInstaller脚本开始安装：
+./runInstaller
+如果安装界面出现乱码，
+修改语言为英文再安装：
+export LANG=en_US.UTF-8
+
+注意这里安装Oracle要求使用图形化界面,
+一定要用oracle用户登录图形界面，
+否则运行runInstaller会报错显示错误。
+关于如何进入图形化界面，
+请参考以下文章：
+[MobaXterm远程连接Linux图形用户界面](https://www.jianshu.com/p/170a20b37f8c)
+[Xstart远程连接Linux图形用户界面](https://www.jianshu.com/p/a6bf60385c50)
+[VNC的安装和使用](https://www.jianshu.com/p/caa0f8348380)
+
+或者请参考无图形界面安装Oracle的文章：
+[【CentOS】在Centos7 下无图形界面安装 Oracle11g](https://www.cnblogs.com/yejingcn/p/10278473.html)
+
+# 0.安装Oracle数据库
+执行上面的脚本后，
+会进行基本的检查，
+输入y选择继续：
+```
+[oracle@ai-14 database]$ ./runInstaller
+Starting Oracle Universal Installer...
+
+Checking Temp space: must be greater than 500 MB.   Actual 912268 MB    Passed
+Checking swap space: must be greater than 150 MB.   Actual 32763 MB    Passed
+Checking monitor: must be configured to display at least 256 colors
+    >>> Could not execute auto check for display colors using command /usr/bin/xdpyinfo. Check if the DISPLAY variable is set.    Failed <<<<
+
+Some requirement checks failed. You must fulfill these requirements before
+
+continuing with the installation,
+
+Continue? (y/n) [n] y
+
+
+>>> Ignoring required pre-requisite failures. Continuing...
+Preparing to launch Oracle Universal Installer from /tmp/OraInstall2019-09-19_02-55-17PM. Please wait ...[oracle@ai-14 database]$ You can find the log of this install session at:
+ /home/oracle/oraInventory/logs/installActions2019-09-19_02-55-17PM.log
+```
+弹出安装Oracle的图形化界面：
+![](https://upload-images.jianshu.io/upload_images/11810589-bfe02d2c103d7c0b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+从这里开始我们重新计数，
+为了和Oracle安装的步骤一致。
+
+# 1.配置安全更新(Configure Security Updates)
+这是用来配置更新以及技术支持的，
+Email不用填，
+把复选框的勾去掉：
+![](https://upload-images.jianshu.io/upload_images/11810589-163c8dd1c9f9f1dd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Next下一步。
+
+# 2. 安装选项(Installation Option)
+配置安装选项，
+三个选项分别为：
+1. 创建并配置一个新数据库，适用于新安装数据库的用户；
+2. 只安装数据库软件，适用于已有Oracle数据库数据用于数据迁移的；
+3. 升级已有数据库，适用于将老数据库升级成新数据库的用户。
+这里选择第1项：
+![](https://upload-images.jianshu.io/upload_images/11810589-eff26b35dbbe5c2f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Next下一步。
+
+# 3.系统类型(System Class)
+配置安装的系统类型，
+分为桌面版和服务器版，
+桌面版是最小化配置，
+这里选择服务器版：
+![](https://upload-images.jianshu.io/upload_images/11810589-012b721cd87b5127.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Next下一步。
+
+# 4.网格安装选项(Grid Installation Options)
+分布式网格配置，
+可以配置单实例或者分布式服务，
+这里选择单实例数据库安装：
+![](https://upload-images.jianshu.io/upload_images/11810589-21b4a29fe944c3a2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Next下一步。
+
+# 5.安装类型(Intall Type)
+选择安装类型，
+典型安装基本不需要配置，
+这里选择高级安装：
+![](https://upload-images.jianshu.io/upload_images/11810589-775abebd5b2a510d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Next下一步。
+
+# 6.产品语言(Product Languages)
+选择产品语言，
+这里选择英文和简体中文。
+![](https://upload-images.jianshu.io/upload_images/11810589-fe38147ab44861c5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Next下一步。
+
+# 7.数据库版本(Database Edition)
+选择数据库版本，
+这里选择企业版，
+需要6.4G硬盘空间：
+![](https://upload-images.jianshu.io/upload_images/11810589-568dfcdc95118508.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Next下一步。
+
+# 8.安装位置(Installation Location)
+选择安装位置，
+和前面环境变量的配置保持一致：
+![](https://upload-images.jianshu.io/upload_images/11810589-ad94170216c945bc.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Next下一步。
+
+# 9.建立清单(Create Inventory)
+Inventory Directory目录用于记录Oracle的清单信息的，
+清单信息中包括Oracle的安装路径等信息。
+选择Oracle家目录的一个目录即可：
+![](https://upload-images.jianshu.io/upload_images/11810589-1386c46c4cc62c55.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Next下一步。
+
+# 10.配置类型(Configuration Type)
+用于配置创建数据库的类型：
+1. 通用/事务处理：专为一般用途或交互较多的应用程序而设计。
+2. 数据仓库：对数据存储应用程序进行优化。
+这里选择通用/事务处理:
+![](https://upload-images.jianshu.io/upload_images/11810589-09c1f29c268da8f4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Next下一步。
+
+# 11.数据库标识符(Database Identifiers)
+配置数据库名和服务ID
+注意记住数据库名，
+使用数据库时会用到：
+![](https://upload-images.jianshu.io/upload_images/11810589-b34d490255f484ad.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Next下一步。
+
+# 12.配置选项(Configuration Options)
+配置选项有三个选项卡，
+主要修改内存和字符集。
+
+## 12.1.内存(Memory)
+勾选打开自动内存管理：
+![](https://upload-images.jianshu.io/upload_images/11810589-6cfd990a0c4883a9.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 12.2.字符集(Character sets)
+选择从字符集列表中选择字符集，
+将字符集设置成UTF-8:
+![](https://upload-images.jianshu.io/upload_images/11810589-eaef3e3d216865f5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Next下一步。
+
+# 13.数据存储(Database Storage)
+用于配置数据存储文件的位置，
+这里存储在/home/oracle/oradata目录:
+![](https://upload-images.jianshu.io/upload_images/11810589-128d952c2be1134a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Next下一步。
+
+# 14.管理选项(Management Options)
+Oracle 12c支持Oracle企业云控制管理，
+可以注册自己的Oracle到上面统一管理，
+这里不需要配置跳过即可：
+![](https://upload-images.jianshu.io/upload_images/11810589-695a8e3f10e22243.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Next下一步。
+
+# 15.恢复选项(Recovery Options)
+用于配置数据备份，
+这里不需要打开备份：
+![](https://upload-images.jianshu.io/upload_images/11810589-08939b3de5aeeacf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Next下一步。
+
+如果实际的企业生产环境，
+肯定是要做备份的，
+请参考相关的文章配置。
+
+# 16.用户密码(Schema Password)
+配置相关用户的密码，
+这里所有的用户使用相同的密码，
+如果密码太简单可能会报错，
+需要大小写数字都包含，
+注意记住密码后面会用到。
+![](https://upload-images.jianshu.io/upload_images/11810589-0787c5eddca797fd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Next下一步。
+
+# 17.操作系统用户组(Operating System Groups)
+用于配置数据库用户组的，
+只要前面创建了相关用户组，
+这一步可以直接使用默认的：
+![](https://upload-images.jianshu.io/upload_images/11810589-91e4a6f1e237bb5c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Next下一步。
+
+# 18.先决条件检查(Prerequisite Checks)
+安装程序会检测交换分区大小，
+内核参数以及依赖包等：
+![](https://upload-images.jianshu.io/upload_images/11810589-9bbb04fff63c63b4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+上面报错提示系统参数shmmax不符合预期，
+可以点击上面的Fix&Check Again,
+弹出修复脚本对话框：
+![](https://upload-images.jianshu.io/upload_images/11810589-7057553e9763f504.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+按照提示登录root用户，
+执行指定脚本/tmp/CVU_12.1.0.2.0_oracle/runfixup.sh：
+```
+[root@ai-14 database]# /tmp/CVU_12.1.0.2.0_oracle/runfixup.sh
+All Fix-up operations were completed successfully.
+```
+脚本执行成功后，
+点击OK完成修复，
+然后点击Next下一步。
+
+其实只要前面步骤完成了，
+有些错误可以直接忽略。
+
+# 19.概要(Summary)
+这里汇总了前面所有配置信息，
+确认配置没有问题即可：
+![](https://upload-images.jianshu.io/upload_images/11810589-1c12c7dc37256b82.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Install安装。
+
+# 20.安装产品(Install Product)
+开始真正的安装Oracle数据库，
+根据服务器性能，安装比较慢，
+其中有几步安装需要按照提示操作。
+
+## 20.1.开始安装
+![](https://upload-images.jianshu.io/upload_images/11810589-65f45758a9d102dd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 20.2.安装进度和状态
+![](https://upload-images.jianshu.io/upload_images/11810589-7bc55b6a31d73e15.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 20.3.执行配置脚本
+![](https://upload-images.jianshu.io/upload_images/11810589-2e9b7ef45e231cb7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+按照提示登录root用户，
+an顺序执行指定的两个脚本，
+1./home/oracle/oraInventory/orainstRoot.sh
+2./home/oracle/product/12c/dbhome_1/root.sh
+```
+[root@ai-14 database]# /home/oracle/oraInventory/orainstRoot.sh
+Changing permissions of /home/oracle/oraInventory.
+Adding read,write permissions for group.
+Removing read,write,execute permissions for world.
+
+Changing groupname of /home/oracle/oraInventory to oinstall.
+The execution of the script is complete.
+[root@ai-14 database]# /home/oracle/product/12c/dbhome_1/root.sh
+Performing root user operation.
+
+The following environment variables are set as:
+    ORACLE_OWNER= oracle
+    ORACLE_HOME=  /home/oracle/product/12c/dbhome_1
+
+Enter the full pathname of the local bin directory: [/usr/local/bin]:
+   Copying dbhome to /usr/local/bin ...
+   Copying oraenv to /usr/local/bin ...
+   Copying coraenv to /usr/local/bin ...
+
+
+Creating /etc/oratab file...
+Entries will be added to the /etc/oratab file as needed by
+Database Configuration Assistant when a database is created
+Finished running generic part of root script.
+Now product-specific root actions will be performed.
+```
+脚本执行成功后，
+点击OK完成。
+
+## 20.4.继续等待安装
+![](https://upload-images.jianshu.io/upload_images/11810589-ec3430b00660b6ff.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 20.5.数据库配置助手
+这里自动安装，等待进度完成：
+![](https://upload-images.jianshu.io/upload_images/11810589-ef424101722ec269.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+完成后不要急着点OK,
+点击PasswordManagement:
+![](https://upload-images.jianshu.io/upload_images/11810589-eabaaa9c23b159bd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 20.6.密码管理
+设置SYS和SYSTEM用户的密码：
+![](https://upload-images.jianshu.io/upload_images/11810589-0e557ce5b90d0630.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击OK返回。
+
+# 21.完成(Finish)
+Oracle数据库安装成功：
+![](https://upload-images.jianshu.io/upload_images/11810589-8bc2bec0b11a04ed.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 22.查看数据库监听
+重新登录Oracle用户，
+使用lsnrctl status查看数据库状态，
+可以看到数据库已经启动：
+```
+[oracle@ai-14 bin]$ lsnrctl status
+
+LSNRCTL for Linux: Version 12.1.0.2.0 - Production on 19-SEP-2019 16:16:43
+
+Copyright (c) 1991, 2014, Oracle.  All rights reserved.
+
+Connecting to (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=ai-14)(PORT=1521)))
+STATUS of the LISTENER
+------------------------
+Alias                     LISTENER
+Version                   TNSLSNR for Linux: Version 12.1.0.2.0 - Production
+Start Date                19-SEP-2019 15:57:09
+Uptime                    0 days 0 hr. 19 min. 48 sec
+Trace Level               off
+Security                  ON: Local OS Authentication
+SNMP                      OFF
+Listener Parameter File   /home/oracle/product/12c/dbhome_1/network/admin/listener.ora
+Listener Log File         /home/oracle/diag/tnslsnr/ai-14/listener/alert/log.xml
+Listening Endpoints Summary...
+  (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=ai-14)(PORT=1521)))
+  (DESCRIPTION=(ADDRESS=(PROTOCOL=ipc)(KEY=EXTPROC1521)))
+  (DESCRIPTION=(ADDRESS=(PROTOCOL=tcps)(HOST=ai-14)(PORT=5500))(Security=(my_wallet_directory=/home/oracle/admin/oracle/xdb_wallet))(Presentation=HTTP)(Session=RAW))
+Services Summary...
+Service "oracle" has 1 instance(s).
+  Instance "oraclesid", status READY, has 1 handler(s) for this service...
+Service "oraclesidXDB" has 1 instance(s).
+  Instance "oraclesid", status READY, has 1 handler(s) for this service...
+The command completed successfully
+```
+
+# 23.登录数据库
+使用sqlplus命令，
+输入system用户名和密码，
+成功登录，
+并且能够进行操作：
+```
+[oracle@ai-14 ~]$ sqlplus
+
+SQL*Plus: Release 12.1.0.2.0 Production on Thu Sep 19 16:17:56 2019
+
+Copyright (c) 1982, 2014, Oracle.  All rights reserved.
+
+Enter user-name: system
+Enter password:
+Last Successful login time: Thu Sep 19 2019 16:15:38 +08:00
+
+Connected to:
+Oracle Database 12c Enterprise Edition Release 12.1.0.2.0 - 64bit Production
+With the Partitioning, OLAP, Advanced Analytics and Real Application Testing options
+
+SQL> select TNAME，TABTYPE from tab;
+select TNAME，TABTYPE from tab
+       *
+ERROR at line 1:
+ORA-00904: "TNAME???TABTYPE": invalid identifier
+
+
+SQL> select TNAME from tab;
+
+TNAME
+--------------------------------------------------------------------------------
+LOGMNR_SESSION_EVOLVE$
+LOGMNR_GLOBAL$
+LOGMNR_GT_TAB_INCLUDE$
+LOGMNR_GT_USER_INCLUDE$
+LOGMNR_GT_XID_INCLUDE$
+LOGMNR_PDB_INFO$
+LOGMNR_DID$
+LOGMNR_UID$
+LOGMNRGGC_GTLO
+LOGMNRGGC_GTCS
+LOGMNRC_DBNAME_UID_MAP
+```
+
+# 24.数据库信息汇总
+|名称          |实际值       |
+|--------------|----------------|
+|主机名     |ai-14             |
+|IP              |10.21.13.14   |
+|服务端口 |1521             |
+|服务名     |oracle            |
+|服务ID     |oraclesid       |
+|SYSDBA  | sys，system |
+建议安装完数据库后，
+记录一个类似的汇总信息，
+以后使用数据库都要用到，
+记录下来防止时间长了忘记。
+
+# 25.远程连接数据库
+需要先关闭Linux的防火墙和selinux。
+否则远程连接数据库会失败。
+
+## 25.1.关闭CentOS 7的防火墙和selinux
+使用root执行如下命令：
+```
+systemctl stop firewalld
+systemctl disable firewalld
+systemctl status firewalld
+```
+```
+[root@ai-14 ~]# systemctl stop firewalld
+[root@ai-14 ~]# systemctl disable firewalld
+[root@ai-14 ~]# systemctl status firewalld
+● firewalld.service - firewalld - dynamic firewall daemon
+   Loaded: loaded (/usr/lib/systemd/system/firewalld.service; disabled; vendor preset: enabled)
+   Active: inactive (dead)
+     Docs: man:firewalld(1)
+
+9月 17 17:01:41 ai-14 systemd[1]: Starting firewalld - dynamic firewall daemon...
+9月 17 17:01:43 ai-14 systemd[1]: Started firewalld - dynamic firewall daemon.
+9月 20 14:49:51 ai-14 systemd[1]: Stopping firewalld - dynamic firewall daemon...
+9月 20 14:49:52 ai-14 systemd[1]: Stopped firewalld - dynamic firewall daemon.
+```
+
+## 25.2.远程连接
+这里使用DBeaver工具连接Oracle数据库，
+Oracle连接配置：
+![](https://upload-images.jianshu.io/upload_images/11810589-1f4d6cfc5d9bbe11.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击测试连接(T)..,
+测试连接成功：
+![](https://upload-images.jianshu.io/upload_images/11810589-eb44683dd2a2e0d7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 26.参考文章
+[Linux上安装Oracle的辛酸史](https://www.cnblogs.com/exmyth/p/9048941.html)
+[【CentOS】在Centos7 下无图形界面安装 Oracle11g](https://www.cnblogs.com/yejingcn/p/10278473.html)
