@@ -9,7 +9,8 @@ Windows\Notepad插件推荐.txt
 Linux\X-manager(X-shell)介绍
 Xshell打开Linux图形化界面
 Linux 服务器重启oracle数据库
-Oracle数据库安装Version12c
+centos 7关闭selinux
+yum相关
 
 3.待发布文章
 
