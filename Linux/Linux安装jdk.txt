@@ -21,9 +21,11 @@ chown -R root:root jdk1.7.0_80
 
 # 3.配置环境变量
 vi .bashrc 
+```
 export JAVA_HOME=/usr/java/jdk1.7.0_80
 export PATH=$PATH:$JAVA_HOME/bin
 export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar 
+```
 使配置生效：
 source .bashrc 
 
