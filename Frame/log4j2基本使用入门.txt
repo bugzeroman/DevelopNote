@@ -1,0 +1,12 @@
+# 1.Log4j2简介
+Apache Log4j 2是对Log4j的升级，
+它比其前身Log4j 1.x提供了重要的改进，
+并提供了许多在Logback中可用的改进，
+同时修复了Logback架构中的一些固有问题。
+详细请参考官网：[Apache Log4j 2](http://logging.apache.org/log4j/2.x/index.html)
+本文介绍Log4j2的常用功能
+
+
+# x.参考文章
+[log4j2 入门教程](https://blog.csdn.net/timchen525/article/details/77844534)
+[Frequently Asked Questions](https://logging.apache.org/log4j/2.x/faq.html#troubleshooting)

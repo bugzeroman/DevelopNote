@@ -13,6 +13,8 @@ centos 7关闭selinux
 yum相关
 csv数据导入导出PostgreSQL,Oracle,MySQL
 oracle命令行导入导出数据格式
+log4j2基本使用
+
 3.待发布文章
 
 
