@@ -34,3 +34,5 @@ java -version
 # 5.创建软连接
 ln -s /usr/java/jdk1.7.0_80/bin/java /usr/bin/java
 方便服务器上面的其他服务使用
+其他用户使用该jdk时，
+按照上面的第3步配置环境变量即可。
