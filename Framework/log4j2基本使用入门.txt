@@ -1,12 +1,333 @@
 # 1.Log4j2简介
-Apache Log4j 2是对Log4j的升级，
+Apache Log4j 2是日志框架Log4j的升级，
 它比其前身Log4j 1.x提供了重要的改进，
-并提供了许多在Logback中可用的改进，
-同时修复了Logback架构中的一些固有问题。
+并且参考了Logback中许多有用的改进，
+同时修复了Logback的一些固有问题。
 详细请参考官网：[Apache Log4j 2](http://logging.apache.org/log4j/2.x/index.html)
-本文介绍Log4j2的常用功能
+本文介绍Log4j2的常用功能,
+给出相应功能的参数配置方法，
+最后给出一个完整的log4j2.xml配置文件，
+作为工作开发中常用的日志配置参考。
+
+# 2.Jar包依赖
+## 2.1.直接依赖
+在Maven的pom.xml添加如下依赖：
+```
+<dependencies>
+    <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>2.12.1</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
+        <version>2.12.1</version>
+    </dependency>
+</dependencies>
+```
+## 2.2.使用bom管理依赖
+在Maven的父pom.xml添加如下依赖管理：
+```
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-bom</artifactId>
+      <version>2.12.1</version>
+      <scope>import</scope>
+      <type>pom</type>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+```
+然后在使用Log4j2的子pom.xml添加如下依赖，
+这样就不用写具体的版本号了，
+保证项目的子工程都使用相同版本的Log4j2。
+```
+<dependencies>
+    <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
+    </dependency>
+</dependencies>
+```
+在复杂场景下，可能不止依赖上面两个jar包，
+这种方法可以保证Log4j2模块之间的版本一致。
+
+# 3.测试代码
+为了演示Log4j2的功能，创建如下的测试类：
+```java
+package org.apache.logging.log4j;
+
+public class Log4j2Test {
+    private static Logger LOG = LogManager.getLogger(Log4j2Test.class);
+
+    public static void main(String[] args) throws Exception {
+        // 一直打印日志，用于测试Log4j2功能
+        while (true) {
+            logAll();
+        }
+    }
+
+    // 打印各种级别的日志用于测试
+    public static void logAll() throws Exception {
+        LOG.trace("trace level log");
+        LOG.debug("debug level log");
+        LOG.info("info level log");
+        LOG.error("error level log");
+        LOG.fatal("fatal level log");
+        // 设置休眠时间，控制日志打印速度
+        Thread.sleep(3);
+    }
+}
+
+```
+
+# 4.打印日志
+运行上面的测试程序，
+在控制台打印出如下日志：
+```
+ERROR StatusLogger No Log4j 2 configuration file found. 
+Using default configuration (logging only errors to the console), or user programmatically provided configurations. 
+Set system property 'log4j2.debug' to show Log4j 2 internal initialization logging.
+See https://logging.apache.org/log4j/2.x/manual/configuration.html for instructions on how to configure Log4j 2
+11:33:08.438 [main] ERROR org.apache.logging.log4j.Log4j2Test - error level log
+11:33:08.440 [main] FATAL org.apache.logging.log4j.Log4j2Test - fatal level log
+```
+可以看到ERROR报错了，没有找到Log4j2的配置文件，
+使用了默认配置，只打印errors日志到console控制台，
+然后控制台输出了error和fatal两个级别的日志信息。
+
+# 5.日志级别
+Log4j2共有8种日志级别，
+按照优先级从小到大排序: 
+```
+ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < OFF
+```
+当日志级别设置为某一级别时,
+则会打印大于等于该级别的日志，
+比如日志级别设置为ERROR，
+则会打印ERROR，FATAL级别的日志。
+ALL会把所有级别的日志打印出来，
+OFF不会打印任何级别的日志，
+所以严格来讲只有6种日志级别。
+
+# 6.自动配置
+Log4j2能够在初始化期间自动配置，
+它支持4种格式的配置文件：
+Properties, YAML, JSON,  XML
+并且按从高到低的加权顺序查找配置文件。
+
+## 6.1.log4j.configurationFile
+Log4j2启动时，首先检查系统属性log4j.configurationFile，
+如果设置了该属性，则匹配文件扩展名去加载配置文件，
+就是说文件名可以是任意的，文件扩展名必须是上面的4种之一。
+在启动应用时配置该参数，示例如下：
+```
+java -jar -Dlog4j.configurationFile="/home/yuwen/myLog4j2.xml" log4j2test.jar
+```
+log4j.configurationFile可以配置如上的绝对路径，
+也可以配置相对路径，即只配置文件名myLog4j2.xml，
+Log4j2会在classpath路径中查找配置文件。
+
+## 6.2.log4j2-test.*
+如果没有设置系统属性，
+则在classpath路径中按照顺序查找如下4个文件：
+```
+log4j2-test.properties
+log4j2-test.yaml or log4j2-test.yml
+log4j2-test.json or log4j2-test.jsn
+log4j2-test.xml
+```
+
+## 6.3.log4j2.*
+如果找不到上面的文件，
+则在classpath路径中按照顺序查找如下4个文件：
+```
+log4j2.properties
+log4j2.yaml or log4j2.yml
+log4j2.json or  log4j2.jsn
+log4j2.xml
+```
+
+## 6.4.DefaultConfiguration 
+如果无法找到任何配置文件，
+则使用默认配置文件，
+这将导致日志输出到控制台。
+
+# 7.默认配置文件
+在第4步中打印日志找不到配置文件，
+使用的默认配置等价于下面的配置：
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+  <Appenders>
+    <Console name="Console" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+    </Console>
+  </Appenders>
+  <Loggers>
+    <Root level="ERROR">
+      <AppenderRef ref="Console"/>
+    </Root>
+  </Loggers>
+</Configuration>
+```
+
+# 8.配置分析
+在上面的默认配置文件中，
+主要有两类配置，
+一类是Appenders：定义日志输出目的地，内容和格式等。
+另一类是Loggers：定义日志级别和使用的Appenders。
+
+## 8.1.Appenders
+```
+<Console name="Console" target="SYSTEM_OUT">
+```
+表示日志输出到控制台的标准输出。
+
+```
+<PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+```
+pattern定义日志输出格式：
+|配置             |说明                           |
+|-----------------|-------------------------------|
+|%d{HH:mm:ss.SSS} |输出日志打印的时间，精确到毫秒 |
+|[%t]             |输出当前线程名称 |
+|%-5level         |输出日志级别，-5表示左对齐并且固定输出5个字符，不足在右边补空格 |
+|%logger{36}      |输出logger名称，注意Root Logger没有名称则没有输出 |
+|%msg             |输出要打印的业务日志信息 |
+|%n               |日志换行 |
+实际会输出如下日志：
+```
+11:33:08.438 [main] ERROR org.apache.logging.log4j.Log4j2Test - error level log
+```
+更多的PatternLayout设置请参考官网：
+[Log4j2 PatternLayout](http://logging.apache.org/log4j/2.x/manual/layouts.html#PatternLayout)
+
+# 9.新建配置文件
+新建log4j2.xml文件，
+添加上面的默认配置，
+放到classpath路径下，
+则应用启动时会读取该文件，
+下面以该xml文件为例，
+通过修改相应的配置，
+演示Log4j2的功能。
+
+# 10.Configuration
+实际上Log4j2的配置可以通过以下四种方式中的一种来完成:
+1. 通过使用Properties、YAML、JSON、XML格式编写的配置文件。
+2. 以编程方式，创建ConfigurationFactory和Configuration的实现。
+3. 以编程方式，调用配置接口中公开的api，将组件添加到默认配置。
+4. 以编程方式，通过调用内部Logger类的方法。
+
+本文主要介绍第1种，
+详解XML格式的配置文件。
+
+# 10.1.内部日志
+Log4j2内部日志会输出到控制台，
+status的值可以填第5步中的日志级别，
+它控制Log4j2内部日志的输出级别，
+Log4j2会输出初始化、翻转和其他内部操作的详细信息。
+设置status="trace"对定位Log4j2问题非常有用。
+```
+<Configuration status="WARN">
+```
+也可以设置系统属性log4j2.debug，
+也会将Log4j2内部日志打印到控制台，
+包括在找到配置文件之前发生的内部日志。
+在启动应用时配置该参数，示例如下：
+```
+java -jar -Dlog4j2.debug log4j2test.jar
+```
+
+# 10.2.自动重新配置
+Log4j2能够自动检测配置文件的修改，
+并且自动重新加载配置。
+通过在Configuration元素上配置monitorInterval属性，
+并将其设置为非零值，
+那么在下一次计算或记录日志事件，
+且自上次检查以来已经超过monitorInterval时间，
+则将检查该文件是否被修改。
+注意时间单位默认为秒，
+而且最小时间间隔是5秒。
+```
+<Configuration monitorInterval="5">
+```
+如上示例为每隔至少5秒检查一次配置文件。
+
+# 11.添加自定义Appender
+```
+<Appenders>
+    <File name="File" fileName="test.log">
+        <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+    </File>
+</Appenders>
+```
+这里增加了一个类型为File的Appender，
+name为File，
+FileName为test.log，
+表示日志会打印到test.log文件中。
 
 
-# x.参考文章
-[log4j2 入门教程](https://blog.csdn.net/timchen525/article/details/77844534)
+# 12.添加自定义Logger
+```
+<Loggers>
+    <Logger name="org.apache.logging.log4j" level="ERROR" additivity="true">
+        <AppenderRef ref="File" />
+    </Logger>
+</Loggers>
+```
+这里增加了一个Logger，需要配合上面的Appender使用，
+name为Log4j2Test的包路径org.apache.logging.log4j，
+level日志级别为EEROR，
+AppenderRef指向了上面新增的名称为File的Appender，
+表示Log4j2Test的ERROR和FATAL级别的日志会打印到test.log，
+test.log文件内容：
+```
+16:55:31.343 [main] ERROR org.apache.logging.log4j.Log4j2Test - error level log
+16:55:31.345 [main] FATAL org.apache.logging.log4j.Log4j2Test - fatal level log
+```
+同时additivity设置为true，
+会将当前的Logger特性会传递给Root，
+即上述的日志不仅会输出到test.log文件，
+也会输出到Root指向的控制台，
+Console控制台内容：
+```
+16:55:31.343 [main] ERROR org.apache.logging.log4j.Log4j2Test - error level log
+16:55:31.345 [main] FATAL org.apache.logging.log4j.Log4j2Test - fatal level log
+```
+
+# 13.完整的log4j2.xml
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="5">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+        </Console>
+        <File name="File" fileName="test.log">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+        </File>
+    </Appenders>
+    <Loggers>
+        <Logger name="org.apache.logging.log4j" level="ERROR" additivity="true">
+            <AppenderRef ref="File" />
+        </Logger>
+        <Root level="ERROR">
+            <AppenderRef ref="Console" />
+        </Root>
+    </Loggers>
+</Configuration>
+```
+
+# 14.参考文章
+[Log4j2 入门教程](https://blog.csdn.net/timchen525/article/details/77844534)
+[Log4j2 配置文件](https://logging.apache.org/log4j/2.x/manual/configuration.html)
+[Log4j2 Appenders](http://logging.apache.org/log4j/2.x/manual/appenders.html)
 [Frequently Asked Questions](https://logging.apache.org/log4j/2.x/faq.html#troubleshooting)

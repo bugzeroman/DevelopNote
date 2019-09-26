@@ -13,11 +13,14 @@ centos 7关闭selinux
 yum相关
 csv数据导入导出PostgreSQL,Oracle,MySQL
 oracle命令行导入导出数据格式
-log4j2基本使用
+log4j2高级使用定量定时混合
+log4j2完整xml参考 
+更多的PatternLayout设置
 
 3.待发布文章
 
 4.待更新的文章
 读懂Java代码总结 重新排版优化
+Eclipse使用技巧
 
 5.待转载的文章
