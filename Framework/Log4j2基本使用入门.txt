@@ -200,7 +200,7 @@ pattern定义日志输出格式：
 |%d{HH:mm:ss.SSS} |输出日志打印的时间，精确到毫秒 |
 |[%t]             |输出当前线程名称 |
 |%-5level         |输出日志级别，-5表示左对齐并且固定输出5个字符，不足在右边补空格 |
-|%logger{36}      |输出logger名称，注意Root Logger没有名称则没有输出 |
+|%logger{36}      |输出logger名称，一般是类的全限定路径名 |
 |%msg             |输出要打印的业务日志信息 |
 |%n               |日志换行 |
 实际会输出如下日志：
@@ -212,7 +212,7 @@ pattern定义日志输出格式：
 
 # 9.新建配置文件
 新建log4j2.xml文件，
-添加上面的默认配置，
+添加上面第7步的默认配置，
 放到classpath路径下，
 则应用启动时会读取该文件，
 下面以该xml文件为例，
@@ -227,14 +227,14 @@ pattern定义日志输出格式：
 4. 以编程方式，通过调用内部Logger类的方法。
 
 本文主要介绍第1种，
-详解XML格式的配置文件。
+详解XML格式文件的编写配置。
 
 # 10.1.内部日志
-Log4j2内部日志会输出到控制台，
-status的值可以填第5步中的日志级别，
-它控制Log4j2内部日志的输出级别，
+Log4j2内部日志可以输出到控制台，
+status控制Log4j2内部日志的输出级别，
+它的值可以填第5步中的日志级别，
 Log4j2会输出初始化、翻转和其他内部操作的详细信息。
-设置status="trace"对定位Log4j2问题非常有用。
+设置status="TRACE"对定位Log4j2问题非常有用。
 ```
 <Configuration status="WARN">
 ```
@@ -259,7 +259,8 @@ Log4j2能够自动检测配置文件的修改，
 ```
 <Configuration monitorInterval="5">
 ```
-如上示例为每隔至少5秒检查一次配置文件。
+如上示例为每隔至少5秒检查一次配置文件，
+如果配置文件有变化则自动重新加载。
 
 # 11.添加自定义Appender
 ```
@@ -272,8 +273,7 @@ Log4j2能够自动检测配置文件的修改，
 这里增加了一个类型为File的Appender，
 name为File，
 FileName为test.log，
-表示日志会打印到test.log文件中。
-
+表示日志会打印到test.log文件。
 
 # 12.添加自定义Logger
 ```
@@ -302,6 +302,7 @@ Console控制台内容：
 16:55:31.343 [main] ERROR org.apache.logging.log4j.Log4j2Test - error level log
 16:55:31.345 [main] FATAL org.apache.logging.log4j.Log4j2Test - fatal level log
 ```
+可以看到和上面文件中的内容一模一样。
 
 # 13.完整的log4j2.xml
 ```
