@@ -15,7 +15,7 @@ csv数据导入导出PostgreSQL,Oracle,MySQL
 oracle命令行导入导出数据格式
 log4j2完整xml参考 
 更多的PatternLayout设置
-Log4j2进阶使用(按大小时间备份日志)
+Log4j2进阶使用(gz压缩，log循环顺序)
 
 3.待发布文章
 
@@ -24,3 +24,6 @@ Log4j2进阶使用(按大小时间备份日志)
 Eclipse使用技巧
 
 5.待转载的文章
+
+6.待处理其他事项
+同步文章到CSDN和新浪BLOG

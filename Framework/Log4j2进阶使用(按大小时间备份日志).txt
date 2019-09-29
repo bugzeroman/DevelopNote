@@ -1,0 +1,371 @@
+# 1.进阶说明
+本文介绍Log4j2进阶使用，
+基本使用请参考[Log4j2基本使用入门](https://www.jianshu.com/p/a344409cf08a)。
+本文基于上面的基本使用入门，
+主要介绍按照日志大小和时间备份日志，
+并且限制备份日志的个数，
+以及删除过期的备份日志。
+
+由于日志信息是不断追加到日志文件的，
+经过一段时间会导致日志文件很大，
+所以需要及时分割过大的日志文件，
+以及限制日志文件占用的硬盘空间，
+及时清理掉不用的过期的日志文件。
+
+# 2.RollingFileAppender
+RollingFileAppender能实现上面提出的需求，
+它需要配置TriggeringPolicy和RolloverStrategy，
+TriggeringPolicy触发策略决定何时执行备份，
+RolloverStrategy翻转策略决定如何执行备份。
+如果没有配置RolloverStrategy翻转策略, 
+RollingFileAppender将使用DefaultRolloverStrategy，
+而且DefaultRolloverStrategy支持自定义删除文件操作。
+
+# 3.添加全局变量
+```
+<properties>
+    <property name="LOG_HOME">logs</property>
+    <property name="LOG_BACKUP">backup</property>
+    <property name="FILE_NAME">test</property>
+</properties>
+```
+LOG_HOME用于指定当前日志存放的目录，
+LOG_BACKUP用于指定备份日志存放的目录，
+FILE_NAME用于指定日志文件的名称。
+在需要的地方使用${LOG_HOME}引用即可。
+
+# 4.按大小备份
+本章通过配置log4j2.xml，
+实现如下目标：
+最多保存3个日志备份文件，
+每个日志文件大小不超过1MB。
+
+## 4.1.添加自定义Appender
+```
+<Appenders>
+    <RollingFile name="RollingSizeFile" fileName="${LOG_HOME}/${FILE_NAME}.log"
+        filePattern="${LOG_HOME}/${LOG_BACKUP}/${FILE_NAME}-%i.log">
+        <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+        <Policies>
+            <SizeBasedTriggeringPolicy size="1MB" />
+        </Policies>
+    </RollingFile>
+</Appenders>
+```
+这里增加了一个类型为RollingFile的Appender，
+name为RollingSizeFile，
+FileName为\${LOG_HOME}/\${FILE_NAME}.log，
+指定了当前正在打印的日志文件名称，
+和文件存放的相对路径；
+filePattern为\${LOG_HOME}/\${LOG_BACKUP}/${FILE_NAME}-%i.log，
+指定了备份后的日志文件名称和存放路径，
+其中%i表示备份文件名按照正整数开始递增。
+SizeBasedTriggeringPolicy策略指定了文件大小，
+```
+<SizeBasedTriggeringPolicy size="1MB" />
+```
+当日志文件达到1MB时生成备份文件，
+大小以字节为单位指定，
+后缀为KB、MB或GB，例如1GB。
+```
+<SizeBasedTriggeringPolicy/>
+```
+如果不填，默认值为10MB。
+
+## 4.2.添加自定义Logger
+```
+<Loggers>
+    <Logger name="org.apache.logging.log4j" level="ERROR" additivity="false">
+        <AppenderRef ref="RollingSizeFile" />
+    </Logger>
+</Loggers>
+```
+AppenderRef指定打印日志到新增的name为RollingSizeFile的Appender。
+
+## 4.3.打印日志
+运行测试程序，
+打印一段时间的日志，
+在项目下会生成如下目录和文件：   
+```
+logs/:
+    backup/
+    test.log
+
+logs/backup:
+    test-1.log
+    test-2.log
+    test-3.log
+    test-4.log
+    test-5.log
+    test-6.log
+    test-7.log
+```
+可以看到logs目录下有test.log文件和backup目录,
+backup目录下有test-1.log等7个备份文件，
+而且每个文件的大小都是1MB。
+上面由于没有配置RolloverStrategy滚动策略，
+RollingFileAppender使用DefaultRolloverStrategy，
+DefaultRolloverStrategy默认最多保存7个备份文件。
+
+## 4.4.修改自定义Appender
+RollingFile中增加DefaultRolloverStrategy默认滚动策略，
+并且指定最多保存3个备份文件：
+```
+<DefaultRolloverStrategy max="3" />
+```
+修改后效果如下：   
+```
+logs/:
+    backup/
+    test.log
+
+logs/backup:
+    test-1.log
+    test-2.log
+    test-3.log
+```
+
+# 5.按时间备份
+本章通过配置log4j2.xml，
+实现如下目标：
+每1分钟备份一次日志文件，
+删除3分钟前备份的日志文件。
+## 5.1.添加自定义Appender
+```
+<Appenders>
+    <RollingFile name="RollingTimeFile" fileName="${LOG_HOME}/${FILE_NAME}.log"
+        filePattern="${LOG_HOME}/$${date:yyyy-MM}/${FILE_NAME}-%d{yyyy-MM-dd-HH-mm}.log">
+        <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+        <Policies>
+            <TimeBasedTriggeringPolicy interval="1" />
+        </Policies>
+    </RollingFile>
+</Appenders>
+```
+这里的配置和第4步中略有不同，
+name为RollingTimeFile,
+主要是filePattern、TimeBasedTriggeringPolicy配置不一样，
+filePattern为\${LOG_HOME}/\$\${date:yyyy-MM}/\${FILE_NAME}-%d{yyyy-MM-dd-HH-mm}.log，
+其中$${date:yyyy-MM}指定了备份文件存放的目录为当前年月，
+比如目录2019-09，而不是backup了，
+${FILE_NAME}-%d{yyyy-MM-dd-HH-mm}.log指定了备份后的日志文件名称，
+精确到分钟的一个时间戳。
+
+TimeBasedTriggeringPolicy策略指定了生成备份文件的策略。
+```
+<TimeBasedTriggeringPolicy interval="1" />
+```
+这个配置要和filePattern结合使用，
+上面filePattern中的命名规则是${FILE_NAME}-%d{yyyy-MM-ddHH-mm}.log，
+最小的时间粒度是mm，即分钟，
+而TimeBasedTriggeringPolicy设置的interval是1，
+结合起来就是每1分钟生成一个新文件。
+同理，如果要每1小时生成一个新文件，
+则改成%d{yyyy-MM-ddHH}，最小粒度为小时，
+如果再把interval该为12,
+那就是每12小时生成一个新文件。
+
+## 5.2.添加自定义Logger
+```
+<Loggers>
+    <Logger name="org.apache.logging.log4j" level="ERROR" additivity="false">
+        <AppenderRef ref="RollingTimeFile" />
+    </Logger>
+</Loggers>
+```
+AppenderRef指定打印日志到新增的name为RollingTimeFile的Appender。
+
+## 5.3.打印日志
+运行测试程序，
+打印一段时间的日志，
+在项目下会生成如下目录和文件：   
+```
+logs/:
+2019-09/
+test.log
+
+logs/2019-09:
+test-2019-09-27-17-20.log
+test-2019-09-27-17-21.log
+test-2019-09-27-17-22.log
+test-2019-09-27-17-23.log
+test-2019-09-27-17-24.log
+test-2019-09-27-17-25.log
+test-2019-09-27-17-26.log
+test-2019-09-27-17-27.log
+test-2019-09-27-17-28.log
+test-2019-09-27-17-29.log
+test-2019-09-27-17-30.log
+test-2019-09-27-17-31.log
+test-2019-09-27-17-32.log
+test-2019-09-27-17-33.log
+```
+可以看到logs目录下有test.log文件和2019-09备份目录,
+2019-09目录下有test-2019-09-27-17-20.log等14个备份文件，
+而且每个文件的大小都不一样，和时间段内打印的日志多少有关。
+随着时间推移会生成2019-10之类的目录，
+而且目录下的备份文件也会越来越多。
+
+## 5.4.修改自定义Appender
+RollingFile中增加DefaultRolloverStrategy策略，
+删除3分钟前备份的日志文件：
+```
+<DefaultRolloverStrategy>
+    <Delete basePath="${LOG_HOME}" maxDepth="2">
+        <IfFileName glob="*/*.log" />
+        <IfLastModified age="3M" />
+    </Delete>
+</DefaultRolloverStrategy>
+```
+Delete表示删除满足条件的文件，
+basePath指定了需要处理的日志目录，
+因为备份的日志在basePath下的年月目录(\$\${date:yyyy-MM})，
+所以maxDepth设置为2，代表扫描的目录深度，
+maxDepth="1"表示当前目录。
+指定文件名称：
+```
+<IfFileName glob="*/*.log" />
+```
+匹配二级目录下的扩展名为.log的文件。
+
+指定文件过期时间：
+```
+<IfLastModified age="3M" />
+```
+age的单位：D、H、M、S，分别表示天、小时、分钟、秒。
+批量最后修改时间为3分钟前的文件。
+
+修改后效果如下：   
+```
+logs/:
+2019-09/
+test.log
+
+logs/2019-09:
+test-2019-09-29-15-41.log
+test-2019-09-29-15-42.log
+test-2019-09-29-15-43.log
+```
+查看的时间是2019-09-29 15:44，
+只保存了前3分钟内生成的3个日志，
+随着时间的推移，
+生成新日志test-2019-09-29-15-44.log，
+删除旧日志test-2019-09-29-15-41.log，
+该目录下始终只有当前时间3分钟内的备份日志。
+
+# 6.按大小和时间备份
+可以把按大小和时间备份结合起来使用，
+实现更复杂的日志文件备份需求。
+本章通过配置log4j2.xml，
+实现如下目标：
+每1分钟备份一次日志文件，
+每个日志文件大小不超过1MB，
+如果在1分钟内日志文件超过1MB，
+则生成以当前时间+序号的备份日志，
+但是每分钟内最多保存3个备份日志，
+并且删除5分钟前备份的日志文件。
+
+## 6.1.自定义Appender
+```
+<Appenders>
+    <RollingFile name="RollingFile" fileName="${LOG_HOME}/${FILE_NAME}.log"
+        filePattern="${LOG_HOME}/$${date:yyyy-MM}/${FILE_NAME}-%d{yyyy-MM-dd-HH-mm}-%i.log">
+        <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+        <Policies>
+            <TimeBasedTriggeringPolicy interval="1" />
+            <SizeBasedTriggeringPolicy size="1MB" />
+        </Policies>
+        <DefaultRolloverStrategy max="3">
+            <Delete basePath="${LOG_HOME}" maxDepth="2">
+                <IfFileName glob="*/*.log" />
+                <IfLastModified age="5M" />
+            </Delete>
+        </DefaultRolloverStrategy>
+    </RollingFile>
+</Appenders>
+```
+大部分配置和上面说过的一致，
+就是简单的组合起来即可，
+需要注意的是filePattern:
+```
+filePattern="${LOG_HOME}/$${date:yyyy-MM}/${FILE_NAME}-%d{yyyy-MM-dd-HH-mm}-%i.log"
+```
+备份文件名${FILE_NAME}-%d{yyyy-MM-dd-HH-mm}-%i.log结合了时间和序号。
+
+## 6.3.打印日志
+运行测试程序，
+打印一段时间的日志，
+在项目下会生成如下目录和文件：  
+```
+logs/:
+2019-09/
+test.log
+
+logs/2019-09:
+test-2019-09-29-16-47-1.log
+test-2019-09-29-16-47-2.log
+test-2019-09-29-16-47-3.log
+test-2019-09-29-16-48-1.log
+test-2019-09-29-16-48-2.log
+test-2019-09-29-16-48-3.log
+test-2019-09-29-16-49-1.log
+test-2019-09-29-16-49-2.log
+test-2019-09-29-16-49-3.log
+test-2019-09-29-16-50-1.log
+test-2019-09-29-16-50-2.log
+test-2019-09-29-16-50-3.log
+test-2019-09-29-16-51-1.log
+test-2019-09-29-16-51-2.log
+test-2019-09-29-16-51-3.log
+```
+看到2019-09目录下只有5分钟内的备份日志，
+每分钟的备份日志最多有3个文件，
+根据日志具体打印的情况，
+少的时候可能1分钟只有1或者2个文件，
+多的时候最多也只有3个文件，
+在这1分钟内后生成的日志会覆盖掉前面的。
+
+# 7.完整log4j2.xml
+下面给出完整的配置文件，
+供大家开发时参考使用：
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="5">
+    <properties>
+        <property name="LOG_HOME">logs</property>
+        <property name="FILE_NAME">test</property>
+    </properties>
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+        </Console>
+        <RollingFile name="RollingFile" fileName="${LOG_HOME}/${FILE_NAME}.log"
+            filePattern="${LOG_HOME}/$${date:yyyy-MM}/${FILE_NAME}-%d{yyyy-MM-dd-HH-mm}-%i.log">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" />
+                <SizeBasedTriggeringPolicy size="1MB" />
+            </Policies>
+            <DefaultRolloverStrategy max="3">
+                <Delete basePath="${LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="*/*.log" />
+                    <IfLastModified age="5M" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Logger name="org.apache.logging.log4j" level="TRACE" additivity="false">
+            <AppenderRef ref="RollingFile" />
+        </Logger>
+        <Root level="ERROR">
+            <AppenderRef ref="Console" />
+        </Root>
+    </Loggers>
+</Configuration>
+```
+
+# 8.参考文章
+[slf4j+log4j2基础教程（拿来即用教程）](https://blog.csdn.net/lianjunzongsiling/article/details/78848844)
+[log4j2 RollingRandomAccessFile配置](https://blog.csdn.net/yyding1988/article/details/84882627)
+[log4j2 入门教程](https://blog.csdn.net/timchen525/article/details/77844534)
