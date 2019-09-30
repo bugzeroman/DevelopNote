@@ -1,0 +1,40 @@
+# 1.简介
+UMLet是一款简单实用、开源的轻量级UML建模工具，
+UML中定义了用例图、类图、对象图、状态图、活动图、
+时序图、协作图、构件图、部署图等9种图形，
+它能够帮助我们快速地构建各种UML模型。
+UMLet是跨平台的，因为底层是JAVA，
+它可以在Windows、OS X和Linux上独立运行，
+并且是绿色版的，灵活轻便，易于安装。
+UMLet自身保存的格式是.uxf格式，
+可以另存为BMP，EPS，GIF，JPG，PDF，PNG，SVG等格式。
+UMLet有单独软件和Eclipse插件两种安装形式，
+本文介绍的是单独软件版本，解压即用。
+![](https://upload-images.jianshu.io/upload_images/11810589-2165f7b39f1dcbd2.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 2.使用心得
+UMLet的主要界面分为三个区：
+![](https://upload-images.jianshu.io/upload_images/11810589-d8af3933683939f3.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 2.1.工作区
+画图时的工作区，用于绘制各种UML模型图。
+## 2.2.模版区
+最上面是模版选择区，用于选择UML的各种模版。
+下面的模版区根据选择的模板列出UML元素，
+绘制模型图从模版区中选择元素并拖拽出去，
+也可以双击直接添加到工作区。
+![](https://upload-images.jianshu.io/upload_images/11810589-080a7b7dca297699.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+## 2.3.参数区
+用于修改UML元素的属性参数，
+在工作区中选中一个元素，
+可以修改类名称、字段、方法、背景色等等。
+
+# 3.使用技巧
+折线的使用：悬浮到线段上，当出现粗十字后，便可拉动线段。每个拐点都会出现一个圆，当鼠标悬浮在拐点时，会变为小手，此时可以拉动拐点的位置。
+我使用UMLet绘制的Ranger架构图，仅供参考：
+![](https://upload-images.jianshu.io/upload_images/11810589-0a1a792a07d72cc8.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+# 4.参考
+[UMLet的官网](http://www.umlet.com/)
+[UMLet官网示例](http://www.itmeyer.at/umlet/uml2/)
+[UMLet使用说明之绘制用例图](https://blog.csdn.net/Jack_CJZ/article/details/79934805)
