@@ -81,7 +81,7 @@ public class Log4j2Test {
         LOG.info("info level log");
         LOG.error("error level log");
         LOG.fatal("fatal level log");
-        // 设置休眠时间，控制日志打印速度
+        // 设置休眠时间(单位ms)，控制日志打印速度
         Thread.sleep(3);
     }
 }
