@@ -1,0 +1,121 @@
+# 1.高级进阶说明
+本文介绍Log4j2高级进阶使用，
+基于[Log4j2进阶使用(按大小时间备份日志)](https://www.jianshu.com/p/c7ae523f6e82)，
+介绍更多的高级特性，
+本文基于上文给出的完整log4j2.xml，
+修改对应的配置项，
+演示高级特性的使用。
+基本使用请参考[Log4j2基本使用入门](https://www.jianshu.com/p/a344409cf08a)。
+
+# 2.调整日志备份时间
+按时间备份日志文件的时候，
+可以指定modulate为true：
+```
+<TimeBasedTriggeringPolicy interval="10" modulate="true"/>
+```
+表示对备份日志的生成时间纠偏，
+纠偏以零点为基准进行，
+即日志时间将以0点为边界进行偏移计算。
+如果每4小时备份一次日志，
+假设当前时间是凌晨3点，
+那么下次生成日志时间是4点，8点，12点等等。
+如果每10分钟备份一次日志，
+假设当前时间是09:58，
+那么下次生成日志时间是10:00, 10:10, 10:20等等。
+具体效果就是不管当前的运行时间，
+生成的备份日志时间是可以预期的，
+有规律的，便于查看的。
+
+运行测试程序效果如下： 
+```
+logs/:
+10月 10 10:30 2019-10/
+10月 10 10:36 test.log
+
+logs/2019-10:
+10月 10 09:59 test-2019-10-10-09-59-1.log
+10月 10 10:09 test-2019-10-10-10-09-1.log
+10月 10 10:19 test-2019-10-10-10-19-1.log
+```
+可以看到在09:59, 10:09, 10:19等时间生成了备份日志。
+发现实际文件时间和预期的时间都差了1分钟，
+查看Log4j2源码:
+```java
+org.apache.logging.log4j.core.appender.rolling.PatternProcessor.getNextTime(long, int, boolean)
+cal.set(Calendar.MINUTE, currentCal.get(Calendar.MINUTE));
+if (frequency == RolloverFrequency.EVERY_MINUTE) {
+    increment(cal, Calendar.MINUTE, increment, modulus);
+    nextTime = cal.getTimeInMillis();
+    cal.add(Calendar.MINUTE, -1);
+    nextFileTime = cal.getTimeInMillis();
+    return debugGetNextTime(nextTime);
+}
+```
+可以看到nextTime和nextFileTime确实差了1分钟，
+也就是备份日志文件的时间比预期时间差1个单位，
+因此如果每4小时备份一次日志，
+那么下次生成的日志文件时间是3点，7点，11点等等，
+实际比预期都差了1个小时。
+按照时间备份日志文件，
+时间单位可以是年，月，日，小时，分钟，秒，毫秒，星期，
+生成的备份文件就是上一个时间单位的时间，
+比如备份的就是去年，上个月，昨天的日志等等，
+因此实际减去1个时间单位是合理的。
+
+# 3.压缩日志
+通过配置filePattern文件的后缀名，
+可以实现在备份日志时对日志文件进行压缩。
+支持的文件压缩格式：.gz, .zip, .bz2, .deflate, .pack200,.xz。
+生成的归档文件将使用匹配后缀的压缩方案进行压缩。
+
+```
+<RollingFile name="RollingFile" fileName="${LOG_HOME}/${FILE_NAME}.log"
+    filePattern="${LOG_HOME}/$${date:yyyy-MM}/${FILE_NAME}-%d{yyyy-MM-dd-HH}-%i.log.zip">
+```
+上面的配置中filePattern以.zip结尾，
+表示备份文件压缩为zip格式。
+运行测试程序效果如下： 
+```
+logs/:
+2019-10/
+test.log
+
+logs/2019-10:
+test-2019-10-10-15-03-1.log.zip
+test-2019-10-10-15-04-1.log.zip
+test-2019-10-10-15-05-1.log.zip
+```
+可以看到备份的日志文件都压缩为zip格式，
+而且文件占用硬盘空间更少了。
+
+同时DefaultRolloverStrategy支持配置日志压缩级别，
+设置compressionLevel属性，范围0-9，
+压缩效果依次增大，
+0不压缩，1压缩速度最快，9压缩率最好，
+但是只对于压缩文件类型有效，
+目前Log4j2只实现了zip压缩文件支持compressionLevel。
+```
+<DefaultRolloverStrategy compressionLevel="1">
+```
+如果不填写压缩级别，默认是DEFAULT_COMPRESSION(-1)。
+查看Log4j2压缩代码实现，
+调用的是jdk提供的zip压缩:
+```
+java.util.zip.ZipOutputStream.setLevel(int)
+/**
+ * Sets the compression level for subsequent entries which are DEFLATED.
+ * The default setting is DEFAULT_COMPRESSION.
+ * @param level the compression level (0-9)
+ * @exception IllegalArgumentException if the compression level is invalid
+ */
+public void setLevel(int level) {
+    def.setLevel(level);
+}
+```
+
+下面的配置表示备份文件压缩为gz格式：
+```
+filePattern="${LOG_HOME}/$${date:yyyy-MM}/${FILE_NAME}-%d{yyyy-MM-dd-HH}-%i.log.gz"
+```
+
+# 4.敏感日志设置

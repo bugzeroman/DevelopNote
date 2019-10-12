@@ -1,0 +1,246 @@
+# 1.进阶说明
+通过配置Layout打印格式化的日志，
+Log4j2支持很多的Layouts：
+CSV GELF HTML JSON Pattern Serialized Syslog XML YAML
+本文仅介绍Pattern Layouts的详细使用。
+本文基于[Log4j2基本使用入门](https://www.jianshu.com/p/a344409cf08a)。
+请先参考上面的基本使用入门。
+
+# 2.Pattern Layouts
+Pattern Layouts是一个灵活的布局，
+是最常用的日志格式配置。
+该类的目标是格式化一个日志事件并返回结果，
+结果的格式取决于转换模式。
+转换模式与c语言中printf函数的转换模式密切相关。
+转换模式由称为转换说明符的文字文本和格式控制表达式组成。
+注意，任何文字文本，包括特殊字符，都可能包含在转换模式中。
+特殊字符包括\t、\n、\r、\f，使用\\输出一个反斜杠。
+每个转换说明符以百分号(%)开头，
+后面是可选的格式修饰符和必填的转换字符。
+格式修饰符控制字段宽度、填充、左对齐和右对齐等内容。
+转换字符指定数据的类型，例如日期、线程名、日志级别、日志名称等等。
+
+# 3.一个简单的例子
+log4j2.xml中的PatternLayout配置：
+```
+<PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+```
+对应输出的日志信息：
+```
+11:33:08.440 [main] FATAL org.apache.logging.log4j.Log4j2Test - fatal level log
+```
+详细对应关系：
+|数据类型 |转换字符        |输出日志 |
+|---------|----------------|---------|
+|日期     |%d{HH:mm:ss.SSS}|11:33:08.440 |
+|线程名   |%t              |main |
+|日志级别 |%-5level        |FATAL |
+|日志名称 |%logger{36}     |org.apache.logging.log4j.Log4j2Test |
+|日志信息 |%msg            |fatal level log |
+|换行     |%n              |日志结束换行 |
+另外配置中的空白字符和[]-等字符都是按照原样输出的。
+
+# 4.PatternLayout参数
+|属性    |说明 |
+|--------|-----|
+|charset |指定日志字符集 |
+|pattern |指定日志输出格式 |
+|alwaysWriteExceptions |默认为true，输出异常 |
+|header  |可选项，包含在每个日志文件的顶部 |
+|footer  |可选项，包含在每个日志文件的尾部 |
+上面没有把全部参数列出来，
+下面仅介绍pattern参数的详细配置。
+
+# 5.pattern属性
+pattern可以配置各种类型的转换字符，
+转换字符又称为占位符，
+在打印日志的时候会被替换为实际的值。
+
+|转换字符 |说明 |
+|:--------|:----|
+|c{precision}<br>logger{precision} |输出发布日志事件的日志程序的名称。 |
+|C{precision}<br>class{precision}  |输出发出日志记录请求的调用者的完全限定类名，可能会影响性能，谨慎使用。 |
+|d{pattern}<br>date{pattern}       |输出日志事件的日期。日期转换说明符后面可以跟一组大括号，其中包含每个SimpleDateFormat的日期和时间模式字符串。 |
+|enc{pattern}{[HTML|XML|JSON|CRLF]}<br>encode{pattern}<br>{[HTML|XML|JSON|CRLF]} |对适合用特定标记语言输出的特殊字符进行编码和转义。默认情况下，如果只指定了一个选项，它将对HTML进行编码。第二个选项用于指定应该使用哪种编码格式。此转换器特别适用于对用户提供的数据进行编码，这样输出数据就不会写得不正确或不安全。 |
+|ex<br>exception<br>throwable |输出绑定到日志事件的可抛出跟踪，默认情况下，这将输出完整的跟踪，就像调用Throwable. printstacktrace()时通常会看到的那样。|
+|F<br>file |输出发出日志记录请求的文件名。生成文件信息(位置信息)是一项昂贵的操作，可能会影响性能，请谨慎使用。  |
+|highlight{pattern}{style} |根据当前事件的日志级别将ANSI颜色添加到所包含模式的结果中。(见Jansi配置。)  |
+|l<br>location |输出生成日志事件的调用者的位置信息。位置信息取决于JVM实现，但通常由调用方法的完全限定名、调用者源文件名和括号之间的行号组成。生成位置信息是一项昂贵的操作，可能会影响性能，请谨慎使用。 |
+|L<br>line     |上面location功能的简略版，仅仅输出发出日志请求的行号。同样生成行号信息可能会影响性能，请谨慎使用。 |
+|m{nolookups}{ansi}<br>msg{nolookups}{ansi}<br>message{nolookups}{ansi}  |输出应用程序提供的与日志事件关联的消息。 |
+|M<br>method  |输出发出日志请求的方法名。生成调用者的方法名(位置信息)是一项昂贵的操作，可能会影响性能,请谨慎使用。  |
+|maxLen<br>maxLength |输出评估模式的结果并截断结果。如果长度大于20，则输出将包含一个拖尾省略号。如果提供的长度无效，则使用默认值100。示例语法:%maxLen{%p: %c{1} - %m%notEmpty{=>%ex{short}}}{160}将被限制为160个字符，后面加一个省略号。另一个例子:%maxLen{%m}{20}将被限制为20个字符，并且没有拖尾省略号。 |
+|n |输出平台相关的行分隔符字符。与使用不可移植的行分隔符字符串(如“\n”或“\r\n”)相比，这个转换字符提供了几乎相同的性能。因此，它是指定行分隔符的首选方法。 |
+|N<br>nano |在创建日志事件时输出System.nanoTime()的结果。 |
+|pid{[defaultValue]}<br>processId{[defaultValue]} |如果底层平台支持，则输出进程ID。如果平台不支持进程id，可以指定一个可选的默认值来显示。 |
+|p<br>level |输出日志事件的级别。 |
+|r<br>relative |输出从JVM启动到日志事件创建的毫秒数。 |
+|replace{pattern}{regex}{substitution} |将正则表达式'regex'的出现替换为对模式求值后字符串中的'替换'。例如，“%replace{%msg}{\s}{}”将删除事件消息中包含的所有空格。模式可以任意复杂，特别是可以包含多个转换关键字。例如，“%替换{%logger %msg}{\。}{/}将用正斜杠替换日志记录器或事件消息中的所有点。 |
+|sn<br>sequenceNumber |包含将在每个事件中递增的序列号。计数器是一个静态变量，因此它只在共享相同转换器类对象的应用程序中是唯一的。 |
+|T<br>tid<br>threadId |输出生成日志事件的线程ID。 |
+|t<br>tn<br>thread<br>threadName |输出生成日志事件的线程名称。 |
+|tp<br>threadPriority |输出生成日志事件的线程的优先级。 |
+|fqcn       |输出记录器的完全限定类名。 |
+|endOfBatch |输出日志事件的EndOfBatch状态，为“true”或“false”。 |
+|u{"RANDOM" | "TIME"}<br>uuid |包括一个随机的或基于时间的UUID。基于时间的UUID是一个1型UUID,可以产生高达每毫秒10000独特的id,将使用每个主机的MAC地址,并试图确保唯一性跨多个jvm和/或类加载器在同一个主机上0到16384之间的一个随机数将与每个UUID生成类的实例相关联,包括在每一个基于时间的UUID生成。因为基于时间的uuid包含MAC地址和时间戳，所以应该小心使用它们，因为它们可能会导致安全漏洞。 |
+|%          | 序列%%输出一个百分比符号。 |
+
+# 6.logger属性详解
+```
+c{precision}
+logger{precision}
+```
+logger转换说明符后面可以跟着precision精度说明符，
+后者由一个十进制整数组成，也可以是一个以十进制整数开头的模式。
+当精度说明符是一个整数值时，它减少了记录器名称的大小。
+如果数字为正，则布局将打印最右边的记录器名称组件的相应数量。
+如果为负，则布局将删除最左侧记录器名称组件的相应数量。
+如果精度包含任何非整数字符，则布局将根据模式缩写名称。
+如果精度整数小于1，布局仍然完整打印最右边的标记。
+默认情况下，布局将完整打印日志程序名称。
+| Conversion Pattern | Logger Name                 | Result                 |
+| :----------------- | :-------------------------- | :--------------------- |
+| %c{1}              | org.apache.commons.Foo      | Foo                    |
+| %c{2}              | org.apache.commons.Foo      | commons.Foo            |
+| %c{10}             | org.apache.commons.Foo      | org.apache.commons.Foo |
+| %c{-1}             | org.apache.commons.Foo      | apache.commons.Foo     |
+| %c{-2}             | org.apache.commons.Foo      | commons.Foo            |
+| %c{-10}            | org.apache.commons.Foo      | org.apache.commons.Foo |
+| %c{1.}             | org.apache.commons.Foo      | o.a.c.Foo              |
+| %c{1.1.~.~}        | org.apache.commons.test.Foo | o.a.~.~.Foo            |
+| %c{.}              | org.apache.commons.test.Foo | ....Foo                |
+
+# 7.class属性详解
+```
+C{precision}
+class{precision}
+```
+输出发出日志记录请求的调用者的完全限定类名。
+此转换说明符可选后跟精度说明符，
+它遵循与logger转换器相同的规则。
+生成调用者的类名(位置信息)是一项昂贵的操作，
+可能会影响性能，请谨慎使用。
+
+所以一般将类名作为日志名称，
+使用如下的代码记录日志：
+```java
+private static Logger LOG = LogManager.getLogger(Log4j2Test.class);
+```
+配置log4j2.xml时使用logger{precision}打印日志程序名称，
+就能打印出生成日志的调用者的全限定类名，
+通过这种方法是不损害性能的。
+
+# 8.date属性详解
+```
+d{pattern}
+date{pattern} 
+```
+输出日志事件的日期。
+日期转换说明符后面可以跟一组大括号，
+其中包含每个SimpleDateFormat的日期和时间模式字符串。
+| Pattern                            | Example                         |
+| :--------------------------------- | :------------------------------ |
+| %d{DEFAULT}                        | 2012-11-02 14:34:02,123         |
+| %d{DEFAULT_MICROS}                 | 2012-11-02 14:34:02,123456      |
+| %d{DEFAULT_NANOS}                  | 2012-11-02 14:34:02,123456789   |
+| %d{ISO8601}                        | 2012-11-02T14:34:02,781         |
+| %d{ISO8601_BASIC}                  | 20121102T143402,781             |
+| %d{ISO8601_OFFSET_DATE_TIME_HH}    | 2012-11-02'T'14:34:02,781-07    |
+| %d{ISO8601_OFFSET_DATE_TIME_HHMM}  | 2012-11-02'T'14:34:02,781-0700  |
+| %d{ISO8601_OFFSET_DATE_TIME_HHCMM} | 2012-11-02'T'14:34:02,781-07:00 |
+| %d{ABSOLUTE}                       | 14:34:02,781                    |
+| %d{ABSOLUTE_MICROS}                | 14:34:02,123456                 |
+| %d{ABSOLUTE_NANOS}                 | 14:34:02,123456789              |
+| %d{DATE}                           | 02 Nov 2012 14:34:02,781        |
+| %d{COMPACT}                        | 20121102143402781               |
+| %d{UNIX}                           | 1351866842                      |
+| %d{UNIX_MILLIS}                    | 1351866842781                   |
+
+可以定义自定义日期格式:
+| Pattern                                                      | Example                                                     |
+| :----------------------------------------------------------- | :---------------------------------------------------------- |
+| %d{HH:mm:ss,SSS}                                             | 14:34:02,123                                                |
+| %d{HH:mm:ss,nnnn} to %d{HH:mm:ss,nnnnnnnnn}                  | 14:34:02,1234 to 14:34:02,123456789                         |
+| %d{dd MMM yyyy HH:mm:ss,SSS}                                 | 02 Nov 2012 14:34:02,123                                    |
+| %d{dd MMM yyyy HH:mm:ss,nnnn} to %d{dd MMM yyyy HH:mm:ss,nnnnnnnnn} | 02 Nov 2012 14:34:02,1234 to 02 Nov 2012 14:34:02,123456789 |
+| %d{HH:mm:ss}{GMT+0}                                          | 18:34:02                                                    |
+
+%d{UNIX}输出UNIX时间(以秒为单位),
+%d{UNIX_MILLIS}以毫秒为单位输出UNIX时间。
+UNIX时间是当前时间与1970年UTC年1月1日午夜之间的时间差，
+UNIX以秒为单位，UNIX_MILLIS以毫秒为单位。
+虽然时间单位是毫秒，但粒度取决于操作系统(Windows)。
+这是输出事件时间的一种有效方法，
+因为只进行从long到String的转换，不涉及日期格式。
+当在Java 9上运行时，
+Log4j 2.11增加了对时间戳timestamps的支持，
+使得它比毫秒milliseconds更精确。
+
+# 9.L和l属性的区别
+配置log4j2.xml:
+```
+<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level [%l] - %msg%n" />
+<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level [%L] - %msg%n" />
+```
+打印出对应的日志：
+```
+2019-10-12 15:28:25.877 [main] ERROR [org.apache.logging.log4j.Log4j2Test.logAll(Log4j2Test.java:18)] - error level log
+2019-10-12 15:30:34.535 [main] ERROR [18] - error level log
+```
+
+# 10.特殊符号
+有些特殊符号不能直接打印，
+需要使用实体名称或者编号，
+才能原样打印特殊字符。
+
+|特殊符号 |实体名称 |编号  |
+|---------|---------|------|
+|&        |&amp;    |&#38; |
+|<        |&lt;     |&#60; |
+|>        |&gt;     |&#62; |
+|"        |&quot;   |&#34; |
+|'        |&apos;   |&#39; |
+
+# 11.格式修饰符
+
+ The default is to pad on the left (right justify) but you can specify right padding with the left justification flag. 
+ The padding character is space. If the data item is larger than the minimum field width, 
+ the field is expanded to accommodate the data. The value is never truncated.
+ To use zeros as the padding character prepend the minimum field width with a zero.
+This behavior can be changed using the maximum field width modifier 
+which is designated by a period followed by a decimal constant. 
+If the data item is longer than the maximum field, 
+then the extra characters are removed from the beginning of the data item and not from the end.
+For example, it the maximum field width is eight and the data item is ten characters long, then the first two characters of the data item are dropped. This behavior deviates from the printf function in C where truncation is done from the end.
+Truncation from the end is possible by appending a minus character right after the period. In that case, if the maximum field width is eight and the data item is ten characters long, then the last two characters of the data item are dropped.
+Below are various format modifier examples for the category conversion specifier.
+
+默认情况下，相关信息按原样输出。
+然而，在格式修饰符的帮助下，可以改变最小字段宽度、最大字段宽度和对齐。
+可选的格式修饰符放在百分号和转换字符之间。
+这是一个十进制常量，表示要输出的最小字符数。
+可以是正数，也可以是负数(带减号(-)字符)，
+整数表示右对齐，负数表示左对齐。
+如果数据项输出字符数不够，则在左边或右边填充空格，直到达到最小宽度为止。
+若要使用0作为填充字符，请在最小字段宽度前加上0。
+如果数据项大于最小字段宽度，则扩展字段以容纳数据，数据项的值不会被截断。
+可以使用最大字段宽度修饰符限制最大宽度，
+该修饰符由一个句点后跟一个十进制常数指定。
+如果数据项比最大字段长，则从数据项的开头而不是末尾删除额外的字符。
+例如，数据项最大字段宽度为8，数据项长度为10个字符，
+然后删除数据项的前2个字符，保留的是后8个字符。
+可以在句点后面追加一个减号改为从末尾开始截断。
+那么上面的数据项的最后2个字符将被删除。
+下面是类别转换说明符的各种格式修饰符示例。
+| 格式修饰符 | 对齐方式 | 最小宽度 | 最大宽度 | 说明   |
+| :----------| :--------| :--------| :----    | :------|
+| %20c       | 右对齐   | 20       | 无       | 不足20个字符则在数值前面用空格补足，超过20个字符则保留原信息。 |
+| %-20c      | 左对齐   | 20       | 无       | 同上 |
+| %.30c      | NA       | 无       | 30       | 如果信息超过30个字符，则只保留最后30个字符。 |
+| %20.30c    | 右对齐   | 20       | 30       | 不足20个字符则在信息前面用空格补足，超过30个字符则只保留最后30个字符。 |
+| %-20.30c   | 左对齐   | 20       | 30       | 同上 |
+| %-20.-30c  | 左对齐   | 20       | 30       | 不足20个字符则在信息前面用空格补足，超过30个字符则只保留前面30个字符。|
+
+# 12.参考
+[Log4j2 Layouts](http://logging.apache.org/log4j/2.x/manual/layouts.html)
+[Log4j2 Layouts PatternLayout](http://logging.apache.org/log4j/2.x/manual/layouts.html#PatternLayout)
