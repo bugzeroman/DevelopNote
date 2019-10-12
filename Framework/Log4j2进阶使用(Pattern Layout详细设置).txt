@@ -61,7 +61,7 @@ pattern可以配置各种类型的转换字符，
 |c{precision}<br>logger{precision} |输出发布日志事件的日志程序的名称。 |
 |C{precision}<br>class{precision}  |输出发出日志记录请求的调用者的完全限定类名，可能会影响性能，谨慎使用。 |
 |d{pattern}<br>date{pattern}       |输出日志事件的日期。日期转换说明符后面可以跟一组大括号，其中包含每个SimpleDateFormat的日期和时间模式字符串。 |
-|enc{pattern}{[HTML|XML|JSON|CRLF]}<br>encode{pattern}<br>{[HTML|XML|JSON|CRLF]} |对适合用特定标记语言输出的特殊字符进行编码和转义。默认情况下，如果只指定了一个选项，它将对HTML进行编码。第二个选项用于指定应该使用哪种编码格式。此转换器特别适用于对用户提供的数据进行编码，这样输出数据就不会写得不正确或不安全。 |
+|enc{pattern}{[HTML\|XML\|JSON\|CRLF]}<br>encode{pattern}<br>{[HTML\|XML\|JSON\|CRLF]} |对适合用特定标记语言输出的特殊字符进行编码和转义。默认情况下，如果只指定了一个选项，它将对HTML进行编码。第二个选项用于指定应该使用哪种编码格式。此转换器特别适用于对用户提供的数据进行编码，这样输出数据就不会写得不正确或不安全。 |
 |ex<br>exception<br>throwable |输出绑定到日志事件的可抛出跟踪，默认情况下，这将输出完整的跟踪，就像调用Throwable. printstacktrace()时通常会看到的那样。|
 |F<br>file |输出发出日志记录请求的文件名。生成文件信息(位置信息)是一项昂贵的操作，可能会影响性能，请谨慎使用。  |
 |highlight{pattern}{style} |根据当前事件的日志级别将ANSI颜色添加到所包含模式的结果中。(见Jansi配置。)  |
@@ -82,7 +82,7 @@ pattern可以配置各种类型的转换字符，
 |tp<br>threadPriority |输出生成日志事件的线程的优先级。 |
 |fqcn       |输出记录器的完全限定类名。 |
 |endOfBatch |输出日志事件的EndOfBatch状态，为“true”或“false”。 |
-|u{"RANDOM" | "TIME"}<br>uuid |包括一个随机的或基于时间的UUID。基于时间的UUID是一个1型UUID,可以产生高达每毫秒10000独特的id,将使用每个主机的MAC地址,并试图确保唯一性跨多个jvm和/或类加载器在同一个主机上0到16384之间的一个随机数将与每个UUID生成类的实例相关联,包括在每一个基于时间的UUID生成。因为基于时间的uuid包含MAC地址和时间戳，所以应该小心使用它们，因为它们可能会导致安全漏洞。 |
+|u{"RANDOM" \| "TIME"}<br>uuid |包括一个随机的或基于时间的UUID。基于时间的UUID是一个1型UUID,可以产生高达每毫秒10000独特的id,将使用每个主机的MAC地址,并试图确保唯一性跨多个jvm和/或类加载器在同一个主机上0到16384之间的一个随机数将与每个UUID生成类的实例相关联,包括在每一个基于时间的UUID生成。因为基于时间的uuid包含MAC地址和时间戳，所以应该小心使用它们，因为它们可能会导致安全漏洞。 |
 |%          | 序列%%输出一个百分比符号。 |
 
 # 6.logger属性详解
@@ -156,7 +156,7 @@ date{pattern}
 | %d{UNIX}                           | 1351866842                      |
 | %d{UNIX_MILLIS}                    | 1351866842781                   |
 
-可以定义自定义日期格式:
+还可以定义自定义日期格式:
 | Pattern                                                      | Example                                                     |
 | :----------------------------------------------------------- | :---------------------------------------------------------- |
 | %d{HH:mm:ss,SSS}                                             | 14:34:02,123                                                |
@@ -195,26 +195,13 @@ Log4j 2.11增加了对时间戳timestamps的支持，
 
 |特殊符号 |实体名称 |编号  |
 |---------|---------|------|
-|&        |&amp;    |&#38; |
-|<        |&lt;     |&#60; |
-|>        |&gt;     |&#62; |
-|"        |&quot;   |&#34; |
-|'        |&apos;   |&#39; |
+|&        |\&amp;    |\&#38; |
+|<        |\&lt;     |\&#60; |
+|>        |\&gt;     |\&#62; |
+|"        |\&quot;   |\&#34; |
+|'        |\&apos;   |\&#39; |
 
 # 11.格式修饰符
-
- The default is to pad on the left (right justify) but you can specify right padding with the left justification flag. 
- The padding character is space. If the data item is larger than the minimum field width, 
- the field is expanded to accommodate the data. The value is never truncated.
- To use zeros as the padding character prepend the minimum field width with a zero.
-This behavior can be changed using the maximum field width modifier 
-which is designated by a period followed by a decimal constant. 
-If the data item is longer than the maximum field, 
-then the extra characters are removed from the beginning of the data item and not from the end.
-For example, it the maximum field width is eight and the data item is ten characters long, then the first two characters of the data item are dropped. This behavior deviates from the printf function in C where truncation is done from the end.
-Truncation from the end is possible by appending a minus character right after the period. In that case, if the maximum field width is eight and the data item is ten characters long, then the last two characters of the data item are dropped.
-Below are various format modifier examples for the category conversion specifier.
-
 默认情况下，相关信息按原样输出。
 然而，在格式修饰符的帮助下，可以改变最小字段宽度、最大字段宽度和对齐。
 可选的格式修饰符放在百分号和转换字符之间。
@@ -235,10 +222,10 @@ Below are various format modifier examples for the category conversion specifier
 | 格式修饰符 | 对齐方式 | 最小宽度 | 最大宽度 | 说明   |
 | :----------| :--------| :--------| :----    | :------|
 | %20c       | 右对齐   | 20       | 无       | 不足20个字符则在数值前面用空格补足，超过20个字符则保留原信息。 |
-| %-20c      | 左对齐   | 20       | 无       | 同上 |
+| %-20c      | 左对齐   | 20       | 无       | 同上。 |
 | %.30c      | NA       | 无       | 30       | 如果信息超过30个字符，则只保留最后30个字符。 |
 | %20.30c    | 右对齐   | 20       | 30       | 不足20个字符则在信息前面用空格补足，超过30个字符则只保留最后30个字符。 |
-| %-20.30c   | 左对齐   | 20       | 30       | 同上 |
+| %-20.30c   | 左对齐   | 20       | 30       | 同上。 |
 | %-20.-30c  | 左对齐   | 20       | 30       | 不足20个字符则在信息前面用空格补足，超过30个字符则只保留前面30个字符。|
 
 # 12.参考
