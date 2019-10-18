@@ -1,6 +1,6 @@
 1.文章发布网站
-简书：           https://www.jianshu.com/u/669b3db8f6fe
-CSDN:           https://blog.csdn.net/bugzeroman
+简书：       https://www.jianshu.com/u/669b3db8f6fe
+CSDN:        https://blog.csdn.net/bugzeroman
 新浪博客：   http://blog.sina.com.cn/u/1914861954
 
 2.待写作文章：
@@ -13,9 +13,7 @@ centos 7关闭selinux
 yum相关
 csv数据导入导出PostgreSQL,Oracle,MySQL
 oracle命令行导入导出数据格式
-log4j2完整xml参考 
-更多的PatternLayout设置
-Log4j2进阶使用(gz压缩，log循环顺序)
+Log4j2更多的细节
 JSON用法和性能比较
 
 3.待发布文章
