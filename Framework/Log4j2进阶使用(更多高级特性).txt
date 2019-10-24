@@ -119,3 +119,34 @@ filePattern="${LOG_HOME}/$${date:yyyy-MM}/${FILE_NAME}-%d{yyyy-MM-dd-HH}-%i.log.
 ```
 
 # 4.敏感日志设置
+Layout支持replace功能，
+可以通过正则表达式查找%msg的内容，
+并且替换为想要输出的内容，
+可以实现把敏感日志替换为其他字符。
+下面replace把msg中的error全部替换为*****：
+```
+%replace{%msg}{error}{*****}
+```
+需要注意的这里replace只支持正常打印的内容，
+不支持exception(即catch捕获的error会直接输出)。
+
+log4j2.xml配置参考：
+```
+<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level [%L] - %replace{%msg}{error}{*****}%n" />
+```
+修改前打印日志：
+```
+2019-10-23 16:20:23.085 [main] ERROR [18] - error level log
+2019-10-23 16:20:23.085 [main] FATAL [19] - fatal level log
+```
+修改后打印日志：
+```
+2019-10-23 16:20:25.073 [main] ERROR [18] - ***** level log
+2019-10-23 16:20:25.083 [main] FATAL [19] - fatal level log
+```
+
+# 5.参考文章
+[Log4j2基本使用入门](https://www.jianshu.com/p/a344409cf08a)
+[Log4j2进阶使用(按大小时间备份日志)](https://www.jianshu.com/p/c7ae523f6e82)
+[Log4j2进阶使用(Pattern Layout详细设置)](https://www.jianshu.com/p/37ef7bc6d6eb)
+[Log4j2完整XML参考(详细注释说明)](https://www.jianshu.com/p/3427a76134d6)
