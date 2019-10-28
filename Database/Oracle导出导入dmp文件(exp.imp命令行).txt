@@ -1,0 +1,216 @@
+# 1.说明
+使用Oracle命令行导出导入dmp文件，
+从而在两个数据库之间快速转移数据，
+也可以用来作为数据库的备份，
+将来可以快速恢复数据。
+
+命令：导出exp、导入imp
+步骤：
+1. 使用Oracle的exp命令将指定数据库导出为dmp文件;
+2. 然后将dmp文件上传到需要导入的数据库所在服务器;
+3. 使用Oracle的imp命令将dmp文件导入指定数据库。
+
+# 2.导出exp
+在Oracle数据库10.21.19.63上的guwei用户下，
+有两张表USER_INFO,POLICY_INFO，
+下面导出这两张表的所有数据，
+导出命令：
+```
+exp guwei/ai123456@10.21.19.63/orcl file=guwei_user_policy.dmp tables=USER_INFO,POLICY_INFO
+```
+
+导出日志：
+```
+Export: Release 11.2.0.1.0 - Production on Mon Oct 28 03:08:08 2019
+
+Copyright (c) 1982, 2009, Oracle and/or its affiliates.  All rights reserved.
+
+Connected to: Oracle Database 11g Enterprise Edition Release 11.2.0.1.0 - 64bit Production
+With the Partitioning, OLAP, Data Mining and Real Application Testing options
+Export done in AL32UTF8 character set and AL16UTF16 NCHAR character set
+
+About to export specified tables via Conventional Path ...
+. . exporting table                      USER_INFO  150904330 rows exported
+. . exporting table                    POLICY_INFO         10 rows exported
+Export terminated successfully without warnings.
+```
+
+导出说明：
+这里导出1.5亿条数据，耗时4分钟左右，
+导出的guwei_user_policy.dmp文件大小为7.8G。
+
+# 3.上传dmp文件
+将dmp文件上传到需要导入的数据库所在服务器：
+```
+scp guwei_user_policy.dmp oracle@10.21.13.14:/home/oracle/script/guwei
+```
+
+# 4.导入imp
+下面把USER_INFO,POLICY_INFO这两张表导入，
+导入到Oracle数据库10.21.13.14上的yuwen用户下，
+导入命令：
+```
+imp yuwen/ai123456@10.21.13.14/orcl file=guwei_user_policy.dmp tables=USER_INFO,POLICY_INFO
+```
+
+导入日志：
+```
+Import: Release 12.1.0.2.0 - Production on Mon Oct 28 15:55:51 2019
+
+Copyright (c) 1982, 2014, Oracle and/or its affiliates.  All rights reserved.
+
+
+Connected to: Oracle Database 12c Enterprise Edition Release 12.1.0.2.0 - 64bit Production
+With the Partitioning, OLAP, Advanced Analytics and Real Application Testing options
+
+Export file created by EXPORT:V11.02.00 via conventional path
+
+Warning: the objects were exported by GUWEI, not by you
+
+import done in US7ASCII character set and AL16UTF16 NCHAR character set
+import server uses AL32UTF8 character set (possible charset conversion)
+export client uses AL32UTF8 character set (possible charset conversion)
+. importing GUWEI's objects into YUWEN
+. importing GUWEI's objects into YUWEN
+. . importing table                    "USER_INFO"  150904330 rows imported
+. . importing table                  "POLICY_INFO"         10 rows imported
+Import terminated successfully without warnings.
+```
+
+导入说明：
+导入1.5亿条数据，耗时40分钟左右，性能还是比较好的。
+
+# 5.三种导入导出类型
+Oracle支持三种导入导出类型
+分别是表方式(T方式)，用户方式(U方式)，全库方式(Full方式)，
+上面给出的示例是表方式(T方式)。
+
+## 5.1 表方式（T方式）
+将指定表的数据导出，
+备份某个用户模式下指定的对象（表）,
+使用如下命令：
+```
+exp guwei/ai123456@10.21.19.63/orcl rows=y indexes=n compress=n buffer=50000000 file=exp_table.dmp log=exp_table.log tables=USER_INFO,POLICY_INFO
+```
+
+恢复备份数据中的指定表，
+使用如下命令：
+```
+imp yuwen/ai123456@10.21.13.14/orcl fromuser=guwei touser=yuwen rows=y indexes=n commit=y buffer=50000000 ignore=n file=exp_table.dmp log=exp_table.log tables=USER_INFO,POLICY_INFO
+```
+
+## 5.2 用户方式（U方式）
+将指定用户的所有对象及数据导出,
+备份某个用户模式下的所有对象，
+使用如下命令：
+```
+exp jnth/thpassword@oracle owner=guwei rows=y indexes=n compress=n buffer=50000000 file=exp_table.dmp log=exp_table.log
+```
+
+恢复备份数据的全部内容，
+使用如下命令：
+```
+imp yuwen/ai123456@10.21.13.14/orcl fromuser=guwei touser=yuwen rows=y indexes=n commit=y buffer=50000000 ignore=n file=exp_table.dmp log=exp_table.log
+```
+
+恢复备份数据中的指定表，
+使用如下命令：
+```
+imp yuwen/ai123456@10.21.13.14/orcl fromuser=guwei touser=yuwen rows=y indexes=n commit=y buffer=50000000 ignore=n file=exp_table.dmp log=exp_table.log tables=USER_INFO,POLICY_INFO
+```
+
+## 5.3 全库方式（Full方式）
+将数据库中的所有对象导出,
+备份完整的数据库，
+使用如下命令：
+```
+exp system/systempassword@oracle rows=y indexes=n compress=n buffer=50000000 full=y file=exp_table.dmp log=exp_table.log
+```
+
+导入完整数据库,
+使用如下命令：
+```
+imp system/systempassword@oracle rows=y indexes=n commit=y buffer=50000000 ignore=y full=y file=exp_table.dmp log=exp_table.log
+```
+
+# 6.导出导入的优缺点：
+优点：
+- 简单易行；
+- 可靠性高；
+- 不影响数据库的正常运行。
+
+缺点：
+- 只能提供到"某一时间点上"的恢复，不能最大可能的恢复数据；
+- 数据量大时，恢复较慢。
+
+# 7.导出exp参数说明
+| 参数名               | 说明                       | 默认值       |
+| -------------------- | -------------------------- | ------------ |
+| USERID               | 用户名/口令                |              |
+| FULL                 | 导出整个文件               |  N           |
+| BUFFER               | 数据缓冲区的大小           |              |
+| OWNER                | 导出指定的所有者用户名列表 |              |
+| FILE                 | 输出文件                   | (EXPDAT.DMP) |
+| TABLES               | 导出指定的表名列表         |              |
+| COMPRESS             | 是否压缩导出的文件         |  Y           |
+| RECORDLENGTH         | IO 记录的长度              |              |
+| GRANTS               | 导出权限                   |  Y           |
+| INCTYPE              | 增量导出类型               |              |
+| INDEXES              | 导出索引                   |  Y           |
+| RECORD               | 跟踪增量导出               |  Y           |
+| ROWS                 | 导出数据行                 |  Y           |
+| PARFILE              | 参数文件名                 |              |
+| CONSTRAINTS          | 导出限制                   |  Y           |
+| CONSISTENT           | 交叉表一致性               |              |
+| LOG                  | 屏幕输出的日志文件         |              |
+| STATISTICS           | 分析对象(ESTIMATE)         |              |
+| DIRECT               | 直接路径                   |  N           |
+| TRIGGERS             | 导出触发器                 |  Y           |
+| FEEDBACK             | 显示每 x 行 (0) 的进度     |              |
+| FILESIZE             | 各转储文件的最大尺寸       |              |
+| QUERY                | 选定导出表子集的子句       |              |
+| TRANSPORT_TABLESPACE | 导出可传输的表空间元数据   |  N           |
+| TABLESPACES          | 导出指定的表空间列表       |              |
+
+# 8.导入imp参数说明
+| 参数名                | 说明                           | 默认值       |
+| --------------------- | ------------------------------ | ------------ |
+| USERID                | 用户名/口令                    |              |
+| FULL                  | 导入整个文件                   |  N           |
+| BUFFER                | 数据缓冲区大小                 |              |
+| FROMUSER              | 所有人用户名列表               |              |
+| FILE                  | 输入文件                       | (EXPDAT.DMP) |
+| TOUSER                | 用户名列表                     |              |
+| SHOW                  | 只列出文件内容                 |  N           |
+| TABLES                | 表名列表                       |              |
+| IGNORE                | 忽略创建错误                   |  N           |
+| RECORDLENGTH          | IO记录的长度                   |              |
+| GRANTS                | 导入权限                       |  Y           |
+| INCTYPE               | 增量导入类型                   |              |
+| INDEXES               | 导入索引                       |  Y           |
+| COMMIT                | 提交数组插入                   |  N           |
+| ROWS                  | 导入数据行                     |  Y           |
+| PARFILE               | 参数文件名                     |              |
+| LOG                   | 屏幕输出的日志文件             |              |
+| CONSTRAINTS           | 导入限制                       |  Y           |
+| DESTROY               | 覆盖表空间数据文件             |  N           |
+| INDEXFILE             | 将表/索引信息写入指定的文件    |              |
+| SKIP_UNUSABLE_INDEXES | 跳过不可用索引的维护           |  N           |
+| FEEDBACK              | 每 x 行显示进度                |              |
+| TOID_NOVALIDATE       | 跳过指定类型 ID 的验证         |              |
+| FILESIZE              | 每个转储文件的最大大小         |              |
+| STATISTICS            | 始终导入预计算的统计信息       |              |
+| RESUMABLE             | 在遇到有关空间的错误时挂起     |              |
+| RESUMABLE_NAME        | 用来标识可恢复语句的文本字符串 |              |
+| RESUMABLE_TIMEOUT     | RESUMABLE 的等待时间           |              |
+| COMPILE               | 编译过程, 程序包和函数         |  Y           |
+| STREAMS_CONFIGURATION | 导入 Streams 的一般元数据      |  Y           |
+| STREAMS_INSTANITATION | 导入 Streams 的实例化元数据    |  N           |
+| TRANSPORT_TABLESPACE  | 导入可传输的表空间元数据       |              |
+| TABLESPACES           | 将要传输到数据库的表空间       |              |
+| DATAFILES             | 将要传输到数据库的数据文件     |              |
+| TTS_OWNERS            | 拥有可传输表空间集中数据的用户 |              |
+
+# 9.参考文章
+[Oracle数据库exp和imp方式导数据](https://blog.csdn.net/fghsfeyhdf/article/details/79807690)
+[Oracle数据库三种备份方案](https://blog.csdn.net/Aria_Miazzy/article/details/96477912)
