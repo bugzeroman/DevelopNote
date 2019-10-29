@@ -19,6 +19,8 @@ Apache Common常用方法介绍和代码示例
 Oralce的SQL几种类型DML等，
 已经4种类型对应的常用SQL。
 Oracle数据库启动和关闭
+crontab使用方法
+Linux下犀利的FTP工具-lftp
 
 3.待发布文章
 
@@ -30,3 +32,5 @@ Eclipse使用技巧
 
 6.待处理其他事项
 同步文章到CSDN和新浪BLOG
+等待CSDN每月自动同步一次后，
+再同步新浪BLOG，不然要多同步一次CSDN。

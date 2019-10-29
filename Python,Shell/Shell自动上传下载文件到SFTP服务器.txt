@@ -1,0 +1,99 @@
+# 1.说明
+本文提供一个Shell脚本，
+可以自动连接到SFTP服务器，
+然后上传或者下载指定的文件，
+进而可以使用Linux的corntab命令，
+定时执行脚本上传下载文件，
+实现文件的同步或者备份功能。
+
+# 2.FTP和SFTP的区别
+一般使用FTP来上传下载文件，
+但是Linux的默认是不提供FTP的，
+需要额外安装FTP服务器，
+而且会占用一定的VPS服务器资源。
+这里建议使用SFTP代替FTP,
+可以不用额外安装任何服务器端程序,
+使用只有SSH的Linux服务器的时候，
+开启SSH默认就开启了SFTP，
+不需要单独配置就可以使用。
+SFTP加密传输认证信息和数据，
+相对来说会更安全。
+
+# 3.安装lftp
+在脚本中需要使用lftp命令来连接SFTP服务器，
+如果没有需要使用root用户安装，
+yum安装命令如下：
+```
+yum install lftp -y
+```
+
+自动上传下载文件的关键是自动输入用户名密码，
+但使用ssh的工具scp、sftp和ssh不能自动输入密码，
+所以这里使用lftp实现。
+
+# 4.上传脚本
+上传脚本uploadFile.sh内容如下：
+```
+#!/bin/bash
+# SFTP配置信息
+# IP
+IP=10.21.19.84
+# 端口
+PORT=22
+# 用户名
+USER=yuwen
+# 密码
+PASSWORD=ai123456
+# 需要上传的文件名
+FILE=test.txt
+# 需要上传的文件所在目录
+CLIENTDIR=/home/yuwen/sftp/upload
+# 上传到目标服务器的目录
+SEVERDIR=/home/yuwen/sftp/download
+
+lftp -u ${USER},${PASSWORD} sftp://${IP}:${PORT} <<EOF
+cd ${SEVERDIR}/
+lcd ${CLIENTDIR}
+put ${FILE}
+by
+EOF
+```
+
+脚本上半部分主要配置目标服务器信息，
+包括IP地址，SFTP端口，用户名，密码,
+以及需要上传的文件的本地路径和远程路径。
+
+脚本下半部分是实现自动上传的关键，
+首先自动登录SFTP服务器，
+然后cd切换远程目录，
+lcd切换本地目录，
+put把文件上传到服务器。
+
+# 5.下载脚本
+修改脚本uploadFile.sh内容，
+把put上传命令改为get命令即可:
+```
+get ${FILE}
+```
+
+# 6.定时执行脚本
+每天凌晨2点执行上传脚本：
+```
+0 2 * * * sh /home/yuwen/uploadFile.sh
+```
+
+查看当前的crontab任务：
+```
+crontab -l
+```
+编辑crontab任务：
+```
+crontab -e
+```
+
+# 7.参考文章
+[定时执行Linux shell脚本实现SFTP定时上传下载文件](https://blog.csdn.net/u012310859/article/details/79364881)
+[ftp/sftp定时自动上传文件脚本（CentOS）](https://www.cnblogs.com/lsdb/p/7805326.html)
+[浅谈ftp和sftp的区别](https://blog.csdn.net/zdb292034/article/details/84531859)
+[sftp登录及命令行用法](https://blog.csdn.net/qnavy123/article/details/79299151)
+[Linux下犀利的FTP工具-lftp](https://blog.csdn.net/hitabc141592/article/details/7573950)
