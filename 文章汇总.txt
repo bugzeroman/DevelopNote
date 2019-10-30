@@ -16,8 +16,7 @@ oracle命令行导入导出数据格式
 Log4j2更多的细节
 JSON用法和性能比较
 Apache Common常用方法介绍和代码示例
-Oralce的SQL几种类型DML等，
-已经4种类型对应的常用SQL。
+Oralce，MySQL,PostgreQL的4种类型对应的常用SQL。
 Oracle数据库启动和关闭
 crontab使用方法
 Linux下犀利的FTP工具-lftp
