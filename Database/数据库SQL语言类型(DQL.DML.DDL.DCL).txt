@@ -67,7 +67,7 @@ TCL属于DCL的一部分，
 控制数据库的事务提交和回滚。
 
 #8.关系图
-![](https://upload-images.jianshu.io/upload_images/11810589-ae0d150c98446a9f.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/11810589-0fc0e144906988b0.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 # 9.参考文章
 [DQL、DML、DDL、DCL的概念与区别](https://www.cnblogs.com/fan-yuan/p/7879353.html)
