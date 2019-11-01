@@ -1,0 +1,416 @@
+# 1.说明
+Oracle数据库导入csv文件，
+当csv文件较小时，
+可以使用数据库管理工具，
+比如DBevaer导入到数据库，
+当csv文件很大时，
+可以使用Oracle提供的sqlldr命令行工具，
+能够快速导入大量数据。
+在数据库之间进行数据迁移时，
+特别是不同类型的数据库，
+使用csv文件是一种很好的选择。
+
+# 2.sqlldr用法
+下面介绍sqlldr用法，
+有一个USER_INFO.csv文件，
+需要导入到数据库中USER_INFO表，
+而且有1.5亿条数据，
+要求导入耗时尽量小。
+这里先介绍基本的导入方式，
+然后介绍direct导入方式，
+最后介绍parallel导入方式。
+
+# 3.获取csv文件
+USER_INFO.csv文件内容如下，
+这里仅选取了三条测试数据:
+```
+MSISDN,PROVINCE_CODE,CREATE_TIME
+8617512570551,30,2019-10-31 17:16:09
+8613063310680,33,2019-10-31 17:16:12
+8613295281345,80,2019-10-31 17:16:14
+```
+
+# 4.创建USER_INFO表
+```
+CREATE TABLE "USER_INFO" ( 
+"MSISDN" VARCHAR2(16),
+"PROVINCE_CODE" VARCHAR2(4),
+"CREATE_TIME"   DATE,
+CONSTRAINT "PK_USER_INFO_MSISDN" PRIMARY KEY ("MSISDN") 
+) TABLESPACE "USERS";
+
+COMMENT ON COLUMN "USER_INFO"."MSISDN" IS '用户手机号';
+COMMENT ON COLUMN "USER_INFO"."PROVINCE_CODE" IS '省份编码'; 
+COMMENT ON COLUMN "USER_INFO"."CREATE_TIME" IS '用户创建时间'; 
+```
+注意表中字段要和csv文件对应。
+
+# 5.创建ctl文件
+创建名为loaddata_USER_INFO.ctl的控制文件：
+```
+options(skip=1,BINDSIZE=20971520, ROWS=10000, READSIZE=20971520, ERRORS=999999999)
+load data
+infile '/home/oracle/USER_INFO.csv'
+insert into table "USER_INFO"
+fields terminated by ','  
+Optionally enclosed by '\''  
+(MSISDN,PROVINCE_CODE,CREATE_TIME "to_date(:CREATE_TIME, 'yyyy-mm-dd hh24:mi:ss')")
+```
+第1行是导入参数配置，
+已经是支持大量数据导入的参数方案。
+
+第3行infile指定导入的文件是USER_INFO.csv；
+
+第4行into table前面的insert表示导入方式：
+1. insert  :默认方式，在导入记录前要求表为空；
+2. append  :在表中追加新导入的记录；
+3. replace :删除旧记录(等价delete from table语句)，替换成新导入的记录；
+4. truncate:删除旧记录(等价truncate table语句)，替换成新导入的记录；
+into table后面指定导入数据库表USER_INFO，
+且表名必须大写；
+
+第5行指定每一行的字段是以逗号(,)分隔；
+
+第6行指定字段是用两个分号(')包围起来的，可选的；
+
+最后一行对应导入的字段，
+注意如果导入的是时间字段，
+需要指明时间转换的格式。
+
+# 6.使用sqlldr导入
+指定需要导入的数据库，
+以及使用的control文件：
+```
+sqlldr userid=yuwen/ai123456@10.21.13.14:1521/orcl control=loaddata_USER_INFO.ctl
+```
+
+导入成功输出日志如下：
+```
+SQL*Loader: Release 12.1.0.2.0 - Production on Thu Oct 31 17:37:49 2019
+
+Copyright (c) 1982, 2014, Oracle and/or its affiliates.  All rights reserved.
+
+Path used:      Conventional
+Commit point reached - logical record count 3
+
+Table "USER_INFO":
+  3 Rows successfully loaded.
+
+Check the log file:
+  loaddata_USER_INFO.log
+for more information about the load.
+```
+看到3条数据成功导入USER_INFO，
+同时会生成loaddata_USER_INFO.log日志，
+通过该日志可以查看更详细的导入信息，
+如果导入时发生错误，
+可以查看到详细的错误信息，
+而且还会生成USER_INFO.bad文件，
+bad文件原样输出了导入失败的数据。
+默认情况下ERRORS达到50个就会停止导入，
+如果需要忽略错误继续导入，
+可以配置ERRORS最大值为999999999。
+
+# 7.direct直接路径方式
+sqlldr支持direct参数，
+使用直接路径方式导效率非常高,
+direct参数默认为FALSE，
+上面第6步使用的就是默认常规路径方式，
+下面使用直接路径方式，
+进一步加快数据导入速度。
+但是使用直接路径方式会导致表的唯一索引(或主键)失效，
+可以在导入前先删除表的唯一索引，
+然后在导入完成后重建索引即可，
+如果有重复的数据，
+需要先去重才能重建索引成功，
+经过测试即使需要重建索引，
+使用直接路径方式还是比常规路径方式快。
+
+# 8.创建ctl文件(直接路径方式)
+创建名为loaddata_USER_INFO_direct.ctl的控制文件：
+```
+options(skip=1,COLUMNARRAYROWS=20971520, ROWS=10000, READSIZE=20971520, ERRORS=999999999)
+load data
+infile '/home/oracle/USER_INFO.csv'
+insert into table "USER_INFO"
+fields terminated by ','  
+Optionally enclosed by '\''  
+(MSISDN,PROVINCE_CODE,CREATE_TIME "to_date(:CREATE_TIME, 'yyyy-mm-dd hh24:mi:ss')")
+```
+这个文件和第5步中的区别在于，
+options中的BINDSIZE换成了COLUMNARRAYROWS，
+因为BINDSIZE是常规路径绑定数组的大小，
+而COLUMNARRAYROWS是直接路径列数组的行数。
+
+# 9.删除主键
+导入前需要先删除USER_INFO表的主键：
+```
+ALTER TABLE USER_INFO DROP CONSTRAINT PK_USER_INFO_MSISDN;
+```
+
+# 10.使用sqlldr导入(直接路径方式)
+基本与第6步的命令相同，增加direct=true：
+```
+sqlldr userid=yuwen/ai123456@10.21.13.14:1521/orcl control=loaddata_USER_INFO_direct.ctl direct=true
+```
+
+数据成功导入日志如下：
+```
+SQL*Loader: Release 12.1.0.2.0 - Production on Fri Nov 1 10:48:10 2019
+
+Copyright (c) 1982, 2014, Oracle and/or its affiliates.  All rights reserved.
+
+Path used:      Direct
+
+Load completed - logical record count 3.
+
+Table "USER_INFO":
+  3 Rows successfully loaded.
+
+Check the log file:
+  loaddata_USER_INFO_direct.log
+for more information about the load.
+```
+
+# 11.重建主键
+```
+ALTER TABLE USER_INFO ADD CONSTRAINT PK_USER_INFO_MSISDN PRIMARY KEY(MSISDN);
+```
+至此使用直接路径方式导入数据成功，
+经过测试1.5亿条不重复数据direct方式导入，
+花费4分02秒，
+然后重建主键花费19分14秒，
+总耗时23分16秒。
+然而使用常规路径方式导入需要48个小时，
+导入效率得到了极大的提升。
+
+# 12.parallel并行导入
+前面使用的是串行方式导入数据，
+通过设置parallel为true可以并行导入，
+在多核服务器上面能进一步提升导入效率。
+需要注意并行方式仅仅在直接路径方式时有效。
+
+# 13.创建ctl文件(并行方式)
+创建名为loaddata_USER_INFO_direct_parallel.ctl的控制文件：
+```
+options(skip=1,COLUMNARRAYROWS=20971520, ROWS=10000, READSIZE=20971520, ERRORS=999999999)
+load data
+infile '/home/oracle/USER_INFO.csv'
+append into table "USER_INFO"
+fields terminated by ','  
+Optionally enclosed by '\''  
+(MSISDN,PROVINCE_CODE,CREATE_TIME "to_date(:CREATE_TIME, 'yyyy-mm-dd hh24:mi:ss')")
+```
+这个文件和第8步中的区别在于，
+并行方式只支持append导入，
+而且要注意USER_INFO表不能有索引，
+如果有需要先删除。
+
+#14.使用sqlldr导入(并行方式)
+基本与第10步的命令相同，增加parallel=true：
+```
+sqlldr userid=yuwen/ai123456@10.21.13.14:1521/orcl control=loaddata_USER_INFO_direct_parallel.ctl direct=true parallel=true
+```
+
+数据成功导入日志如下：
+```
+SQL*Loader: Release 12.1.0.2.0 - Production on Fri Nov 1 11:08:51 2019
+
+Copyright (c) 1982, 2014, Oracle and/or its affiliates.  All rights reserved.
+
+Path used:      Direct
+SQL*Loader-281: Warning: ROWS parameter ignored in parallel mode.
+
+Load completed - logical record count 3.
+
+Table "USER_INFO":
+  3 Rows successfully loaded.
+
+Check the log file:
+  loaddata_USER_INFO_direct_parallel.log
+for more information about the load.
+```
+
+# 15.sqlldr命令说明
+## 15.1.用法 
+```
+SQLLDR keyword=value [,keyword=value,...]
+```
+
+## 15.2.参数说明
+| 参数                              | 说明                                                         |
+| --------------------------------- | ------------------------------------------------------------ |
+| userid                            | ORACLE 用户名/口令                                           |
+| control                           | 控制文件名                                                   |
+| log                               | 日志文件名                                                   |
+| bad                               | 错误文件名                                                   |
+| data                              | 数据文件名                                                   |
+| discard                           | 废弃文件名                                                   |
+| discardmax                        | 允许废弃的文件的数目         (全部默认)                      |
+| skip                              | 要跳过的逻辑记录的数目  (默认 0)                             |
+| load                              | 要加载的逻辑记录的数目  (全部默认)                           |
+| errors                            | 允许的错误的数目         (默认 50)                           |
+| rows                              | 常规路径绑定数组中或直接路径保存数据间的行数,默认: 常规路径 64, 所有直接路径)|
+| bindsize                          | 常规路径绑定数组的大小 (以字节计)  (默认 256000)             |
+| silent                            | 运行过程中隐藏消息 (标题,反馈,错误,废弃,分区)                |
+| direct                            | 使用直接路径                     (默认 FALSE)                |
+| parfile                           | 参数文件: 包含参数说明的文件的名称                           |
+| parallel                          | 执行并行加载                    (默认 FALSE)                 |
+| file                              | 要从以下对象中分配区的文件                                   |
+| skip_unusable_indexes             | 不允许/允许使用无用的索引或索引分区  (默认 FALSE)            |
+| skip_index_maintenance            | 没有维护索引, 将受到影响的索引标记为无用  (默认 FALSE)       |
+| commit_discontinued               | 提交加载中断时已加载的行  (默认 FALSE)                       |
+| readsize                          | 读取缓冲区的大小               (默认 1048576)                |
+| external_table                    | 使用外部表进行加载; NOT_USED, GENERATE_ONLY, EXECUTE  (默认 NOT_USED) |
+| columnarrayrows                   | 直接路径列数组的行数  (默认 5000)                            |
+| streamsize                        | 直接路径流缓冲区的大小 (以字节计)  (默认 256000)             |
+| multithreading                    | 在直接路径中使用多线程                                       |
+| resumable                         | 启用或禁用当前的可恢复会话  (默认 FALSE)                     |
+| resumable_name                    | 有助于标识可恢复语句的文本字符串                             |
+| resumable_timeout                 | RESUMABLE 的等待时间 (以秒计)  (默认 7200)                   |
+| date_cache                        | 日期转换高速缓存的大小 (以条目计)  (默认 1000)               |
+| no_index_errors                   | 出现任何索引错误时中止加载  (默认 FALSE)                     |
+
+## 15.3.注意事项
+命令行参数可以由位置或关键字指定。
+前者的例子是 'sqlldr scott/tiger foo'; 
+后这的例子是 'sqlldr control=foo userid=scott/tiger'。
+位置指定参数的时间必须早于，
+但不可迟于由关键字指定的参数。
+例如允许 'sqlldr scott/tiger control=foo logfile=log',
+但是不允许 'sqlldr scott/tiger control=foo log', 
+即使参数 'log' 的位置正确。
+
+## 15.4.重要参数
+rows：
+加载的行数，默认值：常规路径：64，直接路径：全部。
+常规路径导入时，指定绑定数组中的行数。直
+接路径导入时，指一次从数据文件只读取的行数。
+该参数同时受bindsize制约，
+如果rows每行实际占用大小超出bindsize的最大可用值，
+则rows自动降低到bindsize最大可用值。
+
+bindsize：
+默认值：256000，以字节为单位。
+为绑定数组指定最大可用空间，
+用来存储一次读取的rows的记录，
+该值不能太小，至少要能放入一条逻辑记录，
+不然有可能造成加载失败，
+但是设置一个超大值也没有意义，
+浪费空间而且起不到任何效果。
+
+direct：
+直接路径，默认值是false。
+直接路径加载并不是通过insert语句的方式提交数据，
+直接路径的加载甚至不走db_buffer，
+因为不会存在缓冲区争用，
+直接路径加载直接向数据文件写数据，
+因此效率较高。
+
+file：
+指定写入的表空间数据文件。
+通常是并行加载时应该会用到该参数，
+指定file文件后，
+要加载的内容即只向指定的数据文件写入数据，
+通过这种方式某些情况下可以减小磁盘间的竞争。
+
+skip_unusable_indexes：
+是否跳过不可用的索引,默认为false。
+如果设置为true。在加载数据的时候，
+如果没加载的表中索引为unusable，
+则该索引数据不维护，数据加载完以后也不会改变索引的状态。
+在oracle中也有一个参数叫skip_unusable_indexes，
+但是sqlldr中的这个参数优先级比oracle数据库内部的这个参数优先级高。
+如果sqlldr中未设置这个参数，则以oracle中的skip_unusable_indexes参数为准。
+
+skip_index_maintenance:
+是否跳过索引维护,默认值为false。
+该参数仅在直接路径加载时有效，
+如果设置为true，则数据加载过程中并不会维护索引，
+因此数据加载完后会导致索引无效。
+
+readsize:
+缓冲区大小,默认值1048576字节,最大不超过20M。
+该参数设置的值仅当从数据文件中读取数据时有效，
+如果数据包含在控制文件中则为64K，并不可修改。
+
+streamsize:
+流缓冲区大小，默认值是256000字节。
+指定直接路径加载时流缓冲区大小。
+
+multithreading：
+是否启用多线程。
+默认值：多cpu系统默认为true，单cpu的系统默认则为false。
+该参数仅仅在直接路径加载时有效。
+
+date_cache：
+日期转换缓存，默认值为1000条。
+指定一个专门用于日志转换的缓存区，
+如果处理的日期在其中，则不需要转换，
+否则直接取出来使用。
+
+# 16.执行结果详细日志
+给出loaddata_USER_INFO_direct_parallel.log日志内容，
+可以看到导入使用的配置，耗时等详细信息，
+供给大家参考：
+```
+SQL*Loader: Release 12.1.0.2.0 - Production on Fri Nov 1 11:20:07 2019
+
+Copyright (c) 1982, 2014, Oracle and/or its affiliates.  All rights reserved.
+
+Control File:   loaddata_USER_INFO_direct_parallel.ctl
+Data File:      /home/oracle/USER_INFO.csv
+  Bad File:     USER_INFO.bad
+  Discard File:  none specified
+ 
+ (Allow all discards)
+
+Number to load: ALL
+Number to skip: 1
+Errors allowed: 999999999
+Continuation:    none specified
+Path used:      Direct - with parallel option.
+
+Table "USER_INFO", loaded from every logical record.
+Insert option in effect for this table: APPEND
+
+   Column Name                  Position   Len  Term Encl Datatype
+------------------------------ ---------- ----- ---- ---- ---------------------
+MSISDN                              FIRST     *   ,  O(') CHARACTER            
+PROVINCE_CODE                        NEXT     *   ,  O(') CHARACTER            
+CREATE_TIME                          NEXT     *   ,  O(') CHARACTER            
+    SQL string for column : "to_date(:CREATE_TIME, 'yyyy-mm-dd hh24:mi:ss')"
+
+SQL*Loader-281: Warning: ROWS parameter ignored in parallel mode.
+
+
+Table "USER_INFO":
+  3 Rows successfully loaded.
+  0 Rows not loaded due to data errors.
+  0 Rows not loaded because all WHEN clauses were failed.
+  0 Rows not loaded because all fields were null.
+
+Bind array size not used in direct path.
+Column array  rows :   10000
+Stream buffer bytes:  256000
+Read   buffer bytes:20971520
+
+Total logical records skipped:          1
+Total logical records read:             3
+Total logical records rejected:         0
+Total logical records discarded:        0
+Total stream buffers loaded by SQL*Loader main thread:        1
+Total stream buffers loaded by SQL*Loader load thread:        0
+
+Run began on Fri Nov 01 11:20:07 2019
+Run ended on Fri Nov 01 11:20:13 2019
+
+Elapsed time was:     00:00:05.60
+CPU time was:         00:00:00.44
+```
+
+# 17.参考文章
+[将CSV文件数据导入Oracle数据库](https://blog.csdn.net/liyang3462/article/details/80104522)
+[（sqlldr）将xx.csv文件导入oracle数据库](https://blog.csdn.net/chmldch/article/details/52800058)
+[sqlldr总结参数介绍](https://www.iteye.com/blog/dbua-1570018)
+[Loading data in direct mode and unique index ORA-26026](http://dbaora.com/loading-data-in-direct-mode-and-unique-index-ora-26026/)
