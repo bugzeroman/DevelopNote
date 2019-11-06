@@ -19,6 +19,7 @@ Oralce，MySQL,PostgreQL的4种类型对应的常用SQL。
 Oracle数据库启动和关闭
 crontab使用方法
 Linux下犀利的FTP工具-lftp
+Python在Windows安装Version3.8(下载到安装选项说明)
 
 3.待发布文章
 
