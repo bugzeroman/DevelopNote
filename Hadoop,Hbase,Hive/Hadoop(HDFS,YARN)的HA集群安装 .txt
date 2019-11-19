@@ -1,13 +1,17 @@
 搭建Hadoop的HDFS HA及YARN HA集群,基于2.7.1版本安装。
 
+![HadoopHA工作原理图.png](https://upload-images.jianshu.io/upload_images/11810589-35895fe59b971ee2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![YarnHA工作原理.png](https://upload-images.jianshu.io/upload_images/11810589-d4fa2f38b4405e9b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 # 安装规划
 |角色规划 |IP/机器名 |安装软件 |运行进程 |
 |------------|--------------|-------------|-------------|
-|namenode1 |zdh-240 |hadoop NameNode、DFSZKFailoverController、ResourceManager |
-|namenode2 |zdh-245 |hadoop NameNode、DFSZKFailoverController、ResourceManager |
-|datanode1 |zdh-237 |hadoop，zookeeper DataNode、QuorumPeerMain、JournalNode、NodeManager |
-|datanode2 |zdh-238 |hadoop，zookeeper DataNode、QuorumPeerMain、JournalNode、NodeManager |
-|datanode3 |zdh-239 |hadoop，zookeeper DataNode、QuorumPeerMain、JournalNode、NodeManager |
+|namenode1 |zdh-240 |hadoop  |NameNode、DFSZKFailoverController、ResourceManager |
+|namenode2 |zdh-245 |hadoop  |NameNode、DFSZKFailoverController、ResourceManager |
+|datanode1 |zdh-237 |hadoop，zookeeper  |DataNode、QuorumPeerMain、JournalNode、NodeManager |
+|datanode2 |zdh-238 |hadoop，zookeeper  |DataNode、QuorumPeerMain、JournalNode、NodeManager |
+|datanode3 |zdh-239 |hadoop，zookeeper  |DataNode、QuorumPeerMain、JournalNode、NodeManager |
 
 # 安装用户
 garrison/zdh1234
@@ -104,8 +108,10 @@ zdh-238执行echo 2 > /tmp/myid
 zdh-239执行echo 3 > /tmp/myid
 
 配置环境变量方便以后操作：
+```
 export ZOOKEEPER_HOME=:~/zookeeper-3.5.1-alpha
 export PATH=$PATH:$ZOOKEEPER_HOME/bin:$ZOOKEEPER_HOME/conf
+```
 
 启动zookeeper，进入到 zookeeper-3.4.5/bin/ 
 ./zkServer.sh start 
@@ -124,9 +130,11 @@ tar -zxvf hadoop-2.7.1.tar.gz
 mv  hadoop-2.7.1.tar.gz backup/
 
 配置环境变量
+```
 export HADOOP_HOME=~/hadoop-2.7.1
 export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH
 export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop 
+```
 
 别名方便进入配置操作
 alias conf='cd /home/garrison/hadoop-2.7.1/etc/hadoop'
