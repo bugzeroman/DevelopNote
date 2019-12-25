@@ -1,0 +1,125 @@
+-- 1.数据库databases相关
+-- 查看数据库
+SHOW databases;
+
+-- 查看当前使用的数据库
+SELECT database();
+
+-- 切换到指定数据库
+USE mysql; 
+USE springbootdb;
+
+-- 创建数据库springbootdb
+CREATE DATABASE springbootdb;
+
+-- 删除数据库
+DROP DATABASE springbootdb;
+-- 如果存在才删除，防止报错
+DROP DATABASE IF EXISTS springbootdb;
+
+-- 2.用户user相关
+-- 查看当前登陆用户
+SELECT user();
+
+-- 查看所有用户
+SELECT user,host,authentication_string FROM mysql.user;
+
+-- 创建用户springboot
+-- 可以指定主机名或者IP,也可以%允许所有客户端登录
+CREATE USER 'springboot'@'localhost' IDENTIFIED BY 'ai12345';
+CREATE USER 'springboot'@'192.168.0.1' IDENDIFIED BY 'ai12345';
+CREATE USER 'springboot'@'%' IDENTIFIED BY 'ai12345';
+
+-- 修改当前用户密码
+SET PASSWORD = PASSWORD("newpassword");
+-- 修改指定用户密码
+SET PASSWORD FOR 'springboot'@'%' = PASSWORD("newpassword");
+
+-- 删除用户
+drop user 'springboot'@'%';
+
+-- 3.权限privilege相关
+-- 查看授予用户的权限
+show grants for 'root';
+show grants for 'springboot';
+
+-- 授权给用户springboot，操作权限，数据库名.表名
+GRANT SELECT, INSERT ON springbootdb.city TO 'springboot'@'%';
+GRANT ALL ON *.* TO 'springboot'@'%';
+GRANT ALL ON springbootdb.* TO 'springboot'@'%';
+GRANT ALL ON springbootdb.city TO 'springboot'@'%';
+
+-- 用上面命令授权的用户不能给其它用户授权 
+-- 如果想让该用户可以授权，用以下命令，同时可以修改其密码
+GRANT ALL ON *.* to 'springboot'@'%' identified BY 'ai12345' WITH GRANT OPTION;
+
+-- 撤销授权，撤销的权限要和授予时一致
+REVOKE ALL ON springbootdb.* FROM 'springboot'@'%';
+
+-- 刷新权限,使之生效
+FLUSH privileges;
+
+-- 4.数据库表table相关
+-- 查看所有表
+SHOW tables;
+
+-- 查看指定的的表结构
+DESCRIBE mysql.user;
+DESCRIBE springbootdb.city;
+-- 如果已经切换到数据库springbootdb，可以省略：
+describe city;
+
+-- 创建表city
+CREATE TABLE `city` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '城市编号',
+  `province_id` int(10) unsigned  NOT NULL COMMENT '省份编号',
+  `city_name` varchar(25) DEFAULT NULL COMMENT '城市名称',
+  `description` varchar(25) DEFAULT NULL COMMENT '描述',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+-- 修改表
+ALTER TABLE city ADD COLUMN city_level INT AFTER city_name;
+
+-- 删除表
+DROP TABLE city;
+DROP TABLE IF EXISTS `city`;
+
+-- 5.表数据data操作相关
+-- 插入数据到表city中
+INSERT city VALUES (1 ,1,'常州市','木木与呆呆的家在常州。');
+
+-- 修改表数据
+UPDATE city SET city_name='南京市' WHERE id=1;
+
+-- 删除表数据
+DELETE FROM city;
+-- 指定删除条件
+DELETE FROM city WHERE id=1;
+-- 直接清空表，会重建表执行效率更高,隐式提交
+TRUNCATE city;
+
+-- 查询事务是否为自动提交
+SHOW VARIABLES like '%autocommit%'
+-- 设置事务手动提交
+set @@autocommit=0;
+
+-- 查看表
+SELECT * FROM city;
+SELECT c.id, c.province_id, c.city_name FROM springbootdb.city AS c;
+
+-- 指定查询条件
+SELECT * FROM city WHERE id=1;
+
+-- 6.其他
+-- 开启创建函数功能
+-- 如果开启了主从复制功能，不建议开启
+SET GLOBAL log_bin_trust_function_creators = 1;
+SELECT @@global.log_bin_trust_function_creators;
+
+-- 查看服务器变量have_ssl，是否支持SSL
+SHOW VARIABLES LIKE '%ssl%';
+-- 如果为yes，表示服务端已经开启SSL
+-- 查看服务ssl等状态
+SHOW STATUS LIKE 'Ssl_cipher';
+SHOW STATUS LIKE '%ssl%';
