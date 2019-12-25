@@ -33,3 +33,11 @@ Eclipse使用技巧
 同步文章到CSDN和新浪BLOG
 等待CSDN每月自动同步一次后，
 再同步新浪BLOG，不然要多同步一次CSDN。
+
+7.需要备份的目录：
+D:\MyDoc\DevelopNote
+D:\MyDoc\Personal
+D:\MyDoc\Learn
+
+D:\Code\Learn
+C:\Users\yuwen\Desktop\开发

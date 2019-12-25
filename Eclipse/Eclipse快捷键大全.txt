@@ -30,17 +30,20 @@ Ctrl+Shift+X 把当前选中的文本全部变味小写
 Ctrl+Shift+Y 把当前选中的文本全部变为小写
 Ctrl+Shift+F 格式化当前代码
 Ctrl+Shift+P 定位到对于的匹配符(譬如{}) (从前面定位后面时,光标要在匹配符里面,后面到前面,则反之)
+TAB 选中数行，整体往后移动
+SHIFT + TAB 选中数行，整体往前移动
+ALT+SHIFT+S 调出生成getter/setter/构造器等结构
 
-# 重构快捷键
-(注:一般重构的快捷键都是Alt+Shift开头的了)
-Alt+Shift+R 重命名 (是我自己最爱用的一个了,尤其是变量和类的Rename,比手工方法能节省很多劳动力)
-Alt+Shift+M 抽取方法 (这是重构里面最常用的方法之一了,尤其是对一大堆泥团代码有用)
-Alt+Shift+C 修改函数结构(比较实用,有N个函数调用了这个方法,修改一次搞定)
-Alt+Shift+L 抽取本地变量( 可以直接把一些魔法数字和字符串抽取成一个变量,尤其是多处调用的时候)
-Alt+Shift+F 把Class中的local变量变为field变量 (比较实用的功能)
-Alt+Shift+I 合并变量(可能这样说有点不妥Inline)
-Alt+Shift+V 移动函数和变量(不怎么常用)
-Alt+Shift+Z 重构的后悔药(Undo)
+# 重构
+Alt+Shift+R 重命名 (尤其是变量和类的Rename)
+Alt+Shift+M 抽取方法 (尤其对泥团代码有用)
+Alt+Shift+C 修改函数结构
+Alt+Shift+L 抽取本地变量( 把魔法数字和字符串抽取成一个变量,尤其是多处调用的时候)
+Alt+Shift+F 把Class中的local变量变为field变量 
+Alt+Shift+I 合并变量
+Alt+Shift+V 移动函数和变量
+Alt+Shift+Z 撤销，重构的后悔药
+(注:一般重构快捷键都是Alt+Shift开头)
 
 # 编辑
 作用域 功能 快捷键 
@@ -146,17 +149,16 @@ Java编辑器 组织导入 Ctrl+Shift+O
 Java编辑器 使用try/catch块来包围 未设置，太常用了，所以在这里列出,建议自己设置。
 也可以使用Ctrl+1自动修正。 
 
-# 运行Debug
-作用域 功能 快捷键 
-全局 单步返回 F7 
-全局 单步跳过 F6 
-全局 单步跳入 F5 
-全局 单步跳入选择 Ctrl+F5 
-全局 调试上次启动 F11 
-全局 继续 F8 
-全局 使用过滤器单步执行 Shift+F5 
-全局 添加/去除断点 Ctrl+Shift+B 
-全局 显示 Ctrl+D 
-全局 运行上次启动 Ctrl+F11 
-全局 运行至行 Ctrl+R 
-全局 执行 Ctrl+U 
+# Debug调试
+单步返回 F7 
+单步跳过 F6 
+单步跳入 F5 
+单步跳入选择 Ctrl+F5 
+调试上次启动 F11 
+继续 F8 
+使用过滤器单步执行 Shift+F5 
+添加/去除断点 Ctrl+Shift+B 
+显示 Ctrl+D 
+运行上次启动 Ctrl+F11 
+运行至行 Ctrl+R 
+执行 Ctrl+U 

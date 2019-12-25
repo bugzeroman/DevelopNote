@@ -40,7 +40,7 @@ CentOS一般没有，可以忽略。
 rpm -e mysql-libs-5.1.52.x86_64 --nodeps
 
 # 6.在mysql下创建data目录
- mkdir -p /home/mysql/mysql-5.7.22-linux-glibc2.12-x86_64/data/
+mkdir -p /home/mysql/mysql-5.7.22-linux-glibc2.12-x86_64/data/
 
 # 7.安装和初始化数据库
 ```
@@ -128,6 +128,7 @@ chkconfig --level 345 mysql on
 # 15.MySQL连接配置和root用户：
 47.100.98.240:3306
 root/password_2
+database:mysql
 
 #16.其他：
 ## 1.关于配置文件的说明：

@@ -8,31 +8,32 @@ show databases;
 use mysql; 
 describe mysql.user;
 select host, user from user;
-select host,user,password from mysql.user;
+
 -- 创建一个数据库 
 CREATE DATABASE hive;  
 -- 列出表
 show tables;
 -- 显示MySQL所有用户:
 select host,user,password from user;
--- 添加 MySQL 用户(user name:user1,password:sql):
+select user,host,authentication_string from mysql.user;
+-- 添加MySQL用户(user name:user1,password:sql)
+-- %支持远程访问,生效不需要重启数据库
 grant all on *.* to ranger@'%' identified by 'zdh1234' with grant option;
 -- 删除 MySQL 用户：
 delete from user where user='user1';
 select host,user,password from user where user = '';
 delete from user where user = '';
+
+-- 刷新权限
 flush privileges;
 
-select * from user;
 -- 删除mysql.user表中出现user为空的记录
 delete from user where user is NULL;
 update user set user='root' where host='localhost';
 
 -- 修改密码，需要重启mysql
 update user set password=password("zdh1234") where user="root" and host='localhost';
-
-grant all on *.* to root@'localhost' identified by 'zdh1234' with grant option;
-flush privilege;
+set password=password("ai123456");
 
 insert into table(`Host`,`User`,`Password`,`Select_priv`,`Insert_priv`,`Update_priv`,`Delete_priv`,`Create_priv`,`Drop_priv`,`Reload_priv`,`Shutdown_priv`,`Process_priv`,`File_priv`,`Grant_priv`,`References_priv`,`Index_priv`,`Alter_priv`,`Show_db_priv`,`Super_priv`,`Create_tmp_table_priv`,`Lock_tables_priv`,`Execute_priv`,`Repl_slave_priv`,`Repl_client_priv`,`Create_view_priv`,`Show_view_priv`,`Create_routine_priv`,`Alter_routine_priv`,`Create_user_priv`,`Event_priv`,`Trigger_priv`,`Create_tablespace_priv`,`ssl_type`,`ssl_cipher`,`x509_issuer`,`x509_subject`,`max_questions`,`max_updates`,`max_connections`,`max_user_connections`,`plugin`,`authentication_string`) values ('%','root','','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','',null,null,null,0,0,0,0,'',null);
 
