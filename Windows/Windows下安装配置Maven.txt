@@ -1,0 +1,45 @@
+# 1.下载Maven
+官方下载地址：
+http://maven.apache.org/download.cgi
+目前Apache Maven最小版本为3.6.3，
+下载适合Windows的安装包apache-maven-3.6.3-bin.zip。
+Maven 3.3以上版本要求JDK版本为1.7及以上。
+
+# 2.解压安装
+安装包为绿色免安装版本，
+直接解压apache-maven-3.6.3-bin.zip，
+生成目录apache-maven-3.6.3。
+
+# 3.目录说明
+bin：包含了mvn运行的脚本，用来执行命令。
+boot：只有一个jar包：plexus-classworlds-2.5.2.jar。
+plexus-classworlds是一个类加载器框架，相对于默认的java类加载器，
+他提供了更丰富的语法以方便配置，Maven使用该框架加载自己的类库。  
+conf：配置文件。
+该目录下有一个重要的配置文件settings.xml，修改此文件可以全局的定制Maven的行为。
+lib：该目录包含了所有Maven运行时需要的java类库，Maven内置的超级POM在此目录下。
+LICENSE：该文件记录了Maven使用的软件许可证。
+NOTICE：该文件记录了Maven包含的第三方软件。
+RESDME.txt：该文件包含了Maven的简要介绍，包括安装需求以及如何安装的简要指令等。
+
+# 4.配置环境变量
+修改系统变量:
+右击我的电脑 -> 属性 -> 高级系统设置 -> 高级 -> 环境变量
+添加用户变量MAVEN_HOME，
+变量值为Maven安装目录，
+比如C:\Program Develop\apache-maven-3.6.3
+编辑用户变量Path，
+新建值：%MAVEN_HOME%\bin
+
+# 5.验证安装
+进入cmd，查看mvn版本：
+mvn -version
+安装成功，返回如下信息：
+```
+Apache Maven 3.6.3 (bb52d8502b132ec0a5a3f4c09453c07478323dc5; 2015-11-11T00:41:47+08:00)
+Maven home: C:\Program Develop\apache-maven-3.3.9\bin\..
+Java version: 1.8.0_191, vendor: Oracle Corporation
+Java home: C:\Program Develop\Java\jdk1.8\jre
+Default locale: zh_CN, platform encoding: GBK
+OS name: "windows 10", version: "10.0", arch: "amd64", family: "dos"
+```
