@@ -15,7 +15,7 @@ http://download.redis.io/releases/redis-5.0.7.tar.gz
 # 3.解压编译
 解压：
 ```
-tar xzf redis-5.0.7.tar.gz
+tar -zxvf redis-5.0.7.tar.gz
 ```
 
 编译：
