@@ -97,6 +97,20 @@ src/redis-server redis.conf
 13204:C 31 Dec 2019 16:40:06.450 # Configuration loaded
 ```
 
+## 6.3.停止Redis进程
+首先找到redis进程：
+```
+ps -ef | grep redis
+```
+输出如下，进程号为13205：
+```
+redis    13205     1  0 16:40 ?        00:00:03 src/redis-server 127.0.0.1:6379
+```
+然后直接kill掉对应进程：
+```
+kill -9 13205
+```
+
 # 7.创建用户
 建议创建如下redis用户：
 ```
@@ -110,6 +124,26 @@ useradd -g develop -s /bin/bash -md /home/redis redis
 passwd redis
 ```
 
-# 8.参考文档
+# 8.问题解决
+## 8.1.无法远程连接redis
+修改配置文件：
+```
+vim redis.conf
+```
+找到如下两个配置项：
+```
+bind 127.0.0.1
+protected-mode yes
+```
+修改为
+```
+bind 0.0.0.0
+protected-mode no
+```
+重新启动Reids之后，
+即可通过远程客户端连接。
+
+# 9.参考文档
 [redis官方网站](https://redis.io/)
 [redis中文官方网站](http://www.redis.cn/)
+
