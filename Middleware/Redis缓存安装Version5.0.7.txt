@@ -1,0 +1,115 @@
+# 1.说明
+Redis是一个开源（BSD许可）的，
+内存中的数据结构存储系统，
+它可以用作数据库、缓存和消息中间件。
+这里介绍在Linux下使用源码编译安装的方式。
+
+# 2.下载
+官方下载地址：
+https://redis.io/download
+下载当前最新的稳定版本：
+redis-5.0.7.tar.gz
+直接下载地址：
+http://download.redis.io/releases/redis-5.0.7.tar.gz
+
+# 3.解压编译
+解压：
+```
+tar xzf redis-5.0.7.tar.gz
+```
+
+编译：
+```
+cd redis-5.0.7
+make
+```
+
+# 4.启动
+```
+src/redis-server
+```
+
+启动后输出如下日志，
+可以看到端口Port为6379，
+进程PID为13174，
+这里只截取了部分日志，
+而且由于是前台启动，
+断开控制台之后Redis就停止了，
+下面会介绍后台启动的方法。
+```
+13174:C 31 Dec 2019 16:39:50.955 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+                _._
+           _.-``__ ''-._
+      _.-``    `.  `_.  ''-._           Redis 5.0.7 (00000000/0) 64 bit
+  .-`` .-```.  ```\/    _.,_ ''-._
+ (    '      ,       .-`  | `,    )     Running in standalone mode
+ |`-._`-...-` __...-.``-._|'` _.-'|     Port: 6379
+ |    `-._   `._    /     _.-'    |     PID: 13174
+  `-._    `-._  `-./  _.-'    _.-'
+ |`-._`-._    `-.__.-'    _.-'_.-'|
+ |    `-._`-._        _.-'_.-'    |           http://redis.io
+  `-._    `-._`-.__.-'_.-'    _.-'
+ |`-._`-._    `-.__.-'    _.-'_.-'|
+ |    `-._`-._        _.-'_.-'    |
+  `-._    `-._`-.__.-'_.-'    _.-'
+      `-._    `-.__.-'    _.-'
+          `-._        _.-'
+              `-.__.-'
+
+```
+
+# 5.测试
+使用内置的客户端与Redis交互:
+```
+src/redis-cli
+```
+
+测试set/get命令：
+```
+127.0.0.1:6379> set foo bar
+OK
+127.0.0.1:6379> get foo
+"bar"
+```
+
+# 6.后台启动
+## 6.1.修改配置文件
+```
+vim redis.conf
+```
+将daemonize的值修改为yes,
+表示Redis作为守护进程运行：
+```
+# By default Redis does not run as a daemon. Use 'yes' if you need it.
+# Note that Redis will write a pid file in /var/run/redis.pid when daemonized.
+daemonize yes
+```
+
+## 6.2.启动时指定配置文件
+```
+src/redis-server redis.conf
+```
+成功启动后只有如下几行日志，
+这样Redis就能在后台提供服务了。
+```
+13204:C 31 Dec 2019 16:40:06.450 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+13204:C 31 Dec 2019 16:40:06.450 # Redis version=5.0.7, bits=64, commit=00000000, modified=0, pid=13204, just started
+13204:C 31 Dec 2019 16:40:06.450 # Configuration loaded
+```
+
+# 7.创建用户
+建议创建如下redis用户：
+```
+redis/ai123456
+```
+然后再安装Redis，
+这样比较方便管理。
+
+```
+useradd -g develop -s /bin/bash -md /home/redis redis
+passwd redis
+```
+
+# 8.参考文档
+[redis官方网站](https://redis.io/)
+[redis中文官方网站](http://www.redis.cn/)

@@ -123,3 +123,10 @@ SHOW VARIABLES LIKE '%ssl%';
 -- 查看服务ssl等状态
 SHOW STATUS LIKE 'Ssl_cipher';
 SHOW STATUS LIKE '%ssl%';
+
+查看MySQL连接
+show processlist;
+
+
+
+
