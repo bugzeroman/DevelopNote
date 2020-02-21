@@ -1,0 +1,71 @@
+#1.说明
+使用TortoiseGit自带的PuTTY Key Generator工具，
+把ssh-keygen生成的私钥转换为Putty使用的.ppk文件，
+然后在拉取Git代码时，
+加载对应的.ppk私钥，
+就能成功拉取代码。
+
+#1.1.背景
+为了同时使用TortoiseGit和git bash管理一份Git代码，
+虽然大部分时候使用TortoiseGit图形化界面非常方便，
+但是有的操作还是需要使用git bash命令行。
+
+使用ssh-keygen生成了对应的私钥和公钥:
+```
+C:\Users\yuwen\.ssh\id_rsa
+C:\Users\yuwen\.ssh\id_rsa.pub
+```
+在git bash上配置并且成功拉取了代码，
+但是使用TortoiseGit拉取代却失败了。
+
+#1.2.原因
+TortoiseGit是通过Putty进行私钥/公钥验证的，
+但是只能加载.ppk格式的私钥文件。
+如果强制加载ssh-keygen生成的私钥文件，
+会出现下面的错误：
+```
+Couldn't load this key (OpenSSH SSH-2 private key)
+```
+需要把ssh-keygen生成的私钥转换为Putty能够识别的私钥。
+
+#1.3.ssh-keygen
+OpenSSH提供了实现SSH协议的很多工具。
+其中就包含ssh-keygen工具，
+可以生成、管理和转换用于认证的密钥和证书。
+
+OpenSSH是SSH协议的开源版本。
+使用SSH传输的数据都进行了加密，
+比telnet,ftp等明文传输工具更安全。
+
+#2.转换私钥
+运行TortoiseGit的bin目录下的puttygen.exe工具：
+![](https://upload-images.jianshu.io/upload_images/11810589-77b09468ffbc63d6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Load,选择需要加载的文件，
+这里选择ssh-keygen生成的id_rsa私钥：
+![](https://upload-images.jianshu.io/upload_images/11810589-89ad70a79f066a2a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+私钥加载成功，提示保存为Putty私有的格式，
+点击确认即可：
+![](https://upload-images.jianshu.io/upload_images/11810589-5d29df06e8637610.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+工具会显示具体加载到的key:
+![](https://upload-images.jianshu.io/upload_images/11810589-f1819a323117b719.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+然后选择Save private key，
+弹出告警，提示未设置保护密码，点击是即可：
+![](https://upload-images.jianshu.io/upload_images/11810589-606c8041767a9289.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+保存为.ppk格式的私钥：
+![](https://upload-images.jianshu.io/upload_images/11810589-689ba7973d274c1b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+#3.加载新的私钥
+在TortoiseGit拉取代码界面：
+![](https://upload-images.jianshu.io/upload_images/11810589-67f2fa9935185458.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Manage Remotes：
+![](https://upload-images.jianshu.io/upload_images/11810589-9fb2005e27d1de9d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Remote下面的origin，
+可以看到Git代码对应的URL,
+然后在Putty Key选择刚才生成的.ppk文件即可。
+![](https://upload-images.jianshu.io/upload_images/11810589-cfc0517d085472cd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击确定后，继续拉取代码即可成功。
+
+# 4.考文章
+[在git与tortoisegit中使用openSSH与PuTTY](https://www.cnblogs.com/podolski/p/4543023.html)
+[如何在TortoiseGit中使用ssh-keygen生成的key](https://q.cnblogs.com/q/70999/)
+[tortoiseGIT ssh方式](https://blog.csdn.net/zhaolei_828/article/details/84721064?utm_source=distribute.pc_relevant.none-task)
