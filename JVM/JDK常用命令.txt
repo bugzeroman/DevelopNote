@@ -18,3 +18,9 @@ jar cvf classes.jar Foo.class Bar.class
 
 远程debug
 JAVA_OPTS=" ${JAVA_OPTS} -Xdebug -Xrunjdwp:transport=dt_socket,address=1088,server=y,suspend=n "
+
+//查看JVM的客户端环境,针对GUI优化,启动速度快,运行速度不如server     
+java -client -version 
+
+//查看JVM的服务器端环境，针对生产环境优化,运行速度快，启动速度慢
+java -server -version  
