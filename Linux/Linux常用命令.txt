@@ -394,3 +394,8 @@ mesg y
 
 以树状图列出目录的内容（所有子目录和文件）
 tree /home
+
+生成md5、sha等校验码（校验文件完整性）
+md5sum my_download.tgz
+sha512sum my_download.tgz
+sha512sum my_download.tgz
