@@ -1,0 +1,180 @@
+# 1.说明
+Kafka单机安装，基于版本1.0.1，
+使用kafka_2.12-1.0.1.tgz安装包，
+其中2.12是编译工具Scala的版本。
+而且不需要另外安装Zookeeper服务，
+使用Kafka自带的Zookeeper即可。
+
+# 2.安装规划
+Kafka:单机
+
+Zookeeper：单机，Kafka自带
+
+Jdk:安装好并且配置环境变量
+
+# 3.安装用户
+kafka/ai123456
+```
+useradd -g hadoop -s /bin/bash -md /home/kafka kafka
+```
+
+# 4.上传并且解压安装包
+上传安装包：
+ftp kafka_kafka_2.12-1.0.1.tgz
+解压安装包：
+tar -zxvf kafka_2.12-1.0.1.tgz
+
+# 5.配置环境变量和别名
+vim .bashrc
+```
+#配置Jdk环境变量
+export JAVA_HOME=/usr/java/jdk1.8.0_221
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+
+#配置Kafka环境变量
+export KAFKA_HOME=/home/kafka/kafka_2.12-1.0.1
+export PATH=$PATH:$KAFKA_HOME/bin
+
+#配置别名，方便使用
+alias conf='cd $KAFKA_HOME/config'
+alias logs='cd $KAFKA_HOME/logs'
+```
+
+使配置生效：
+source .bashrc
+
+# 6.修改Kafka配置文件
+首先创建本地数据存放的目录:
+```
+mkdir /home/kafka/kafka_2.12-1.0.1/data
+```
+
+vim config/server.properties
+主要修改如下配置：
+```
+#服务器IP地址，修改为自己的服务器IP
+host.name=10.21.13.14
+#Kafka的topic内的数据本地保存目录
+log.dirs=/home/kafka/kafka_2.12-1.0.1/data
+
+```
+
+以下使用默认配置即可：
+```
+#如果搭建Kafka集群，需要保证唯一
+broker.id=0
+#端口号、记得开启端口，云服务器要开放安全组
+port=9092
+#zookeeper地址和端口， Kafka支持内置的Zookeeper和引用外部的Zookeeper
+zookeeper.connect=localhost:2181
+#topic的默认分区数
+num.partitions=1
+#Kafka接收的数据保存7天,之后会被删除
+log.retention.hours=168
+#数据最大为1G，超过需要分块
+```
+
+# 7.修改Zookeeper配置
+首先创建本地数据存放的目录:
+```
+mkdir /home/kafka/kafka_2.12-1.0.1/zookeeper
+```
+
+vim config/zookeeper.properties
+主要修改如下配置：
+```
+#Zookeeper数据本地存储目录
+dataDir=/home/kafka/kafka_2.12-1.0.1/zookeeper
+```
+
+以下使用默认配置即可：
+```
+# Zookeeper对外提供服务的端口
+clientPort=2181
+```
+
+# 8.启动Zookeeper
+启动Kafka服务必须先启动Zookeeper服务,
+使用如下命令后台启动自带的Zookeeper:
+```
+bin/zookeeper-server-start.sh -daemon config/zookeeper.properties
+```
+
+# 9.启动Kafka
+注意使用-daemon后台启动Kafka服务：
+```
+bin/kafka-server-start.sh -daemon config/server.properties
+```
+# 10.查看进程
+使用jps可以看到如下进程,
+一个是Kafka，另一个是Zookeeper:
+```
+1464 Kafka
+1035 QuorumPeerMain
+```
+
+# 11.验证安装
+## 11.1.创建一个名为testTopic的主题
+```
+kafka-topics.sh --create --topic testTopic --replication-factor 1 --partitions 1 --zookeeper localhost:2181
+```
+由于只有一个Kafka服务，
+创建主题时指定副本和分区都是1个。
+
+## 11.2.查看刚才创建的主题
+```
+kafka-topics.sh --list --zookeeper localhost:2181
+```
+
+## 11.3.使用producer生产者发送消息
+注意使用上面配置的host.name连接，
+而且Kafka服务端口号默认为9092，
+否则有可能无法连接成功：
+```
+kafka-console-producer.sh --broker-list 10.21.13.14:9092 --sync --topic testTopic
+```
+然后输入要发送的消息：
+"hello wrold"
+
+## 11.4.使用consumer消费者查看刚才发送的消息
+```
+kafka-console-consumer.sh --zookeeper localhost:2181 --topic testTopic --from-beginning
+```
+或者
+```
+kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic testTopic --from-beginning
+```
+Kafka官方推荐使用bootstrap-server方式连接。
+
+## 11.5.删除一个Topic
+这里先创建一个主题，再删除掉：
+```
+kafka-topics.sh --create --topic testDelete --zookeeper localhost:2181 --replication-factor 1 --partitions 1  
+kafka-topics.sh --delete --topic testDelete --zookeeper localhost:2181  
+```
+注意修改server.properties配置文件，
+delete.topic.enable设置为true才能真正删除topic: 
+```
+#是否能够删除topic的开关，默认为false
+delete.topic.enable=true
+```
+
+# 12.其他
+## 12.1.Kafka Debug方法
+在kafka-run-class.sh增加如下参数：
+```
+KAFKA_DEBUG=true
+DEBUG_SUSPEND_FLAG="y"
+```
+
+## 12.2.清除kafka数据
+只要删除上面配置的两个本地存储目录即可：
+```
+rm -rf /home/kafka/kafka_2.12-1.0.1/data
+rm -rf /home/kafka/kafka_2.12-1.0.1/zookeeper
+```
+
+## 12.3.参考文章
+[Kafka1.X官方安装文档](http://kafka.apache.org/10/documentation.html#quickstart)
+[消息中间件kafka安装启动自带配置好的Zookeeper](https://blog.csdn.net/jin_tk/article/details/90645015)
