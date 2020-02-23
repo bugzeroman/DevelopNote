@@ -143,7 +143,7 @@ kafka-console-consumer.sh --zookeeper localhost:2181 --topic testTopic --from-be
 ```
 或者
 ```
-kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic testTopic --from-beginning
+kafka-console-consumer.sh --bootstrap-server 10.21.13.14:9092 --topic testTopic --from-beginning
 ```
 Kafka官方推荐使用bootstrap-server方式连接。
 
@@ -161,20 +161,26 @@ delete.topic.enable=true
 ```
 
 # 12.其他
-## 12.1.Kafka Debug方法
+## 12.1.停止Kafka和Zookeeper
+```
+bin/kafka-server-stop.sh
+
+```
+
+## 12.2.Kafka Debug方法
 在kafka-run-class.sh增加如下参数：
 ```
 KAFKA_DEBUG=true
 DEBUG_SUSPEND_FLAG="y"
 ```
 
-## 12.2.清除kafka数据
+## 12.3.清除kafka数据
 只要删除上面配置的两个本地存储目录即可：
 ```
 rm -rf /home/kafka/kafka_2.12-1.0.1/data
 rm -rf /home/kafka/kafka_2.12-1.0.1/zookeeper
 ```
 
-## 12.3.参考文章
+## 12.4.参考文章
 [Kafka1.X官方安装文档](http://kafka.apache.org/10/documentation.html#quickstart)
 [消息中间件kafka安装启动自带配置好的Zookeeper](https://blog.csdn.net/jin_tk/article/details/90645015)
