@@ -25,3 +25,14 @@ git clone --progress -v  --depth 1 "file://F:\Code\Ranger\ranger" "F:\Code\Range
 查找git文件是何时被删除的
 git log -S usersync
 
+创建分支
+git branch [分支名]
+
+查看分支
+git branch -v
+
+切换分支
+git checkout [分支名]
+
+提交代码到远程仓库
+git push origin master

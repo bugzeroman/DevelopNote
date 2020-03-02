@@ -20,7 +20,7 @@ useradd -g hadoop -s /bin/bash -md /home/kafka kafka
 
 # 4.上传并且解压安装包
 上传安装包：
-ftp kafka_kafka_2.12-1.0.1.tgz
+ftp kafka_2.12-1.0.1.tgz
 解压安装包：
 tar -zxvf kafka_2.12-1.0.1.tgz
 
@@ -72,7 +72,8 @@ zookeeper.connect=localhost:2181
 num.partitions=1
 #Kafka接收的数据保存7天,之后会被删除
 log.retention.hours=168
-#数据最大为1G，超过需要分块
+#单独数据块最大为1G，超过需要分块
+log.segment.bytes=1073741824
 ```
 
 # 7.修改Zookeeper配置
