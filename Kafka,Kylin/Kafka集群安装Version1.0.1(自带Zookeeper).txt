@@ -1,0 +1,183 @@
+# 1.说明
+Kafka集群安装，基于版本1.0.1，
+使用kafka_2.12-1.0.1.tgz安装包，
+其中2.12是编译工具Scala的版本。
+而且不需要另外安装Zookeeper服务，
+使用Kafka自带的Zookeeper即可。
+
+# 2.安装规划
+Kafka:集群，安装3个Kafka服务实例
+
+Zookeeper：集群，使用Kafka自带Zookeeper,也是3个服务实例
+
+Jdk:要求1.8版本，预先安装好Jdk,并且配置环境变量
+
+|Service                |IP               |Hostname |
+|-----------------------|----------------|---------|  
+|Kafka,Zookeeper|192.168.100.201 |kafka1  |
+|Kafka,Zookeeper|192.168.100.202 |kafka2  |
+|Kafka,Zookeeper|192.168.100.203 |kafka3  |
+
+# 3.创建安装用户
+首先root登陆到其中一台主机kafka1，
+新建如下用户：
+kafka/ai123456
+```
+useradd -g hadoop -s /bin/bash -md /home/kafka kafka
+```
+下面的操作如果不另外说明，
+都是在主机kafka1上面的kafka用户操作的。
+
+# 4.上传并且解压安装包
+上传安装包：
+ftp kafka_2.12-1.0.1.tgz .. 
+解压安装包：
+tar -zxvf kafka_2.12-1.0.1.tgz
+
+# 5.配置环境变量和别名
+vim .bashrc
+```
+#配置Jdk环境变量
+export JAVA_HOME=/usr/java/jdk1.8.0_221
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+
+#配置Kafka环境变量
+export KAFKA_HOME=/home/kafka/kafka_2.12-1.0.1
+export PATH=$PATH:$KAFKA_HOME/bin
+
+#配置别名，方便使用
+alias conf='cd $KAFKA_HOME/config'
+alias logs='cd $KAFKA_HOME/logs'
+```
+
+使配置生效：
+source .bashrc
+
+# 6.修改Kafka配置文件
+首先创建本地数据存放的目录:
+```
+mkdir /home/kafka/kafka_2.12-1.0.1/data
+```
+
+vim config/server.properties
+主要修改如下配置：
+```
+#搭建Kafka集群，需要ID保证唯一，不能和集群其他服务相同
+broker.id=1
+#服务器IP地址，修改为自己的服务器IP
+host.name=192.168.100.201
+#Kafka内的topic数据本地保存目录
+log.dirs=/home/kafka/kafka_2.12-1.0.1/data
+#Zookeeper地址和端口， Kafka支持内置的Zookeeper和引用外部的Zookeeper
+zookeeper.connect=192.168.100.201:2181,192.168.100.202:2181,192.168.100.203:2181
+```
+
+以下使用默认配置即可：
+```
+#端口号、记得开启端口，云服务器要开放安全组
+port=9092
+#topic的默认分区数
+num.partitions=3
+#Kafka接收的数据保存7天,之后会被删除
+log.retention.hours=168
+#单独数据块最大为1G，超过需要分块
+log.segment.bytes=1073741824
+```
+
+# 7.修改Zookeeper配置
+首先创建本地数据存放的目录:
+```
+mkdir /home/kafka/kafka_2.12-1.0.1/zookeeper
+```
+然后在该目录下创建一个空文件myid,
+并且向该文件写入1作为Zookeeper的ID:
+```
+touch zookeeper/myid
+echo 1 > zookeeper/myid
+```
+
+vim config/zookeeper.properties
+主要修改如下配置：
+```
+#Zookeeper数据本地存储目录
+dataDir=/home/kafka/kafka_2.12-1.0.1/zookeeper
+# 此配置表示允许follower连接并同步到leader的初始化时间，
+# 它以tickTime的倍数来表示。
+# 当超过设置倍数的tickTime时间，则连接失败。
+initLimit=10
+# Leader服务器与follower服务器之间信息同步允许的最大时间间隔，
+# 如果超过次间隔，
+# 默认follower服务器与leader服务器之间断开链接。
+syncLimit=5
+
+# 下面服务器的条目Server.X，列出构成ZooKeeper集群的服务器。
+# 当服务器启动时，通过在数据目录中查找文件myid，
+# myid文件中配置的数字和X对应，
+# 这样当前服务实例知道自己属于哪个服务器。
+server.1=192.168.100.201:2888:3888
+server.2=192.168.100.202:2888:3888
+server.3=192.168.100.203:2888:3888
+```
+
+以下使用默认配置即可：
+```
+# Zookeeper对外提供服务的端口
+clientPort=2181
+# 限制连接到zookeeper服务器客户端的数量
+maxClientCnxns=0
+```
+
+# 8.分发服务到集群其他机器
+下面以主机kafka2为例子，
+登录主机kafka2上面的kafka用户，
+然后拷贝kafka1上面配置好的目录到本地：
+scp -r kafka@192.168.100.201:/home/kafka/kafka_2.12-1.0.1 /home/kafka
+
+然后修改Kafka和Zookeeper的配置文件：
+vim config/server.properties
+仅修改如下配置：
+```
+#搭建Kafka集群，需要ID保证唯一，不能和集群其他服务相同
+broker.id=2
+#服务器IP地址，修改为自己的服务器IP
+host.name=192.168.100.202
+```
+
+vim zookeeper/myid
+把文件中的1修改为2；
+
+最后按照上面的第5步配置环境变量。
+
+集群其他kafka3等主机按照如上操作即可。
+
+
+# 9.启动Zookeeper
+启动Kafka服务必须先启动Zookeeper服务,
+使用如下命令后台启动自带的Zookeeper，
+而且需要在3台主机上面同时执行如下命令：
+```
+bin/zookeeper-server-start.sh -daemon config/zookeeper.properties
+```
+
+# 10.启动Kafka
+注意使用-daemon后台启动Kafka服务，
+需要在3台主机上面同时执行如下命令：
+```
+bin/kafka-server-start.sh -daemon config/server.properties
+```
+
+# 11.验证操作
+使用jps可以看到如下进程,
+一个是Kafka，另一个是Zookeeper:
+```
+1464 Kafka
+1035 QuorumPeerMain
+```
+
+验证安装和基本操作命令请查看如下文章：
+[Kafka单机安装Version1.0.1(自带Zookeeper)](https://www.jianshu.com/p/1e2727094dcf)
+
+## 12.参考文章
+[Kafka1.X官方安装文档](http://kafka.apache.org/10/documentation.html#quickstart)
+[消息中间件kafka安装启动自带配置好的Zookeeper](https://blog.csdn.net/jin_tk/article/details/90645015)
