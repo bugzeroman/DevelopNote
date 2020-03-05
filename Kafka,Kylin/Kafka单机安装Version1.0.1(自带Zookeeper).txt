@@ -165,7 +165,7 @@ delete.topic.enable=true
 ## 12.1.停止Kafka和Zookeeper
 ```
 bin/kafka-server-stop.sh
-
+bin/zookeeper-server-stop.sh
 ```
 
 ## 12.2.Kafka Debug方法
