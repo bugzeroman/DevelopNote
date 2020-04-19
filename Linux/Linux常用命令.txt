@@ -50,6 +50,16 @@ mv file newFile
 cp file newfile
 复制文件时不改变属主
 cp -a userfile rootpath
+
+使用mv和for循环批量重命名文件，
+把名称右边.txt全部替换为.jpg。
+echo预览结果：
+for name in `ls *.txt`;do echo $name ${name%.txt}.jpg;done
+mv执行重命名；
+for name in `ls *.txt`;do mv $name ${name%.txt}.jpg;done
+可以获取完整一行，可以有空格：
+IFS=$'\n';OLDIFS="$IFS";for name in `ls *.mp4`;do echo $name;done;IFS="$OLDIFS"
+
 Linux文件批量重命名，当前目录下的所有文件名称中的.template替换成-test
 rename .template -test *
 
@@ -345,6 +355,9 @@ service sshd start
 service network restart
 网络查看
 ifconfig
+
+数据去重:
+cat duplicate.txt | sort -u
 
 监控网络流量，使用下面的命令行方式：
 统计时间间隔1s，count是总共统计8次
