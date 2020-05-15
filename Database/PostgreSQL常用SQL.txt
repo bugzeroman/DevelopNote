@@ -88,6 +88,10 @@ SHOW search_path;
 -- 添加新的模式到搜索路径
 SET search_path TO myschema,public;
 
+-- 向表中插入子查询的结果
+INSERT INTO tbl_province (province_id,name,status,create_time)
+SELECT id,name,'OFFLINE',NOW() FROM sys_location WHERE type='PROVINCE'; 
+
 
 -- 参考文章：
 -- [PostgreSQL快速入门](https://www.cnblogs.com/weihengblog/p/9307666.html)
