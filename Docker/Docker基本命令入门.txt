@@ -97,3 +97,15 @@ docker rmi -f centos-test:vim
 docker history <image-id>
 不截断输出结果：
 docker history --no-trunc <image-id>
+
+# 10.
+进入已经运行的镜像：
+docker exec -it bce85007f6d7 /bin/sh
+
+# 11.
+拷贝指定镜像目录下的文件到本地：
+docker cp bce85007f6d7:/app/sline-cm-service-2.1.0-SNAPSHOT.jar .
+
+
+
+

@@ -162,3 +162,7 @@ Java编辑器 使用try/catch块来包围 未设置，太常用了，所以在这里列出,建议自己设置。
 运行上次启动 Ctrl+F11 
 运行至行 Ctrl+R 
 执行 Ctrl+U 
+
+# 自动生成源码
+快速生成toString的方法：
+Alt+ Shift + s ——> s ——>Enter 
