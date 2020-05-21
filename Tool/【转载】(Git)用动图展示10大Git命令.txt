@@ -5,7 +5,7 @@ git merge、git rebase、git reset、git revert、git fetch、git pull、git ref
 在本文中，熟知JavaScript、TypeScript、GraphQL、Serverless、AWS、Docker和Golang的 
 21岁年轻软件顾问Lydia Hallie通过动图形式直观地介绍了这些常用git命令的工作过程，
 包你过目不忘。
-1_GitCommands.png
+![](https://upload-images.jianshu.io/upload_images/11810589-bc3f31aa298c77d0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 尽管Git是一款非常强大的工具，但如果我说 Git 用起来简直是噩梦，
 大多数人也会认同我的说法。
@@ -33,7 +33,7 @@ Git可执行两种类型的合并：fast-forward 和 no-fast-forward。
 Git 很懒，首先会尝试执行最简单的选项：fast-forward！
 这类合并不会创建新的提交，
 而是会将我们正在合并的分支上的提交直接合并到当前分支。
-2_Fast-forward.gif
+![](https://upload-images.jianshu.io/upload_images/11810589-dbc5f0f7cfa9837c.gif?imageMogr2/auto-orient/strip)
 
 完美！现在，我们在dev分支上所做的所有改变都合并到了master分支上。
 那么 no-fast-forward 又是什么意思呢？
@@ -48,7 +48,7 @@ Git 很懒，首先会尝试执行最简单的选项：fast-forward！
 Git会在当前活动分支上创建新的merging commit。
 这个提交的父提交（parent commit）即指向这个活动分支，
 也指向我们想要合并的分支！
-3_No-fast-foward.gif
+![](https://upload-images.jianshu.io/upload_images/11810589-548092b0f346ee73.gif?imageMogr2/auto-orient/strip)
 
 没什么大不了的，完美的合并！
 现在，我们在dev分支上所做的所有改变都合并到了master分支上。
@@ -62,7 +62,7 @@ Git 就不知道如何取舍了。
 
 在这样的情况下，Git 会询问你想要保留哪种选择？
 假设在这两个分支中，我们都编辑了 README.md 的第一行。
-4_MergeConflictsOccured.png
+![](https://upload-images.jianshu.io/upload_images/11810589-f136f988a1e0f7da.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 如果我们想把dev合并到master，就会出现一个合并冲突：
 你想要标题是 Hello! 还是 Hey!？
@@ -70,7 +70,7 @@ Git 就不知道如何取舍了。
 当尝试合并这些分支时，Git 会向你展示冲突出现的位置。
 我们可以手动移除我们不想保留的修改，保存这些修改，
 再次添加这个已修改的文件，然后提交这些修改。
-5_MergeConflictsResoulve.gif
+![](https://upload-images.jianshu.io/upload_images/11810589-7633cefeb4ab4fd2.gif?imageMogr2/auto-orient/strip)
 
 完成！尽管合并冲突往往很让人厌烦，但这是合理的：
 Git 不应该瞎猜我们想要保留哪些修改。
@@ -80,7 +80,8 @@ Git 不应该瞎猜我们想要保留哪些修改。
 另一种可将一个分支的修改融入到另一个分支的方式是执行git rebase。
 
 git rebase会将当前分支的提交复制到指定的分支之上。
-6_Rebasing1.gif
+![](https://upload-images.jianshu.io/upload_images/11810589-65a0707efa19e585.gif?imageMogr2/auto-orient/strip)
+
 
 完美，现在我们在 dev 分支上获取了 master 分支上的所有修改。
 
@@ -111,10 +112,10 @@ exec：在每个提交上运行我们想要 rebase 的命令；
 drop：移除该提交。
 
 很棒！这样我们就能完全控制我们的提交了。
-7_Rebasing2.gif
+![](https://upload-images.jianshu.io/upload_images/11810589-236c20bffe19f619.gif?imageMogr2/auto-orient/strip)
 
 如果你想要移除一个提交，只需 drop 即可。
-8_Rebasing3.gif
+![](https://upload-images.jianshu.io/upload_images/11810589-dce542eadb4f14d0.gif?imageMogr2/auto-orient/strip)
 
 如果你想把多个提交融合到一起以便得到清晰的提交历史，那也没有问题！
 交互式变基能为你在 rebase 时提供大量控制，甚至可以控制当前的活动分支。
@@ -135,7 +136,7 @@ git reset能让我们不再使用当前台面上的文件，
 而且我们也不想保留添加了一个index.js文件的提交035cc。
 但是，我们确实又想要保留新添加的style.css和index.js文件！
 这是软重置的一个完美用例。
-9_SoftReset.gif
+![](https://upload-images.jianshu.io/upload_images/11810589-f7f9aceb7f5247ba.gif?imageMogr2/auto-orient/strip)
 
 输入git status后，
 你会看到我们仍然可以访问在之前的提交上做过的所有修改。
@@ -146,7 +147,7 @@ git reset能让我们不再使用当前台面上的文件，
 不同于软重置，我们应该再也无需访问它们。
 Git 应该直接将整体状态直接重置到特定提交之前的状态：
 这甚至包括你在工作目录中和暂存文件上的修改。
-10_HardReset.gif
+![](https://upload-images.jianshu.io/upload_images/11810589-5050d0907ec40706.gif?imageMogr2/auto-orient/strip)
 
 Git丢弃了9e78i和035cc引入的修改，
 并将状态重置到了ec5be的状态。
@@ -159,7 +160,7 @@ Git丢弃了9e78i和035cc引入的修改，
 假设ec5be添加了一个index.js文件。
 但之后我们发现其实我们再也不需要由这个提交引入的修改了。
 那就还原ec5be提交吧！
-11_Reverting.gif
+![](https://upload-images.jianshu.io/upload_images/11810589-bc469098cea4c6c6.gif?imageMogr2/auto-orient/strip)
 
 完美！提交9e78i还原了由提交ec5be引入的修改。
 在撤销特定的提交时，git revert 非常有用，
@@ -175,7 +176,7 @@ Git丢弃了9e78i和035cc引入的修改，
 假设dev分支上的提交76d12为index.js文件添加了一项修改，
 而我们希望将其整合到master分支中。
 我们并不想要整个dev分支，而只需要这个提交！
-12_Cherry-picking.gif
+![](https://upload-images.jianshu.io/upload_images/11810589-717fb8657977f091.gif?imageMogr2/auto-orient/strip)
 
 现在master分支包含76d12引入的修改了。
 
@@ -188,7 +189,7 @@ Git丢弃了9e78i和035cc引入的修改，
 我们就可在本地获取这些修改。
 这不会以任何方式影响你的本地分支：
 fetch 只是单纯地下载新的数据而已。
-13_Fetching.gif
+![](https://upload-images.jianshu.io/upload_images/11810589-6f2951960a1f5002.gif?imageMogr2/auto-orient/strip)
 
 现在我们可以看到自上次推送以来的所有修改了。
 这些新数据也已经在本地了，
@@ -202,7 +203,7 @@ git fetch 和 git merge。
 当我们从来源拉取修改时，
 我们首先是像 git fetch 那样取回所有数据，
 然后最新的修改会自动合并到本地分支中。
-14_Pulling.gif
+![](https://upload-images.jianshu.io/upload_images/11810589-50bb639f09e3de7b.gif?imageMogr2/auto-orient/strip)
 
 很好，我们现在与远程分支完美同步了，
 并且也有了所有最新的修改！
@@ -215,7 +216,7 @@ git fetch 和 git merge。
 git reflog是一个非常有用的命令，
 可以展示已经执行过的所有动作的日志。
 包括合并、重置、还原，基本上包含你对你的分支所做的任何修改。
-15_Reflog1.gif
+![](https://upload-images.jianshu.io/upload_images/11810589-d7d6481198ed5f82.gif?imageMogr2/auto-orient/strip)
 
 如果你犯了错，你可以根据reflog 提供的信息通过重置HEAD来轻松地重做！
 
@@ -223,7 +224,7 @@ git reflog是一个非常有用的命令，
 当我们执行 git reflog 命令时，
 我们可以看到这个 repo 的状态在合并前位于 HEAD@{1}。
 那我们就执行一次git reset，将 HEAD 重新指向在 HEAD@{1} 的位置。
-16_Reflog2.gif
+![](https://upload-images.jianshu.io/upload_images/11810589-48f21fafa4336328.gif?imageMogr2/auto-orient/strip)
 
 我们可以看到最新的动作已被推送给reflog。
 
