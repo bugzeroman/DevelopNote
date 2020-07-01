@@ -1,0 +1,404 @@
+# 1.说明
+本文详细介绍Spring Boot集成MyBatis-Plus框架的方法，
+使用MySQL数据库进行测试，
+包括完整的开发到测试步骤，
+从一开始的Spring Boot工程创建，
+到MySQL数据库刷库脚本，
+到引入mybatis-plus依赖，
+然后编写实现代码和配置文件，
+最后使用Junit5成功进行测试。
+
+# 2.创建Spring Boot的Demo工程
+首先选择创建Spring Starter Project工程：
+File -> New -> Other... -> Spring Boot -> Spring Starter Project
+SpringStarterProject.png
+点击Next:
+NewSpringStarterProject.png
+输入工程名称Name:springboot-mybatis-plus，
+选择工程本地保存的目录。
+
+点击Next:
+NewSpringStarterProjectDependencies.png
+先选择Spring Boot Version,
+再选择工程需要的依赖：
+Spring Web 
+MySQL Driver
+Spring Boot DevTools
+点击Finish自动完成工程的创建。
+
+工程创建完毕后，删除不需要的文件和目录：
+```
+.mvn
+HELP.md
+mvnw
+mvnw.cmd 
+```
+
+# 3.增加mybatis-plus依赖
+在pom.xml中增加mybatis-plus依赖
+```
+<dependency>
+    <groupId>com.baomidou</groupId>
+    <artifactId>mybatis-plus-boot-starter</artifactId>
+    <version>3.3.2</version>
+</dependency>
+```
+
+# 4.新建application.yml文件
+首先删除src\main\resources目录下的文件和目录：
+```
+static
+templates
+application.properties
+```
+
+新建application.yml文件:
+File -> New -> Other... -> General -> File
+NewFile.png
+点击Next:
+CreateNewFile.png
+选择在src\main\resources目录下创建文件，
+填写文件名application.yml。
+
+# 5.修改application.yml文件
+在application.yml增加配置，
+指定服务端口和连接数据库：
+```
+server:
+  port: 8088
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://10.21.13.14:3306/demodb
+    username: demo
+    password: demo123456
+```
+
+# 6.数据库表和脚本
+现有一张User表，其表结构如下：
+```                              
+|id |ame	|age|email             |
+|---|-------|---|------------------|
+|1	|Jone	|18	|test1@baomidou.com|
+|2	|Jack	|20	|test2@baomidou.com|
+|3	|Tom	|28	|test3@baomidou.com|
+|4	|Sandy	|21	|test4@baomidou.com|
+|5	|Billie	|24	|test5@baomidou.com|
+```
+
+对应的数据库create_tables.sql脚本如下：
+```
+DROP TABLE IF EXISTS TBL_USER;
+
+CREATE TABLE TBL_USER
+(
+    id BIGINT(20) NOT NULL COMMENT '主键ID',
+    name VARCHAR(30) NULL DEFAULT NULL COMMENT '姓名',
+    age INT(11) NULL DEFAULT NULL COMMENT '年龄',
+    email VARCHAR(50) NULL DEFAULT NULL COMMENT '邮箱',
+    PRIMARY KEY (id)
+);
+```
+
+对应的数据库init_data_user.sql脚本如下：
+```
+DELETE FROM TBL_USER;
+
+INSERT INTO TBL_USER (id, name, age, email) VALUES
+(1, 'Jone', 18, 'test1@baomidou.com'),
+(2, 'Jack', 20, 'test2@baomidou.com'),
+(3, 'Tom', 28, 'test3@baomidou.com'),
+(4, 'Sandy', 21, 'test4@baomidou.com'),
+(5, 'Billie', 24, 'test5@baomidou.com');
+```
+
+# 7.数据库用户创建和刷库
+在MySQL数据库中创建对应的数据库和用户：
+```
+CREATE DATABASE demodb;
+GRANT ALL ON *.* to 'demo'@'%' identified BY 'demo123456' WITH GRANT OPTION;
+```
+然后使用创建的用户执行上面的脚本进行刷库。
+
+# 8.创建实体类
+创建实体类User.java：
+```
+package com.example.demo.entity;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+
+@TableName("TBL_USER")
+public class User {
+	private Long id;
+	private String name;
+	private Integer age;
+	private String email;
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Integer getAge() {
+		return age;
+	}
+
+	public void setAge(Integer age) {
+		this.age = age;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	@Override
+	public String toString() {
+		return "User [id=" + id + ", name=" + name + ", age=" + age + ", email=" + email + "]";
+	}
+}
+```
+注意User类的注解@TableName("TBL_USER")，
+表示数据库的表TBL_USER和实体类User对应。
+
+# 9.创建Mapper类：
+在dao层创建Mapper类UserDao.java：
+```
+package com.example.demo.dao;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.example.demo.entity.User;
+
+public interface UserDao extends BaseMapper<User> {
+
+}
+```
+注意需要继承BaseMapper<T>泛型类，
+并且指定其中T为User类。
+
+# 10.增加@MapperScan注解
+在Spring Boot启动类中增加@MapperScan注解，
+用于扫描Mapper文件夹：
+```
+package com.example.demo;
+
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@MapperScan("com.example.demo.dao")
+@SpringBootApplication
+public class SpringbootMybatisPlusApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(SpringbootMybatisPlusApplication.class, args);
+	}
+
+}
+```
+
+# 11.启动Spring Boot
+右键启动类SpringbootMybatisPlusApplication.java  -> 
+Run As -> Java Application
+
+启动成功日志：
+```
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v2.3.1.RELEASE)
+
+2020-07-01 15:34:45.160  INFO 12764 --- [  restartedMain] c.e.d.SpringbootMybatisPlusApplication   : Starting SpringbootMybatisPlusApplication on yuwen-asiainfo with PID 12764 (D:\Code\Learn\SpringBoot\springboot-mybatis-plus\target\classes started by yuwen in D:\Code\Learn\SpringBoot\springboot-mybatis-plus)
+2020-07-01 15:34:45.162  INFO 12764 --- [  restartedMain] c.e.d.SpringbootMybatisPlusApplication   : No active profile set, falling back to default profiles: default
+2020-07-01 15:34:45.201  INFO 12764 --- [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2020-07-01 15:34:45.201  INFO 12764 --- [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2020-07-01 15:34:46.525  INFO 12764 --- [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8088 (http)
+2020-07-01 15:34:46.533  INFO 12764 --- [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2020-07-01 15:34:46.533  INFO 12764 --- [  restartedMain] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.36]
+2020-07-01 15:34:46.588  INFO 12764 --- [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2020-07-01 15:34:46.589  INFO 12764 --- [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1387 ms
+2020-07-01 15:34:46.711  INFO 12764 --- [  restartedMain] o.s.s.concurrent.ThreadPoolTaskExecutor  : Initializing ExecutorService 'applicationTaskExecutor'
+ _ _   |_  _ _|_. ___ _ |    _ 
+| | |\/|_)(_| | |_\  |_)||_|_\ 
+     /               |         
+                        3.3.2 
+2020-07-01 15:34:47.770  INFO 12764 --- [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2020-07-01 15:34:47.969  INFO 12764 --- [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8088 (http) with context path ''
+2020-07-01 15:34:47.978  INFO 12764 --- [  restartedMain] c.e.d.SpringbootMybatisPlusApplication   : Started SpringbootMybatisPlusApplication in 3.105 seconds (JVM running for 3.492)
+```
+
+# 12.功能测试
+首先删除\src\test\java目录下的文件：
+SpringbootMybatisPlusApplicationTests.java
+
+添加测试类SampleTest，
+进行功能测试：
+```
+package com.example.demo;
+
+import java.util.List;
+
+import org.junit.Assert;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import com.example.demo.dao.UserDao;
+import com.example.demo.entity.User;
+
+@SpringBootTest
+public class SampleTest {
+
+	@Autowired
+	private UserDao userDao;
+
+	@Test
+	public void testSelect() {
+		System.out.println(("----- selectAll method test ------"));
+		List<User> userList = userDao.selectList(null);
+		Assert.assertEquals(5, userList.size());
+		userList.forEach(System.out::println);
+	}
+
+}
+```
+注意这里使用的是Junit5进行单元测试，
+如果是Junit4需要自行修改相关配置。
+右键测试类SampleTest -> Run As -> Run Configurations...
+可以看到Test Runner使用的是Junit5:
+Junit5TestRunner.png
+
+测试用例执行成功日志
+```
+15:49:55.334 [main] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating CacheAwareContextLoaderDelegate from class [org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate]
+15:49:55.343 [main] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating BootstrapContext using constructor [public org.springframework.test.context.support.DefaultBootstrapContext(java.lang.Class,org.springframework.test.context.CacheAwareContextLoaderDelegate)]
+15:49:55.365 [main] DEBUG org.springframework.test.context.BootstrapUtils - Instantiating TestContextBootstrapper for test class [com.example.demo.SampleTest] from class [org.springframework.boot.test.context.SpringBootTestContextBootstrapper]
+15:49:55.377 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper - Neither @ContextConfiguration nor @ContextHierarchy found for test class [com.example.demo.SampleTest], using SpringBootContextLoader
+15:49:55.380 [main] DEBUG org.springframework.test.context.support.AbstractContextLoader - Did not detect default resource location for test class [com.example.demo.SampleTest]: class path resource [com/example/demo/SampleTest-context.xml] does not exist
+15:49:55.381 [main] DEBUG org.springframework.test.context.support.AbstractContextLoader - Did not detect default resource location for test class [com.example.demo.SampleTest]: class path resource [com/example/demo/SampleTestContext.groovy] does not exist
+15:49:55.381 [main] INFO org.springframework.test.context.support.AbstractContextLoader - Could not detect default resource locations for test class [com.example.demo.SampleTest]: no resource found for suffixes {-context.xml, Context.groovy}.
+15:49:55.382 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.example.demo.SampleTest]: SampleTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+15:49:55.414 [main] DEBUG org.springframework.test.context.support.ActiveProfilesUtils - Could not find an 'annotation declaring class' for annotation type [org.springframework.test.context.ActiveProfiles] and class [com.example.demo.SampleTest]
+15:49:55.468 [main] DEBUG org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider - Identified candidate component class: file [D:\Code\Learn\SpringBoot\springboot-mybatis-plus\target\classes\com\example\demo\SpringbootMybatisPlusApplication.class]
+15:49:55.469 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.example.demo.SpringbootMybatisPlusApplication for test class com.example.demo.SampleTest
+15:49:55.547 [main] DEBUG org.springframework.boot.test.context.SpringBootTestContextBootstrapper - @TestExecutionListeners is not present for class [com.example.demo.SampleTest]: using defaults.
+15:49:55.547 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper - Loaded default TestExecutionListener class names from location [META-INF/spring.factories]: [org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener, org.springframework.boot.test.mock.mockito.ResetMocksTestExecutionListener, org.springframework.boot.test.autoconfigure.restdocs.RestDocsTestExecutionListener, org.springframework.boot.test.autoconfigure.web.client.MockRestServiceServerResetTestExecutionListener, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrintOnlyOnFailureTestExecutionListener, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverTestExecutionListener, org.springframework.boot.test.autoconfigure.webservices.client.MockWebServiceServerTestExecutionListener, org.springframework.test.context.web.ServletTestExecutionListener, org.springframework.test.context.support.DirtiesContextBeforeModesTestExecutionListener, org.springframework.test.context.support.DependencyInjectionTestExecutionListener, org.springframework.test.context.support.DirtiesContextTestExecutionListener, org.springframework.test.context.transaction.TransactionalTestExecutionListener, org.springframework.test.context.jdbc.SqlScriptsTestExecutionListener, org.springframework.test.context.event.EventPublishingTestExecutionListener]
+15:49:55.561 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper - Using TestExecutionListeners: [org.springframework.test.context.web.ServletTestExecutionListener@54bff557, org.springframework.test.context.support.DirtiesContextBeforeModesTestExecutionListener@593aaf41, org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener@5a56cdac, org.springframework.boot.test.autoconfigure.SpringBootDependencyInjectionTestExecutionListener@7c711375, org.springframework.test.context.support.DirtiesContextTestExecutionListener@57cf54e1, org.springframework.test.context.transaction.TransactionalTestExecutionListener@5b03b9fe, org.springframework.test.context.jdbc.SqlScriptsTestExecutionListener@37d4349f, org.springframework.test.context.event.EventPublishingTestExecutionListener@434a63ab, org.springframework.boot.test.mock.mockito.ResetMocksTestExecutionListener@6e0f5f7f, org.springframework.boot.test.autoconfigure.restdocs.RestDocsTestExecutionListener@2805d709, org.springframework.boot.test.autoconfigure.web.client.MockRestServiceServerResetTestExecutionListener@3ee37e5a, org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrintOnlyOnFailureTestExecutionListener@2ea41516, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverTestExecutionListener@3a44431a, org.springframework.boot.test.autoconfigure.webservices.client.MockWebServiceServerTestExecutionListener@3c7f66c4]
+15:49:55.564 [main] DEBUG org.springframework.test.context.support.AbstractDirtiesContextTestExecutionListener - Before test class: context [DefaultTestContext@550dbc7a testClass = SampleTest, testInstance = [null], testMethod = [null], testException = [null], mergedContextConfiguration = [WebMergedContextConfiguration@21282ed8 testClass = SampleTest, locations = '{}', classes = '{class com.example.demo.SpringbootMybatisPlusApplication}', contextInitializerClasses = '[]', activeProfiles = '{}', propertySourceLocations = '{}', propertySourceProperties = '{org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true}', contextCustomizers = set[org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@2f112965, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@d4342c2, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@1f0f1111, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@0, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizerFactory$Customizer@47d90b9e, org.springframework.boot.test.context.SpringBootTestArgs@1], resourceBasePath = 'src/main/webapp', contextLoader = 'org.springframework.boot.test.context.SpringBootContextLoader', parent = [null]], attributes = map['org.springframework.test.context.web.ServletTestExecutionListener.activateListener' -> true]], class annotated with @DirtiesContext [false] with mode [null].
+15:49:55.589 [main] DEBUG org.springframework.test.context.support.TestPropertySourceUtils - Adding inlined properties to environment: {spring.jmx.enabled=false, org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true}
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v2.3.1.RELEASE)
+
+2020-07-01 15:49:55.873  INFO 15452 --- [           main] com.example.demo.SampleTest              : Starting SampleTest on yuwen-asiainfo with PID 15452 (started by yuwen in D:\Code\Learn\SpringBoot\springboot-mybatis-plus)
+2020-07-01 15:49:55.874  INFO 15452 --- [           main] com.example.demo.SampleTest              : No active profile set, falling back to default profiles: default
+2020-07-01 15:49:56.907  INFO 15452 --- [           main] o.s.s.concurrent.ThreadPoolTaskExecutor  : Initializing ExecutorService 'applicationTaskExecutor'
+ _ _   |_  _ _|_. ___ _ |    _ 
+| | |\/|_)(_| | |_\  |_)||_|_\ 
+     /               |         
+                        3.3.2 
+2020-07-01 15:49:58.403  INFO 15452 --- [           main] com.example.demo.SampleTest              : Started SampleTest in 2.806 seconds (JVM running for 3.564)
+----- selectAll method test ------
+2020-07-01 15:49:58.602  INFO 15452 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2020-07-01 15:49:58.741  INFO 15452 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+User [id=1, name=Jone, age=18, email=test1@baomidou.com]
+User [id=2, name=Jack, age=20, email=test2@baomidou.com]
+User [id=3, name=Tom, age=28, email=test3@baomidou.com]
+User [id=4, name=Sandy, age=21, email=test4@baomidou.com]
+User [id=5, name=Billie, age=24, email=test5@baomidou.com]
+2020-07-01 15:49:58.791  INFO 15452 --- [extShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2020-07-01 15:49:58.796  INFO 15452 --- [extShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2020-07-01 15:49:58.797  INFO 15452 --- [extShutdownHook] o.s.s.concurrent.ThreadPoolTaskExecutor  : Shutting down ExecutorService 'applicationTaskExecutor'
+```
+
+# 13.完整的pom.xml文件
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.3.1.RELEASE</version>
+		<relativePath /> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>com.example</groupId>
+	<artifactId>springboot-mybatis-plus</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>springboot-mybatis-plus</name>
+	<description>Mybatis Plus Demo project for Spring Boot</description>
+
+	<properties>
+		<java.version>1.8</java.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.baomidou</groupId>
+			<artifactId>mybatis-plus-boot-starter</artifactId>
+			<version>3.3.2</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
+```
+
+# 14.参考
+[MyBatis-Plus 的官方快速开始文档](https://mp.baomidou.com/guide/quick-start.html)
+[MyBatis-Plus 的官方示例工程](https://github.com/baomidou/mybatis-plus-samples.git)
