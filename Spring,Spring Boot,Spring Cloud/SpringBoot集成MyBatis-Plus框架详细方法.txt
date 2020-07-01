@@ -11,19 +11,23 @@
 # 2.创建Spring Boot的Demo工程
 首先选择创建Spring Starter Project工程：
 File -> New -> Other... -> Spring Boot -> Spring Starter Project
-SpringStarterProject.png
+![](https://upload-images.jianshu.io/upload_images/11810589-81f94925b486f97f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 点击Next:
-NewSpringStarterProject.png
+![](https://upload-images.jianshu.io/upload_images/11810589-6189f6c0312b6b57.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 输入工程名称Name:springboot-mybatis-plus，
 选择工程本地保存的目录。
 
 点击Next:
-NewSpringStarterProjectDependencies.png
+![](https://upload-images.jianshu.io/upload_images/11810589-51153c97e6e8b28b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 先选择Spring Boot Version,
 再选择工程需要的依赖：
+```
 Spring Web 
 MySQL Driver
 Spring Boot DevTools
+```
 点击Finish自动完成工程的创建。
 
 工程创建完毕后，删除不需要的文件和目录：
@@ -54,9 +58,11 @@ application.properties
 
 新建application.yml文件:
 File -> New -> Other... -> General -> File
-NewFile.png
+![](https://upload-images.jianshu.io/upload_images/11810589-d3e99953382ee52f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 点击Next:
-CreateNewFile.png
+![](https://upload-images.jianshu.io/upload_images/11810589-e639b69c0735b8a4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 选择在src\main\resources目录下创建文件，
 填写文件名application.yml。
 
@@ -76,8 +82,7 @@ spring:
 ```
 
 # 6.数据库表和脚本
-现有一张User表，其表结构如下：
-```                              
+现有一张User表，其表结构如下：      
 |id |ame	|age|email             |
 |---|-------|---|------------------|
 |1	|Jone	|18	|test1@baomidou.com|
@@ -85,7 +90,7 @@ spring:
 |3	|Tom	|28	|test3@baomidou.com|
 |4	|Sandy	|21	|test4@baomidou.com|
 |5	|Billie	|24	|test5@baomidou.com|
-```
+
 
 对应的数据库create_tables.sql脚本如下：
 ```
@@ -119,7 +124,7 @@ INSERT INTO TBL_USER (id, name, age, email) VALUES
 CREATE DATABASE demodb;
 GRANT ALL ON *.* to 'demo'@'%' identified BY 'demo123456' WITH GRANT OPTION;
 ```
-然后使用创建的用户执行上面的脚本进行刷库。
+然后使用新建的用户执行上面的脚本进行刷库。
 
 # 8.创建实体类
 创建实体类User.java：
@@ -247,7 +252,9 @@ Run As -> Java Application
 
 # 12.功能测试
 首先删除\src\test\java目录下的文件：
+```
 SpringbootMybatisPlusApplicationTests.java
+```
 
 添加测试类SampleTest，
 进行功能测试：
@@ -284,7 +291,7 @@ public class SampleTest {
 如果是Junit4需要自行修改相关配置。
 右键测试类SampleTest -> Run As -> Run Configurations...
 可以看到Test Runner使用的是Junit5:
-Junit5TestRunner.png
+![](https://upload-images.jianshu.io/upload_images/11810589-1f988986df17ef94.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 测试用例执行成功日志
 ```
