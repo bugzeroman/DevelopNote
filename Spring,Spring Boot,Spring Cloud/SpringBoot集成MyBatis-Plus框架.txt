@@ -1,0 +1,44 @@
+# 1.说明
+本文介绍Spring Boot集成MyBatis-Plus框架，
+重点介绍需要注意的地方，
+是[SpringBoot集成MyBatis-Plus框架详细方法](https://www.jianshu.com/p/51c2217a9bc3)
+这篇文章的脱水版，
+主要是三个步骤，
+增加mybatis-plus依赖，
+创建Mapper类，
+增加@MapperScan注解。
+
+# 2.增加mybatis-plus依赖
+在pom.xml中增加mybatis-plus依赖
+```
+<dependency>
+    <groupId>com.baomidou</groupId>
+    <artifactId>mybatis-plus-boot-starter</artifactId>
+    <version>3.3.2</version>
+</dependency>
+```
+
+# 3.创建Mapper类
+创建Mapper类UserDao.java，
+需要继承BaseMapper<T>泛型类，
+并且指定其中T为User类。
+```
+public interface UserDao extends BaseMapper<User> {
+
+}
+```
+
+# 4.增加@MapperScan注解
+在Spring Boot启动类中增加@MapperScan注解，
+用于扫描Mapper文件夹：
+```
+@MapperScan("com.example.demo.dao")
+@SpringBootApplication
+public class SpringbootMybatisPlusApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(SpringbootMybatisPlusApplication.class, args);
+	}
+}
+```
+
