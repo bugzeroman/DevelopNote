@@ -36,3 +36,6 @@ git checkout [分支名]
 
 提交代码到远程仓库
 git push origin master
+
+拉取远程变化，包括分支
+git fetch origin

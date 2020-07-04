@@ -106,6 +106,20 @@ docker exec -it bce85007f6d7 /bin/sh
 拷贝指定镜像目录下的文件到本地：
 docker cp bce85007f6d7:/app/sline-cm-service-2.1.0-SNAPSHOT.jar .
 
+# 12.
+logs获取容器的日志
 
+docker logs [OPTIONS] CONTAINER
+OPTIONS说明：
+-f : 跟踪日志输出
+--since :显示某个开始时间的所有日志
+-t : 显示时间戳
+--tail :仅列出最新N条容器日志
 
+docker logs --tail 100 sline-business-service
 
+查看指定时间后的日志，只显示最后100行：
+$ docker logs -f -t --since="2018-02-08" --tail=100 CONTAINER_ID
+
+查看最近30分钟的日志:
+$ docker logs --since 30m CONTAINER_ID
