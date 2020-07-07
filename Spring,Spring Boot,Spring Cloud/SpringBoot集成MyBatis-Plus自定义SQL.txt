@@ -1,0 +1,90 @@
+# 1.说明
+本文介绍Spring Boot集成MyBatis-Plus框架后，
+基于已经创建好的Spring Boot工程，
+添加自定义的SQL实现复杂查询等操作。
+自定义SQL主要有两种方式，
+一种是Annotation注解方式，
+另一种是XML配置文件方式。
+
+# 2.Annotation注解方式
+直接先定义接口方法，
+然后在接口方法上面开发注解即可。
+下面的示例实现了通过@Select注解，
+在注解中开发自定义SQL语句，
+实现了通过ID查询用户的方法：
+```
+package com.example.demo.dao;
+
+import org.apache.ibatis.annotations.Select;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.example.demo.entity.User;
+
+public interface UserDao extends BaseMapper<User> {
+
+	@Select("SELECT * FROM TBL_USER WHERE id=#{id};")
+	public User getUserById(Long id);
+}
+```
+
+# 3.XML配置文件方式
+首先在Spring Boot中指定需要加载的XML文件，
+然后新建对应接口类的XML文件，
+开发对应接口方法的自定义SQL语句。
+
+现有通过ID查询用户的自定义接口如下：
+```
+package com.example.demo.dao;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.example.demo.entity.User;
+
+public interface UserDao extends BaseMapper<User> {
+
+	public User getUserById(Long id);
+}
+```
+
+首先修改application.yml文件：
+```
+mybatis-plus:
+  # 如果是放在src/main/java目录下 classpath:/com/*/*/mapper/*Mapper.xml
+  # 如果是放在resource目录 classpath:/mapper/**.xml
+  mapper-locations: classpath:/mapper/**.xml
+```
+
+然后在src\main\resources目录下，
+创建目录mapper，
+在mapper下创建文件UserDao.xml，
+在XML文件中开发自定义SQL语句：
+```
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.dao.UserDao">
+ 
+    <select id="getUserById" parameterType="Long" resultType="com.example.demo.entity.User">
+        SELECT * FROM TBL_USER WHERE id = #{id}
+    </select>
+</mapper>
+```
+
+# 4.两种方式共存
+Annotation注解和XML配置文件这两种方式，
+可以同时使用，代码可以正常执行，
+不会冲突，也不会报错。
+但是如果自定义了一个接口方法，
+没有对应到任何实现的SQL语句，
+就会报没有找到SQL绑定的错误异常：
+```
+org.apache.ibatis.binding.BindingException: Invalid bound statement (not found): com.example.demo.dao.UserDao.getUserByIdAnnotation
+	at org.apache.ibatis.binding.MapperMethod$SqlCommand.<init>(MapperMethod.java:235)
+	at com.baomidou.mybatisplus.core.override.MybatisMapperMethod.<init>(MybatisMapperMethod.java:50)
+	at com.baomidou.mybatisplus.core.override.MybatisMapperProxy.lambda$cachedMapperMethod$0(MybatisMapperProxy.java:101)
+	at java.util.concurrent.ConcurrentHashMap.computeIfAbsent(Unknown Source)
+	at com.baomidou.mybatisplus.core.override.MybatisMapperProxy.cachedMapperMethod(MybatisMapperProxy.java:100)
+	at com.baomidou.mybatisplus.core.override.MybatisMapperProxy.invoke(MybatisMapperProxy.java:95)
+	at com.sun.proxy.$Proxy79.getUserByIdAnnotation(Unknown Source)
+	at com.example.demo.SampleTest.testSelectByAnnotations(SampleTest.java:31)
+```
+
+# 5.参考文章
+[MyBatis-Plus 自定义sql语句](https://blog.csdn.net/weixin_38111957/article/details/91539019)
