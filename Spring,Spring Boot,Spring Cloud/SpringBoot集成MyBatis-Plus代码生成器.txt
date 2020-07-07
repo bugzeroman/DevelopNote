@@ -1,0 +1,587 @@
+# 1.说明
+本文详细介绍Spring Boot集成MyBatis-Plus代码生成器的方法。
+基于一个创建好的Spring Boot工程，
+执行MyBatis-Plus提供的AutoGenerator代码生成器，
+根据数据库中已经存在的表，
+生成Entity、Mapper、Mapper XML、Service、Controller等各个模块的代码，
+可以极大的提升开发效率。
+
+# 2.数据库TBL_ROLE表
+这里使用的是MySQL数据库,
+数据库配置如下：
+```
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://10.21.13.14:3306/demodb
+    username: demo
+    password: demo123456
+```
+在数据库中有TBL_ROLE表，
+表定义语句如下：
+````
+CREATE TABLE TBL_ROLE
+(
+  id            BIGINT (20) NOT NULL COMMENT '主键ID',
+  role_name     VARCHAR(30) NULL DEFAULT NULL COMMENT '角色名',
+  role_describe VARCHAR(30) NULL DEFAULT NULL COMMENT '角色描述',
+  PRIMARY KEY (id)
+);
+````
+下面演示为TBL_ROLE表生成对应各个模块的代码。
+
+# 3.添加依赖
+在pom.xml文件中增加jar包依赖，
+包括代码生成器mybatis-plus-generator，
+以及模板引擎freemarker：
+```
+<!-- MyBatis-Plus代码生成器 -->
+<dependency>
+	<groupId>com.baomidou</groupId>
+	<artifactId>mybatis-plus-generator</artifactId>
+	<version>3.3.2</version>
+</dependency>
+<dependency>
+	<groupId>org.freemarker</groupId>
+	<artifactId>freemarker</artifactId>
+	<version>2.3.30</version>
+</dependency>
+```
+
+注意如果依赖不到freemarker，
+需要更新一下工程的Maven依赖，
+否则后面执行代码的时候会报错，
+找不到freemarker的相关类。
+  
+# 4.编写配置
+这里使用创建Java代码的方式进行配置，
+创建代码生成器的AutoGenerator类实例，
+然后编写AutoGenerator对应的配置参数，
+最后执行生成代码的方法即可。
+下面演示创建一个CodeGenerator类，
+在main方法中实现了AutoGenerator的创建和配置，
+最后调用AutoGenerator的execute()方法生成代码。
+文末给出了CodeGenerator.java的完整代码。
+
+# 5.CodeGenerator说明
+在CodeGenerator类中，
+需要修改下面的常量配置参数，
+主要是数据库和表名等参数，
+然后执行main方法，
+即可生成对应的代码。
+如果需要进一步自定义配置，
+请详细阅读main方法中1-6这6个配置。
+```
+public class CodeGenerator {
+
+// 数据库连接配置
+private static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+private static final String JDBC_URL = "jdbc:mysql://10.21.13.14:3306/demodb?useUnicode=true&useSSL=false&characterEncoding=utf8";
+private static final String JDBC_USER_NAME = "demo";
+private static final String JDBC_PASSOWRD = "demo123456";
+
+// 包名和模块名
+private static final String PACKAGE_NAME = "com.yuwen";
+private static final String MODULE_NAME = "demo";
+
+// 表名，多个表使用英文逗号分割
+private static final String TBL_NAMES = "tbl_role";
+
+// 表名的前缀，从表生成代码时会去掉前缀
+private static final String TABLE_PREFIX = "tbl_";
+
+// 生成代码入口main方法
+public static void main(String[] args) {
+	// 0.代码生成器
+	AutoGenerator mpg = new AutoGenerator();
+
+	// 1.全局配置
+	GlobalConfig gc = getGlobalConfig();
+	mpg.setGlobalConfig(gc);
+
+	// 2.数据源配置
+	DataSourceConfig dsc = getDataSourceConfig();
+	mpg.setDataSource(dsc);
+
+	// 3.包配置
+	PackageConfig pc = getPackageConfig();
+	mpg.setPackageInfo(pc);
+
+	// 4.自定义配置
+	InjectionConfig cfg = getInjectionConfig();
+	mpg.setCfg(cfg);
+
+	// 5.模板配置
+	TemplateConfig templateConfig = getTemplateConfig();
+	mpg.setTemplate(templateConfig);
+	// 使用Freemarker模板引擎
+	mpg.setTemplateEngine(new FreemarkerTemplateEngine());
+
+	// 6.策略配置
+	StrategyConfig strategy = getStrategyConfig();
+	mpg.setStrategy(strategy);
+
+	// 7.开始生成代码
+	mpg.execute();
+}
+```
+
+## 5.1.全局配置
+```
+/** 1.全局配置 */
+private static GlobalConfig getGlobalConfig() {
+	GlobalConfig gc = new GlobalConfig();
+	String projectPath = System.getProperty("user.dir");
+	gc.setOutputDir(projectPath + "/src/main/java");
+	gc.setAuthor("yuwen");
+	gc.setOpen(false);
+	// 自定义生成的ServiceName，去掉默认的ServiceName前面的I
+	gc.setServiceName("%s" + ConstVal.SERVICE);
+	// gc.setSwagger2(true); 实体属性 Swagger2 注解
+	return gc;
+}
+```
+
+## 5.2.数据源配置
+```
+/** 2.数据源配置 */
+private static DataSourceConfig getDataSourceConfig() {
+	DataSourceConfig dsc = new DataSourceConfig();
+	dsc.setDriverName(JDBC_DRIVER);
+	dsc.setUrl(JDBC_URL);
+	// dsc.setSchemaName("public");
+	dsc.setUsername(JDBC_USER_NAME);
+	dsc.setPassword(JDBC_PASSOWRD);
+	return dsc;
+}
+```
+
+## 5.3.包配置
+```
+/** 3.包配置 */
+private static PackageConfig getPackageConfig() {
+	PackageConfig pc = new PackageConfig();
+	// 生成PACKAGE_NAME.MODULE_NAME的包路径
+	pc.setParent(PACKAGE_NAME);
+	pc.setModuleName(MODULE_NAME);
+	return pc;
+}
+```
+
+## 5.4.自定义配置
+```
+/** 4.自定义配置 */
+private static InjectionConfig getInjectionConfig() {
+
+	// 这里模板引擎使用的是freemarker
+	String templatePath = "/templates/mapper.xml.ftl";
+
+	// 自定义输出配置
+	List<FileOutConfig> focList = new ArrayList<>();
+	String projectPath = System.getProperty("user.dir");
+	// 自定义配置会被优先输出
+	focList.add(new FileOutConfig(templatePath) {
+		@Override
+		public String outputFile(TableInfo tableInfo) {
+			// 自定义输出文件名 ， 如果你 Entity 设置了前后缀、此处注意 xml 的名称会跟着发生变化
+			return projectPath + "/src/main/resources/mapper/" + tableInfo.getEntityName() + "Mapper"
+					+ StringPool.DOT_XML;
+		}
+	});
+
+	InjectionConfig cfg = new InjectionConfig() {
+		@Override
+		public void initMap() {
+			// to do nothing
+		}
+	};
+	cfg.setFileOutConfigList(focList);
+	return cfg;
+}
+```
+
+## 5.5.模板配置
+```
+/** 5.模板配置 */
+private static TemplateConfig getTemplateConfig() {
+	TemplateConfig templateConfig = new TemplateConfig();
+
+	// 配置自定义输出模板
+	// 指定自定义模板路径，注意不要带上.ftl/.vm, 会根据使用的模板引擎自动识别
+	// templateConfig.setEntity("templates/entity2.java");
+	// templateConfig.setService();
+	// templateConfig.setController();
+
+	templateConfig.setXml(null);
+	return templateConfig;
+}
+```
+
+## 5.6.策略配置
+```
+/** 6.策略配置 */
+private static StrategyConfig getStrategyConfig() {
+	StrategyConfig strategy = new StrategyConfig();
+	// 下划线转驼峰命名
+	strategy.setNaming(NamingStrategy.underline_to_camel);
+	strategy.setColumnNaming(NamingStrategy.underline_to_camel);
+	strategy.setEntityLombokModel(false);
+	strategy.setRestControllerStyle(true);
+	strategy.setInclude(TBL_NAMES.split(","));
+	strategy.setControllerMappingHyphenStyle(true);
+	strategy.setTablePrefix(TABLE_PREFIX);
+	return strategy;
+}
+```
+
+# 6.生成代码
+执行代码生成器生成代码后，
+控制台输出如下日志：
+```
+2020-07-07 10:46:49.906 [main] DEBUG [93] - ==========================准备生成文件...==========================
+2020-07-07 10:46:50.150 [main] DEBUG [155] - 创建目录： [D:\Code\Learn\SpringBoot\springboot-mybatis-plus/src/main/java\com\yuwen\demo\entity]
+2020-07-07 10:46:50.150 [main] DEBUG [155] - 创建目录： [D:\Code\Learn\SpringBoot\springboot-mybatis-plus/src/main/java\com\yuwen\demo\controller]
+2020-07-07 10:46:50.151 [main] DEBUG [155] - 创建目录： [D:\Code\Learn\SpringBoot\springboot-mybatis-plus/src/main/java\com\yuwen\demo\mapper]
+2020-07-07 10:46:50.152 [main] DEBUG [155] - 创建目录： [D:\Code\Learn\SpringBoot\springboot-mybatis-plus/src/main/java\com\yuwen\demo\service\impl]
+2020-07-07 10:46:50.209 [main] DEBUG [54] - 模板:/templates/mapper.xml.ftl;  文件:D:\Code\Learn\SpringBoot\springboot-mybatis-plus/src/main/resources/mapper/RoleMapper.xml
+2020-07-07 10:46:50.292 [main] DEBUG [54] - 模板:/templates/entity.java.ftl;  文件:D:\Code\Learn\SpringBoot\springboot-mybatis-plus/src/main/java\com\yuwen\demo\entity\Role.java
+2020-07-07 10:46:50.294 [main] DEBUG [54] - 模板:/templates/mapper.java.ftl;  文件:D:\Code\Learn\SpringBoot\springboot-mybatis-plus/src/main/java\com\yuwen\demo\mapper\RoleMapper.java
+2020-07-07 10:46:50.296 [main] DEBUG [54] - 模板:/templates/service.java.ftl;  文件:D:\Code\Learn\SpringBoot\springboot-mybatis-plus/src/main/java\com\yuwen\demo\service\RoleService.java
+2020-07-07 10:46:50.297 [main] DEBUG [54] - 模板:/templates/serviceImpl.java.ftl;  文件:D:\Code\Learn\SpringBoot\springboot-mybatis-plus/src/main/java\com\yuwen\demo\service\impl\RoleServiceImpl.java
+2020-07-07 10:46:50.299 [main] DEBUG [54] - 模板:/templates/controller.java.ftl;  文件:D:\Code\Learn\SpringBoot\springboot-mybatis-plus/src/main/java\com\yuwen\demo\controller\RoleController.java
+2020-07-07 10:46:50.299 [main] DEBUG [107] - ==========================文件生成完成！！！==========================
+```
+
+在工程中看到新生成如下文件：
+```
+src/main/resources/mapper/RoleMapper.xml
+src/main/java/com/yuwen/demo/entity/Role.java
+src/main/java/com/yuwen/demo/mapper/RoleMapper.java
+src/main/java/com/yuwen/demo/service/RoleService.java
+src/main/java/com/yuwen/demo/service/impl/RoleServiceImpl.java
+src/main/java/com/yuwen/demo/controller/RoleController
+```
+可以通过这里生成的文件名称，
+对比上面的配置的生效情况。
+文末给出上面各个文件的完整代码。
+
+# 7.CodeGenerator.java
+```
+package com.example.demo.uitl.generate;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.baomidou.mybatisplus.core.toolkit.StringPool;
+import com.baomidou.mybatisplus.generator.AutoGenerator;
+import com.baomidou.mybatisplus.generator.InjectionConfig;
+import com.baomidou.mybatisplus.generator.config.ConstVal;
+import com.baomidou.mybatisplus.generator.config.DataSourceConfig;
+import com.baomidou.mybatisplus.generator.config.FileOutConfig;
+import com.baomidou.mybatisplus.generator.config.GlobalConfig;
+import com.baomidou.mybatisplus.generator.config.PackageConfig;
+import com.baomidou.mybatisplus.generator.config.StrategyConfig;
+import com.baomidou.mybatisplus.generator.config.TemplateConfig;
+import com.baomidou.mybatisplus.generator.config.po.TableInfo;
+import com.baomidou.mybatisplus.generator.config.rules.NamingStrategy;
+import com.baomidou.mybatisplus.generator.engine.FreemarkerTemplateEngine;
+
+/**
+ * 
+ * 代码生成器 ，先修改下面的常量配置参数，然后执行 main方法
+ */
+public class CodeGenerator {
+
+	// 数据库连接配置
+	private static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+	private static final String JDBC_URL = "jdbc:mysql://10.21.13.14:3306/demodb?useUnicode=true&useSSL=false&characterEncoding=utf8";
+	private static final String JDBC_USER_NAME = "demo";
+	private static final String JDBC_PASSOWRD = "demo123456";
+
+	// 包名和模块名
+	private static final String PACKAGE_NAME = "com.yuwen";
+	private static final String MODULE_NAME = "demo";
+
+	// 表名，多个表使用英文逗号分割
+	private static final String TBL_NAMES = "tbl_role";
+
+	// 表名的前缀，从表生成代码时会去掉前缀
+	private static final String TABLE_PREFIX = "tbl_";
+
+	// 生成代码入口main方法
+	public static void main(String[] args) {
+		// 0.代码生成器
+		AutoGenerator mpg = new AutoGenerator();
+
+		// 1.全局配置
+		GlobalConfig gc = getGlobalConfig();
+		mpg.setGlobalConfig(gc);
+
+		// 2.数据源配置
+		DataSourceConfig dsc = getDataSourceConfig();
+		mpg.setDataSource(dsc);
+
+		// 3.包配置
+		PackageConfig pc = getPackageConfig();
+		mpg.setPackageInfo(pc);
+
+		// 4.自定义配置
+		InjectionConfig cfg = getInjectionConfig();
+		mpg.setCfg(cfg);
+
+		// 5.模板配置
+		TemplateConfig templateConfig = getTemplateConfig();
+		mpg.setTemplate(templateConfig);
+		// 使用Freemarker模板引擎
+		mpg.setTemplateEngine(new FreemarkerTemplateEngine());
+
+		// 6.策略配置
+		StrategyConfig strategy = getStrategyConfig();
+		mpg.setStrategy(strategy);
+
+		// 7.开始生成代码
+		mpg.execute();
+	}
+
+	/** 1.全局配置 */
+	private static GlobalConfig getGlobalConfig() {
+		GlobalConfig gc = new GlobalConfig();
+		String projectPath = System.getProperty("user.dir");
+		gc.setOutputDir(projectPath + "/src/main/java");
+		gc.setAuthor("yuwen");
+		gc.setOpen(false);
+		// 自定义生成的ServiceName，去掉默认的ServiceName前面的I
+		gc.setServiceName("%s" + ConstVal.SERVICE);
+		// gc.setSwagger2(true); 实体属性 Swagger2 注解
+		return gc;
+	}
+
+	/** 2.数据源配置 */
+	private static DataSourceConfig getDataSourceConfig() {
+		DataSourceConfig dsc = new DataSourceConfig();
+		dsc.setDriverName(JDBC_DRIVER);
+		dsc.setUrl(JDBC_URL);
+		// dsc.setSchemaName("public");
+		dsc.setUsername(JDBC_USER_NAME);
+		dsc.setPassword(JDBC_PASSOWRD);
+		return dsc;
+	}
+
+	/** 3.包配置 */
+	private static PackageConfig getPackageConfig() {
+		PackageConfig pc = new PackageConfig();
+		// 生成PACKAGE_NAME.MODULE_NAME的包路径
+		pc.setParent(PACKAGE_NAME);
+		pc.setModuleName(MODULE_NAME);
+		return pc;
+	}
+
+	/** 4.自定义配置 */
+	private static InjectionConfig getInjectionConfig() {
+
+		// 这里模板引擎使用的是freemarker
+		String templatePath = "/templates/mapper.xml.ftl";
+
+		// 自定义输出配置
+		List<FileOutConfig> focList = new ArrayList<>();
+		String projectPath = System.getProperty("user.dir");
+		// 自定义配置会被优先输出
+		focList.add(new FileOutConfig(templatePath) {
+			@Override
+			public String outputFile(TableInfo tableInfo) {
+				// 自定义输出文件名 ， 如果你 Entity 设置了前后缀、此处注意 xml 的名称会跟着发生变化
+				return projectPath + "/src/main/resources/mapper/" + tableInfo.getEntityName() + "Mapper"
+						+ StringPool.DOT_XML;
+			}
+		});
+
+		InjectionConfig cfg = new InjectionConfig() {
+			@Override
+			public void initMap() {
+				// to do nothing
+			}
+		};
+		cfg.setFileOutConfigList(focList);
+		return cfg;
+	}
+
+	/** 5.模板配置 */
+	private static TemplateConfig getTemplateConfig() {
+		TemplateConfig templateConfig = new TemplateConfig();
+
+		// 配置自定义输出模板
+		// 指定自定义模板路径，注意不要带上.ftl/.vm, 会根据使用的模板引擎自动识别
+		// templateConfig.setEntity("templates/entity2.java");
+		// templateConfig.setService();
+		// templateConfig.setController();
+
+		templateConfig.setXml(null);
+		return templateConfig;
+	}
+
+	/** 6.策略配置 */
+	private static StrategyConfig getStrategyConfig() {
+		StrategyConfig strategy = new StrategyConfig();
+		// 下划线转驼峰命名
+		strategy.setNaming(NamingStrategy.underline_to_camel);
+		strategy.setColumnNaming(NamingStrategy.underline_to_camel);
+		strategy.setEntityLombokModel(false);
+		strategy.setRestControllerStyle(true);
+		strategy.setInclude(TBL_NAMES.split(","));
+		strategy.setControllerMappingHyphenStyle(true);
+		strategy.setTablePrefix(TABLE_PREFIX);
+		return strategy;
+	}
+
+}
+```
+
+# 8.RoleMapper.xml
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yuwen.demo.mapper.RoleMapper">
+
+</mapper>
+```
+
+# 9.Role.java
+```
+package com.yuwen.demo.entity;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import java.io.Serializable;
+
+/**
+ * <p>
+ * 
+ * </p>
+ *
+ * @author yuwen
+ * @since 2020-07-07
+ */
+@TableName("TBL_ROLE")
+public class Role implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * 主键ID
+     */
+    private Long id;
+
+    /**
+     * 角色名
+     */
+    private String roleName;
+
+    /**
+     * 角色描述
+     */
+    private String roleDescribe;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+    public String getRoleName() {
+        return roleName;
+    }
+
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
+    public String getRoleDescribe() {
+        return roleDescribe;
+    }
+
+    public void setRoleDescribe(String roleDescribe) {
+        this.roleDescribe = roleDescribe;
+    }
+
+    @Override
+    public String toString() {
+        return "Role{" +
+            "id=" + id +
+            ", roleName=" + roleName +
+            ", roleDescribe=" + roleDescribe +
+        "}";
+    }
+}
+```
+
+# 10.RoleMapper.java
+```
+package com.yuwen.demo.mapper;
+
+import com.yuwen.demo.entity.Role;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+/**
+ * <p>
+ *  Mapper 接口
+ * </p>
+ *
+ * @author yuwen
+ * @since 2020-07-07
+ */
+public interface RoleMapper extends BaseMapper<Role> {
+
+}
+```
+
+# 11.RoleService.java
+```
+package com.yuwen.demo.service;
+
+import com.yuwen.demo.entity.Role;
+import com.baomidou.mybatisplus.extension.service.IService;
+
+/**
+ * <p>
+ *  服务类
+ * </p>
+ *
+ * @author yuwen
+ * @since 2020-07-07
+ */
+public interface RoleService extends IService<Role> {
+
+}
+```
+
+# 12.RoleServiceImpl.java
+```
+
+```
+
+# 13.RoleController
+```
+package com.yuwen.demo.service.impl;
+
+import com.yuwen.demo.entity.Role;
+import com.yuwen.demo.mapper.RoleMapper;
+import com.yuwen.demo.service.RoleService;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.stereotype.Service;
+
+/**
+ * <p>
+ *  服务实现类
+ * </p>
+ *
+ * @author yuwen
+ * @since 2020-07-07
+ */
+@Service
+public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements RoleService {
+
+}
+```
+
+# 14.参考
+[代码生成器](https://mp.baomidou.com/guide/generator.html#%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)
+[代码生成器配置](https://mp.baomidou.com/config/generator-config.html#%E5%9F%BA%E6%9C%AC%E9%85%8D%E7%BD%AE)
