@@ -124,9 +124,11 @@ SHOW VARIABLES LIKE '%ssl%';
 SHOW STATUS LIKE 'Ssl_cipher';
 SHOW STATUS LIKE '%ssl%';
 
-查看MySQL连接
+-- 查看MySQL连接
 show processlist;
 
-
-
+-- 查询并且修改数据库的编码格式
+show variables like 'character%';
+set character_set_database=utf8;
+SET character_set_system=utf8;
 

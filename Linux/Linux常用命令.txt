@@ -24,6 +24,11 @@ cat /etc/passwd | grep yuwen
 统计用户数量
 cat /etc/passwd | wc -l
 
+查看当前目录下的所有目录和文件
+ls -R 
+查看指定目录下的所有目录和文件
+ls -R test
+
 切换到用户家目录
 cd ~
 回到上一个目录
