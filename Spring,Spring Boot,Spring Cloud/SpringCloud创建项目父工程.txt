@@ -1,0 +1,147 @@
+# 1.说明
+本文详解介绍Spring Cloud项目的父工程创建，
+由于Spring Cloud项目下有很多模块组件，
+需要先创建一个大的父工程项目，
+然后在下面创建各个子工程模块。
+
+# 2.创建父工程
+这一步创建一个Maven Project，
+作为Spring Cloud的父工程：
+File -> New -> Other... -> Maven -> Maven Project
+![](https://upload-images.jianshu.io/upload_images/11810589-f48524d4edb180f2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+勾选Create a simple project(skip archetype selection),
+然后去掉勾选Use default Workspace location，
+点击Browse...设置自己项目保存的Location:
+D:\Code\Learn\SpringCloud\spring-cloud-demo
+![](https://upload-images.jianshu.io/upload_images/11810589-e10ea10c098d195a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+点击Next下一步，
+这里输入要创建的项目的名称等信息，
+主要是修改Group Id，Artifact Id，Packaging，
+注意Packaging设置为pom，
+表示该项目是作为父工程使用，
+顺便一提子项目建立的Packaging应该为jar。
+![](https://upload-images.jianshu.io/upload_images/11810589-9a726a210d032f83.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+点击Finish完成工程创建。
+
+# 3.查看pom.xml
+```
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.yuwen.spring</groupId>
+  <artifactId>spring-cloud-demo</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <description>Spring Cloud Demo Project</description>
+</project>
+```
+  
+# 4.删除多余的目录
+删除父工程下的src目录，
+因为父工程没有源码文件。
+
+# 5.添加依赖
+在pom.xml中的dependencyManagement下面，
+加入Spring Boot和Spring Cloud依赖管理，
+注意这里的Spring Boot和Spring Cloud版本要匹配：
+```
+<dependencyManagement>
+  <dependencies>
+    <!--spring boot dependencies-->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-dependencies</artifactId>
+      <version>2.3.1.RELEASE</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+    <!--spring cloud dependencies-->
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-dependencies</artifactId>
+      <version>Hoxton.SR6</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+```
+这样子模块继承之后，
+在子模块中就不用写依赖的版本号，
+各个子模块就不会有jar包冲突问题了。
+
+# 6.添加构建
+在pom.xml中的build下面，
+加入spring-boot-maven-plugin打包插件，
+指定了使用Maven打包Spring Boot工程时，
+goal为repackage即重新打包，
+重新打出的新jar包就会有正确的启动类。
+子工程打包时，会继承该打包配置，
+否则子工程使用mvn clean install打包后，
+会发生jar包找不到main无法运行问题。
+```
+<build>
+	<plugins>
+		<plugin>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-maven-plugin</artifactId>
+			<version>2.3.1.RELEASE</version>
+			<executions>
+				<execution>
+					<!--打包时，重新打包指定spring boot的启动类 -->
+					<id>repackage</id>
+					<goals>
+						<goal>repackage</goal>
+					</goals>
+				</execution>
+			</executions>
+		</plugin>
+	</plugins>
+</build>
+```
+
+# 7.父工程的parent说明
+由于这里的父工程没有它的parent父工程，
+也可以使用spring-boot-starter-parent作为父工程，
+可以解决上一步的打包问题。
+```
+<parent>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-parent</artifactId>
+	<version>2.3.1.RELEASE</version>
+	<relativePath /> <!-- lookup parent from repository -->
+</parent>
+```
+但是如果这里的父工程需要继承公司更高一级的父工程，
+那这种方法就无法使用了，
+而且这种方法没有上一步的通用。
+推荐开发遇到问题时，
+把spring-boot-starter-parent作为参考，
+而不是直接依赖其作为父工程。
+
+# 8.Spring Cloud和Spring Boot版本对应关系
+"spring-cloud": {
+"Finchley.M2": "Spring Boot >=2.0.0.M3 and <2.0.0.M5",
+"Finchley.M3": "Spring Boot >=2.0.0.M5 and <=2.0.0.M5",
+"Finchley.M4": "Spring Boot >=2.0.0.M6 and <=2.0.0.M6",
+"Finchley.M5": "Spring Boot >=2.0.0.M7 and <=2.0.0.M7",
+"Finchley.M6": "Spring Boot >=2.0.0.RC1 and <=2.0.0.RC1",
+"Finchley.M7": "Spring Boot >=2.0.0.RC2 and <=2.0.0.RC2",
+"Finchley.M9": "Spring Boot >=2.0.0.RELEASE and <=2.0.0.RELEASE",
+"Finchley.RC1": "Spring Boot >=2.0.1.RELEASE and <2.0.2.RELEASE",
+"Finchley.RC2": "Spring Boot >=2.0.2.RELEASE and <2.0.3.RELEASE",
+"Finchley.SR4": "Spring Boot >=2.0.3.RELEASE and <2.0.999.BUILD-SNAPSHOT",
+"Finchley.BUILD-SNAPSHOT": "Spring Boot >=2.0.999.BUILD-SNAPSHOT and <2.1.0.M3",
+"Greenwich.M1": "Spring Boot >=2.1.0.M3 and <2.1.0.RELEASE",
+"Greenwich.SR6": "Spring Boot >=2.1.0.RELEASE and <2.1.16.BUILD-SNAPSHOT",
+"Greenwich.BUILD-SNAPSHOT": "Spring Boot >=2.1.16.BUILD-SNAPSHOT and <2.2.0.M4",
+"Hoxton.SR6": "Spring Boot >=2.2.0.M4 and <2.3.2.BUILD-SNAPSHOT",
+"Hoxton.BUILD-SNAPSHOT": "Spring Boot >=2.3.2.BUILD-SNAPSHOT and <2.4.0.M1",
+"2020.0.0-SNAPSHOT": "Spring Boot >=2.4.0.M1"
+}
+注意两者一定要匹配，
+不然会发生意想不到的问题，
+而且比较难处理的。
+最新的对应关系查询地址：
+https://start.spring.io/actuator/info
