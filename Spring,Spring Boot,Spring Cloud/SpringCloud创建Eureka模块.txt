@@ -10,12 +10,13 @@
 这一步创建一个Maven Module，
 作为Spring Cloud的父工程下的一个子工程：
 在父工程spring-cloud-demo上右键 -> New -> Other... -> Maven -> Maven Project
-MavenModuleWizard.png
+![](https://upload-images.jianshu.io/upload_images/11810589-324c76381194c3d2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 勾选Create a simple project(skip archetype selection),
 输入Module Name:eureka-server,
 查看Parent Project:spring-cloud-demo，
 如果不是自己选择的父工程，请重新选择。
-MavenModuleWizardNew0.png
+![](https://upload-images.jianshu.io/upload_images/11810589-196559f1c4b23d78.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 点击Finish完成工程创建。
 
 创建后可以看到pom.xml如下：
@@ -69,8 +70,7 @@ eureka:
 在src/main/java目录下新增主启动类，
 Package:com.yuwen.spring.eureka
 Name:EurekaServerApplication
-JavaClassNew.png
-
+![](https://upload-images.jianshu.io/upload_images/11810589-08c07d87347c8d41.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 然后修改EurekaServerApplication.java如下,
 注意一定要有@EnableEurekaServer注解，
 表示这是一个Eureka服务注册中心：
@@ -156,7 +156,7 @@ Run As ... -> Java Application
 http://localhost:7001
 ```
 可以看到如下页面：
-EurekaPage.png
+![](https://upload-images.jianshu.io/upload_images/11810589-b2f06c9be0748f8f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 # 8.客户端注册到Eureka
 Eureka服务启动后，
@@ -177,5 +177,7 @@ eureka:
       #与eureka server交互的地址，包括查询服务和注册服务
       defaultZone: http://localhost:7001/eureka
 ```
+然后在客户端的主启动类上面加@EnableEurekaClient注解，
+这样客户端服务启动之后，
 可以看到Eureka页面已经有客户端注册了：
-EurekaPageClient.png
+![](https://upload-images.jianshu.io/upload_images/11810589-e95e080fa48a9026.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
