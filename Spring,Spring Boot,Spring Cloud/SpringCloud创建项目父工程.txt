@@ -21,7 +21,7 @@ D:\Code\Learn\SpringCloud\spring-cloud-demo
 主要是修改Group Id，Artifact Id，Packaging，
 注意Packaging设置为pom，
 表示该项目是作为父工程使用，
-顺便一提子项目建立的Packaging应该为jar。
+顺便一提子工程建立的Packaging应该为jar。
 ![](https://upload-images.jianshu.io/upload_images/11810589-9a726a210d032f83.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 点击Finish完成工程创建。
 
