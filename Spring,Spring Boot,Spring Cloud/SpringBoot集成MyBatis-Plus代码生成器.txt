@@ -270,7 +270,7 @@ src/main/java/com/yuwen/demo/entity/Role.java
 src/main/java/com/yuwen/demo/mapper/RoleMapper.java
 src/main/java/com/yuwen/demo/service/RoleService.java
 src/main/java/com/yuwen/demo/service/impl/RoleServiceImpl.java
-src/main/java/com/yuwen/demo/controller/RoleController
+src/main/java/com/yuwen/demo/controller/RoleController.java
 ```
 可以通过这里生成的文件名称，
 对比上面的配置的生效情况。
