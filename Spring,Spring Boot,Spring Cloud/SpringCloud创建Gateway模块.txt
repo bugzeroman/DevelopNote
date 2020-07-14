@@ -7,7 +7,7 @@
 创建Gateway模块这个子工程，
 作为Spring Cloud的网关路由。
 
-2.创建gateway模块
+# 2.创建gateway模块
 这一步创建一个Maven Module，
 作为Spring Cloud的父工程下的一个子工程：
 在父工程spring-cloud-demo上右键 -> New -> Other... -> Maven -> Maven Project
@@ -70,7 +70,7 @@ eureka:
       defaultZone: http://localhost:7001/eureka
 ```
 主要是用于连接Eureka服务中心，
-以及配置的gateway的路由配置。
+以及配置的Gateway的路由配置。
 
 # 5.新增主启动类
 在src/main/java目录下新增主启动类，
@@ -177,11 +177,11 @@ Run As ... -> Java Application
 的访问自动转到http://news.baidu.com/guonei，
 即通过gateway请求到百度新闻国内页面。
 浏览器访问效果如下：
-gatewayGuonei.png
+![](https://upload-images.jianshu.io/upload_images/11810589-1f3918696f0b42f2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 如果访问http://localhost:6001/guoji，
 由于没有配置相应的路由规则，
 则会出现下面的错误页面：
-gatewayji.png
+![](https://upload-images.jianshu.io/upload_images/11810589-47ad080d88c62f18.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
