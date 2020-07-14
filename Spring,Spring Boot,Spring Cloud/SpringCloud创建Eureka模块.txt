@@ -161,6 +161,15 @@ http://localhost:7001
 # 8.客户端注册到Eureka
 Eureka服务启动后，
 客户端可以注册到Eureka，
+在pom.xml中增加eureka-client的依赖：
+```
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+    </dependency>
+</dependencies>
+```
 在application.yml中配置自己的主机名，
 以及连接的eureka地址：
 ```
