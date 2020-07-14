@@ -1,0 +1,187 @@
+# 1.说明
+本文详细介绍Spring Cloud创建Gateway模块的方法，
+基于已经创建好的Spring Cloud父工程，
+请参考[SpringCloud创建项目父工程](https://www.jianshu.com/p/db69666c0432),
+和已经创建好的Eureka子工程，
+请参考[SpringCloud创建Eureka模块](https://www.jianshu.com/p/25fc5936a8cd),
+创建Gateway模块这个子工程，
+作为Spring Cloud的网关路由。
+
+2.创建gateway模块
+这一步创建一个Maven Module，
+作为Spring Cloud的父工程下的一个子工程：
+在父工程spring-cloud-demo上右键 -> New -> Other... -> Maven -> Maven Project
+
+勾选Create a simple project(skip archetype selection),
+输入Module Name:gateway,
+查看Parent Project:spring-cloud-demo，
+如果不是自己选择的父工程，请重新选择。
+
+点击Finish完成工程创建。
+
+# 3.添加依赖
+在pom.xml中增加eureka-client的依赖,
+以及spring-cloud-starter-gateway的依赖：
+```
+<dependencies>
+	<dependency>
+		<groupId>org.springframework.cloud</groupId>
+		<artifactId>spring-cloud-starter-gateway</artifactId>
+	</dependency>
+
+	<dependency>
+		<groupId>org.springframework.cloud</groupId>
+		<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+	</dependency>
+</dependencies>
+```
+
+# 4.新增配置文件
+在src/main/resource目录下新增application.yml文件，
+并且增加如下配置：
+```
+server:
+  port: 6001
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      routes:
+        #路由的ID，没有固定规则但要求唯一，建议配合服务名
+        - id: payment_routh 
+          #匹配后提供服务的路由地址
+          uri: http://news.baidu.com   
+          predicates:
+            #断言,路径相匹配的进行路由
+            - Path= /guonei/**   
+
+eureka:
+  instance:
+    #eureka客户端的实例名字（主机名）
+    hostname: gateway-service
+  client:
+    service-url:
+      #表示向注册中心注册自己
+      register-with-eureka: true
+      #表示需要去注册中心检索服务
+      fetch-registry: true
+      #与eureka server交互的地址，包括查询服务和注册服务
+      defaultZone: http://localhost:7001/eureka
+```
+主要是用于连接Eureka服务中心，
+以及配置的gateway的路由配置。
+
+# 5.新增主启动类
+在src/main/java目录下新增主启动类，
+Package:com.yuwen.spring.gateway
+Name:GatewayApplication
+然后修改GatewayApplication.java如下,
+注意一定要有EnableEurekaClient注解，
+表示这是一个Eureka的客户端：
+```
+package com.yuwen.spring.gateway;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class GatewayApplication {
+	public static void main(String[] args) {
+		SpringApplication.run(GatewayApplication.class, args);
+	}
+}
+```
+
+# 6.启动gateway
+右键主启动类GatewayApplication.java，
+Run As ... -> Java Application
+主要提前启动Eureka Server服务，
+成功启动日志如下，
+可以看到对外提供的服务端口是6001：
+```
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v2.3.1.RELEASE)
+
+2020-07-10 12:24:23.363  INFO 18968 --- [           main] c.y.spring.gateway.GatewayApplication    : No active profile set, falling back to default profiles: default
+2020-07-10 12:24:23.780  INFO 18968 --- [           main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=db5a2a8d-f793-34a6-b94a-45993e42245a
+2020-07-10 12:24:23.833  INFO 18968 --- [           main] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerBeanPostProcessorAutoConfiguration' of type [org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerBeanPostProcessorAutoConfiguration] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)
+2020-07-10 12:24:23.834  INFO 18968 --- [           main] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerBeanPostProcessorAutoConfiguration$ReactiveLoadBalancerConfig' of type [org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerBeanPostProcessorAutoConfiguration$ReactiveLoadBalancerConfig] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)
+2020-07-10 12:24:23.835  INFO 18968 --- [           main] trationDelegate$BeanPostProcessorChecker : Bean 'deferringLoadBalancerExchangeFilterFunction' of type [org.springframework.cloud.client.loadbalancer.reactive.DeferringLoadBalancerExchangeFilterFunction] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)
+2020-07-10 12:24:23.905  WARN 18968 --- [           main] c.n.c.sources.URLConfigurationSource     : No URLs will be polled as dynamic configuration sources.
+2020-07-10 12:24:23.905  INFO 18968 --- [           main] c.n.c.sources.URLConfigurationSource     : To enable URLs as dynamic configuration sources, define System property archaius.configurationSource.additionalUrls or make config.properties available on classpath.
+2020-07-10 12:24:23.908  WARN 18968 --- [           main] c.n.c.sources.URLConfigurationSource     : No URLs will be polled as dynamic configuration sources.
+2020-07-10 12:24:23.908  INFO 18968 --- [           main] c.n.c.sources.URLConfigurationSource     : To enable URLs as dynamic configuration sources, define System property archaius.configurationSource.additionalUrls or make config.properties available on classpath.
+2020-07-10 12:24:26.134  INFO 18968 --- [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [After]
+2020-07-10 12:24:26.134  INFO 18968 --- [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Before]
+2020-07-10 12:24:26.134  INFO 18968 --- [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Between]
+2020-07-10 12:24:26.134  INFO 18968 --- [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Cookie]
+2020-07-10 12:24:26.134  INFO 18968 --- [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Header]
+2020-07-10 12:24:26.134  INFO 18968 --- [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Host]
+2020-07-10 12:24:26.134  INFO 18968 --- [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Method]
+2020-07-10 12:24:26.135  INFO 18968 --- [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Path]
+2020-07-10 12:24:26.135  INFO 18968 --- [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Query]
+2020-07-10 12:24:26.135  INFO 18968 --- [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [ReadBodyPredicateFactory]
+2020-07-10 12:24:26.135  INFO 18968 --- [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [RemoteAddr]
+2020-07-10 12:24:26.135  INFO 18968 --- [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Weight]
+2020-07-10 12:24:26.135  INFO 18968 --- [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [CloudFoundryRouteService]
+2020-07-10 12:24:27.507  WARN 18968 --- [           main] ockingLoadBalancerClientRibbonWarnLogger : You already have RibbonLoadBalancerClient on your classpath. It will be used by default. As Spring Cloud Ribbon is in maintenance mode. We recommend switching to BlockingLoadBalancerClient instead. In order to use it, set the value of `spring.cloud.loadbalancer.ribbon.enabled` to `false` or remove spring-cloud-starter-netflix-ribbon from your project.
+2020-07-10 12:24:27.513  WARN 18968 --- [           main] eactorLoadBalancerClientRibbonWarnLogger : You have RibbonLoadBalancerClient on your classpath. LoadBalancerExchangeFilterFunction that uses it under the hood will be used by default. Spring Cloud Ribbon is now in maintenance mode, so we suggest switching to ReactorLoadBalancerExchangeFilterFunction instead. In order to use it, set the value of `spring.cloud.loadbalancer.ribbon.enabled` to `false` or remove spring-cloud-starter-netflix-ribbon from your project.
+2020-07-10 12:24:27.564  INFO 18968 --- [           main] o.s.c.n.eureka.InstanceInfoFactory       : Setting initial instance status as: STARTING
+2020-07-10 12:24:27.657  INFO 18968 --- [           main] com.netflix.discovery.DiscoveryClient    : Initializing Eureka in region us-east-1
+2020-07-10 12:24:28.214  INFO 18968 --- [           main] c.n.d.provider.DiscoveryJerseyProvider   : Using JSON encoding codec LegacyJacksonJson
+2020-07-10 12:24:28.214  INFO 18968 --- [           main] c.n.d.provider.DiscoveryJerseyProvider   : Using JSON decoding codec LegacyJacksonJson
+2020-07-10 12:24:28.286  INFO 18968 --- [           main] c.n.d.provider.DiscoveryJerseyProvider   : Using XML encoding codec XStreamXml
+2020-07-10 12:24:28.286  INFO 18968 --- [           main] c.n.d.provider.DiscoveryJerseyProvider   : Using XML decoding codec XStreamXml
+2020-07-10 12:24:28.392  INFO 18968 --- [           main] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2020-07-10 12:24:28.815  INFO 18968 --- [           main] com.netflix.discovery.DiscoveryClient    : Disable delta property : false
+2020-07-10 12:24:28.815  INFO 18968 --- [           main] com.netflix.discovery.DiscoveryClient    : Single vip registry refresh property : null
+2020-07-10 12:24:28.815  INFO 18968 --- [           main] com.netflix.discovery.DiscoveryClient    : Force full registry fetch : false
+2020-07-10 12:24:28.815  INFO 18968 --- [           main] com.netflix.discovery.DiscoveryClient    : Application is null : false
+2020-07-10 12:24:28.815  INFO 18968 --- [           main] com.netflix.discovery.DiscoveryClient    : Registered Applications size is zero : true
+2020-07-10 12:24:28.815  INFO 18968 --- [           main] com.netflix.discovery.DiscoveryClient    : Application version is -1: true
+2020-07-10 12:24:28.815  INFO 18968 --- [           main] com.netflix.discovery.DiscoveryClient    : Getting all instance registry info from the eureka server
+2020-07-10 12:24:28.943  INFO 18968 --- [           main] com.netflix.discovery.DiscoveryClient    : The response status is 200
+2020-07-10 12:24:28.944  INFO 18968 --- [           main] com.netflix.discovery.DiscoveryClient    : Starting heartbeat executor: renew interval is: 30
+2020-07-10 12:24:28.945  INFO 18968 --- [           main] c.n.discovery.InstanceInfoReplicator     : InstanceInfoReplicator onDemand update allowed rate per min is 4
+2020-07-10 12:24:28.948  INFO 18968 --- [           main] com.netflix.discovery.DiscoveryClient    : Discovery Client initialized at timestamp 1594355068947 with initial instances count: 0
+2020-07-10 12:24:28.948  INFO 18968 --- [           main] o.s.c.n.e.s.EurekaServiceRegistry        : Registering application GATEWAY with eureka with status UP
+2020-07-10 12:24:28.949  INFO 18968 --- [           main] com.netflix.discovery.DiscoveryClient    : Saw local status change event StatusChangeEvent [timestamp=1594355068949, current=UP, previous=STARTING]
+2020-07-10 12:24:28.950  INFO 18968 --- [nfoReplicator-0] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_GATEWAY/yuwen-asiainfo:gateway:6001: registering service...
+2020-07-10 12:24:29.004  INFO 18968 --- [nfoReplicator-0] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_GATEWAY/yuwen-asiainfo:gateway:6001 - registration status: 204
+2020-07-10 12:24:29.505  INFO 18968 --- [           main] o.s.b.web.embedded.netty.NettyWebServer  : Netty started on port(s): 6001
+2020-07-10 12:24:29.506  INFO 18968 --- [           main] .s.c.n.e.s.EurekaAutoServiceRegistration : Updating port to 6001
+2020-07-10 12:24:30.752  INFO 18968 --- [           main] c.y.spring.gateway.GatewayApplication    : Started GatewayApplication in 9.197 seconds (JVM running for 10.148)
+2020-07-10 12:24:58.947  INFO 18968 --- [freshExecutor-0] com.netflix.discovery.DiscoveryClient    : Disable delta property : false
+2020-07-10 12:24:58.947  INFO 18968 --- [freshExecutor-0] com.netflix.discovery.DiscoveryClient    : Single vip registry refresh property : null
+2020-07-10 12:24:58.947  INFO 18968 --- [freshExecutor-0] com.netflix.discovery.DiscoveryClient    : Force full registry fetch : false
+2020-07-10 12:24:58.947  INFO 18968 --- [freshExecutor-0] com.netflix.discovery.DiscoveryClient    : Application is null : false
+2020-07-10 12:24:58.947  INFO 18968 --- [freshExecutor-0] com.netflix.discovery.DiscoveryClient    : Registered Applications size is zero : true
+2020-07-10 12:24:58.947  INFO 18968 --- [freshExecutor-0] com.netflix.discovery.DiscoveryClient    : Application version is -1: false
+2020-07-10 12:24:58.947  INFO 18968 --- [freshExecutor-0] com.netflix.discovery.DiscoveryClient    : Getting all instance registry info from the eureka server
+2020-07-10 12:24:58.972  INFO 18968 --- [freshExecutor-0] com.netflix.discovery.DiscoveryClient    : The response status is 200
+
+```
+
+# 7.测试效果
+查看上面gateway的路由配置，
+会把http://localhost:6001/guonei
+的访问自动转到http://news.baidu.com/guonei，
+即通过gateway请求到百度新闻国内页面。
+浏览器访问效果如下：
+gatewayGuonei.png
+
+如果访问http://localhost:6001/guoji，
+由于没有配置相应的路由规则，
+则会出现下面的错误页面：
+gatewayji.png
+
+
