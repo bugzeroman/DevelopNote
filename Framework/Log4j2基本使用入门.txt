@@ -11,23 +11,25 @@ Apache Log4j 2是日志框架Log4j的升级，
 
 # 2.Jar包依赖
 ## 2.1.直接依赖
-在Maven的pom.xml添加如下依赖：
+在Maven的父工程pom.xml添加如下依赖：
 ```
-<dependencies>
-    <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-api</artifactId>
-        <version>2.12.1</version>
-    </dependency>
-    <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-core</artifactId>
-        <version>2.12.1</version>
-    </dependency>
-</dependencies>
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.12.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.12.1</version>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
 ```
 ## 2.2.使用bom管理依赖
-在Maven的父pom.xml添加如下依赖管理：
+在Maven的父工程pom.xml添加如下依赖管理：
 ```
 <dependencyManagement>
   <dependencies>
@@ -41,7 +43,7 @@ Apache Log4j 2是日志框架Log4j的升级，
   </dependencies>
 </dependencyManagement>
 ```
-然后在使用Log4j2的子pom.xml添加如下依赖，
+然后在使用Log4j2的子工程pom.xml添加如下依赖，
 这样就不用写具体的版本号了，
 保证项目的子工程都使用相同版本的Log4j2。
 ```
