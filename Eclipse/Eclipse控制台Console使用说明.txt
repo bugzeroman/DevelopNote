@@ -1,0 +1,118 @@
+1.说明
+本文详细介绍Eclipse控制台Console使用说明，
+调试时通过控制台查看日志，
+有时候日志太多会找不到上面的日志，
+有时候几个控制台会不受控制的弹出，
+那么请参考本文，
+通过调整Eclipse控制台,
+更高效方便的查看日志定位问题。
+
+2.打开控制台
+有时候不小心关闭了控制台，
+打开Eclipse控制台的方法，
+Eclipse -> Windows -> Show View -> Console
+ShowViewConsole1.png
+或者：
+Eclipse -> Windows -> Show View -> Other... -> General -> Console
+ShowViewConsole2.png
+
+打开控制台后，
+如果发现控制台的位置不是默认位置，
+可以重置Eclipse视图:
+Eclipse -> Windows -> Perspective -> Reset Perspective...
+ResetPrespective.png
+
+3.打开Console设置
+Console窗口空白处右击 -> Preferences....
+PreferenceButton.png
+注意需要是一个打开的控制台，
+并且是有日志输出的，
+否则空的控制台是无法右键的。
+EclipseConsole.png
+或者：
+Eclipse -> Windows ->  Preferences ->  Run/Debug -> Console
+PreferenceConfig.png
+
+4.设置控制台不限日志行数
+打开Console设置，
+去掉Limit console output的勾选即可。
+或者设置console buffer size(characters) ，
+将其值设置为足够大。
+
+5.关闭控制台自动跳出
+在Eclipse中有项目运行的时候，
+当有日志标准和错误输出打印到console中时，
+控制台就会被自动弹出，
+非常影响编码，或者定位问题。
+
+解决步骤，打开Console设置，
+关闭程序标准输出时弹出控制台：
+去掉勾选"Show when program writest to standard out"
+
+关闭程序错误抛出时弹出控制台：
+去掉勾选"Show when program writes to standard error"
+
+这两个功能也可以在控制台右边直接点击，
+第一次点击后选中状态就是生效，
+再次点击后取消选中就不会生效。
+
+6.关闭正在运行的程序
+控制台右边的红色方框Terminate：
+ConsoleTerminate.png
+
+7.关闭控制台
+控制台右边灰白的叉号Remove Launch,
+注意只能关闭已经Terminate的控制台。
+
+控制台右边的两个一起的叉号Remove All Terminated Launches,
+可以关闭所有已经结束的程序的控制台。
+
+8.清理控制台
+控制台右边文本右下角带个叉号Clear Console,
+可以清空控制台已经输出的日志，
+方便查看新的日志输出。
+
+9.日志滚动锁定
+控制台右边带一把锁的窗口Scroll Lock,
+可以阻止不断输出的日志导致的页面滚动，
+在查看上面的日志的时候非常方便。
+
+10.日志换行
+控制台右边文本带一个回车Word Wrap,
+当输出的一条日志过长时，
+会把超过控制台窗口显示范围的换行，
+这样就能完整的显示这条日志。
+
+11.锁定当前控制台
+控制台右边带个图钉的面板Pin Console，
+用来锁定当前控制台，
+当其他控制台有日志输出时，
+不会切换到其他控制台。
+
+12.切换控制台
+控制台右边的小电脑Display Selected Console，
+当有多个控制台存在的时候，
+可以通过这个来切换不同的控制台。
+
+13.Maven控制台
+控制台右边的小窗口右上角带个加号，
+点开后有5个选项，
+选择5 Maven Console,
+会打开如下界面，
+输出Maven控制台的一些信息，
+主要是Maven执行的命令记录，
+这个一般用的很少：
+MavenConsole1.png
+
+但是程序对应的控制器也会输出如下信息，
+主要是Maven输出的和程序相关的日志：
+MavenConsole2.png
+
+14.复制输出日志
+控制台右边两个重叠的文本框Copy Text with escapes，
+可以用转义复制控制台输出的所有日志，
+想要复制控制台的所有输出日志时，
+就不用很麻烦的用鼠标去选中拷贝了。
+
+
+
