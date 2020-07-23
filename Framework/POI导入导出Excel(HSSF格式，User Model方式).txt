@@ -1,0 +1,306 @@
+# 1.POI说明
+Apache POI是Apache软件基金会的开源代码库，
+POI提供对Microsoft Office格式档案读和写的功能。
+
+POI支持的格式：
+HSSF － 提供读写Microsoft Excel格式档案的功能。
+XSSF － 提供读写Microsoft Excel OOXML格式档案的功能。
+HWPF － 提供读写Microsoft Word格式档案的功能。
+HSLF － 提供读写Microsoft PowerPoint格式档案的功能。
+HDGF － 提供读写Microsoft Visio格式档案的功能。
+
+其中Excel支持HSSF和XSSF两种格式:
+HSSF对应Excel 2003及以前版本生成的文件格式(.xls)，
+XSSF对应Excel 2007及之后版本生成的文件格式(.xlsx)。
+本文仅介绍Excel文件的读写，
+并且使用HSSF读写.xls格式的Excel文件。
+
+# 2.HSSF说明
+HSSF是Horrible Spread Sheet Format的缩写，
+即糟糕的表格格式。
+HSSF为读取操作提供了两类API：
+User Model, Event Model和Event User Model，
+即"用户模型", "事件模型"和"事件-用户-模型"。
+
+User Model是类似于Dom方式的解析，
+API使用起来很简单，
+但是占用内存，处理效率低。
+Event Model是类似于Sax方式的解析，
+比User Model更节约内存，效率更高，
+但是抽象程度相比User Model更低，
+相比User Model功能更少，
+API使用门槛也要高一些。
+Event User Model是结合了上面的两个优点，
+基于Event Model的流解析方式进一步封装，
+提供了类似User Model更友好的操作方式。
+
+学过Xml的都知道，
+Dom解析就是将文件全部读入内存,
+对文件内部的结构进行建模成一颗Dom树的过程。
+下面是POI对Excel的建模的Dom树结构：
+WorkBook结构.png
+
+本文下面仅介绍使用User Model方式，
+操作HSSF(.xls)格式的文件，
+其他方式请参考后续文章。
+
+# 3.Jar包依赖
+在pom.xml中添加如下依赖：
+```
+<dependency>
+    <groupId>org.apache.poi</groupId>
+    <artifactId>poi</artifactId>
+    <version>4.1.2</version>
+</dependency>
+```
+
+# 4.Excel文件
+现在有需要导入的city_date.xls,
+内容如下：
+CityData.png
+
+# 5.Area对象
+根据上面的Excel文件内容，
+抽象出来Area对象，
+其中属性一一对应文件中列名。
+```
+package org.apache.poi;
+
+import java.util.Date;
+
+public class Area {
+
+    /** 省份 */
+    private String province;
+    /** 城市 */
+    private String city;
+    /** 城市排名 */
+    private Integer order;
+    /** 城市纪念日 */
+    private Date cityDay;
+    /** 是否一线大城市 */
+    private Boolean isBigCity;
+    /** 城市描述 */
+    private String description;
+
+    public String getProvince() {
+        return province;
+    }
+
+    public void setProvince(String province) {
+        this.province = province;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public Integer getOrder() {
+        return order;
+    }
+
+    public void setOrder(Integer order) {
+        this.order = order;
+    }
+
+    public Date getCityDay() {
+        return cityDay;
+    }
+
+    public void setCityDay(Date cityDay) {
+        this.cityDay = cityDay;
+    }
+
+    public Boolean getIsBigCity() {
+        return isBigCity;
+    }
+
+    public void setIsBigCity(Boolean isBigCity) {
+        this.isBigCity = isBigCity;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    @Override
+    public String toString() {
+        return "Area [province=" + province + ", city=" + city + ", order=" + order + ", cityDay=" + cityDay
+                + ", isBigCity=" + isBigCity + ", description=" + description + "]";
+    }
+
+}
+```
+
+# 6.导入Excel
+解析.xls格式文件，
+转换为内存中的Java对象。
+```
+public static List<Area> importExcel() throws Exception {
+    InputStream fileIn = null;
+    HSSFWorkbook workbook = null;
+    try {
+        // 1.创建文件输入流
+        fileIn = new FileInputStream("city_date.xls");
+        // 2.创建Excel工作簿对象
+        workbook = new HSSFWorkbook(fileIn);
+        // 校验excel中的工作表是否存在
+        int numberOfSheets = workbook.getNumberOfSheets();
+        if (numberOfSheets <= 0) {
+            return null;
+        }
+        // 3.获取Excel工作表对象
+        HSSFSheet sheetAt = workbook.getSheetAt(0);
+        ArrayList<Area> citys = new ArrayList<>();
+        // 工作表中至少要有一行数据
+        if (sheetAt.getLastRowNum() < 0) {
+            return null;
+        }
+
+        // 4.循环读取表格数据
+        for (Row row : sheetAt) {
+            // 首行（即表头）不读取,后面可以校验表头
+            if (row.getRowNum() == 0) {
+                continue;
+            }
+            // 一行至少有6列信息，无法解析需要跳过
+            if (row.getLastCellNum() < 5) {
+                continue;
+            }
+            // 读取当前行中单元格数据，索引从0开始
+            String province = row.getCell(0).getStringCellValue();
+            String cityName = row.getCell(1).getStringCellValue();
+            Integer order = (int) row.getCell(2).getNumericCellValue();
+            Date cityDay = row.getCell(3).getDateCellValue();
+            Boolean isBigCity = row.getCell(4).getBooleanCellValue();
+            String description = row.getCell(5).getStringCellValue();
+
+            Area city = new Area();
+            city.setProvince(province);
+            city.setCity(cityName);
+            city.setOrder(order);
+            city.setCityDay(cityDay);
+            city.setIsBigCity(isBigCity);
+            city.setDescription(description);
+            citys.add(city);
+
+            return citys;
+        }
+    } finally {
+        // 5.关闭流
+        if (fileIn != null) {
+            fileIn.close();
+        }
+        if (workbook != null) {
+            workbook.close();
+        }
+    }
+    return null;
+}
+```
+
+# 7.导出Excel
+将内存中的Java对象，
+写入到.xls格式文件。
+```
+public static void exportExcel() throws Exception {
+    HSSFWorkbook workbook = null;
+    FileOutputStream fileOut = null;
+    try {
+        // 1.需要导出的数据
+        List<Area> citys = new ArrayList<>();
+        Area changzhou = new Area();
+        changzhou.setProvince("江苏省");
+        changzhou.setCity("常州市");
+        changzhou.setOrder(88);
+        changzhou.setCityDay(new Date());
+        changzhou.setIsBigCity(false);
+        changzhou.setDescription("常州是个美丽的旅游和实业城市~");
+        citys.add(changzhou);
+
+        // 2.在内存中创建一个excel文件
+        workbook = new HSSFWorkbook();
+        // 3.创建工作簿
+        HSSFSheet sheet = workbook.createSheet("city sheet");
+        // 4.创建标题行
+        HSSFRow titlerRow = sheet.createRow(0);
+        titlerRow.createCell(0).setCellValue("省份");
+        titlerRow.createCell(1).setCellValue("城市");
+        titlerRow.createCell(2).setCellValue("排名");
+        titlerRow.createCell(3).setCellValue("纪念日");
+        titlerRow.createCell(4).setCellValue("大城市");
+        titlerRow.createCell(5).setCellValue("描述");
+
+        // 获取最后一行的行号
+        int lastRowNum = sheet.getLastRowNum();
+        // 5.遍历数据,创建数据行
+        for (Area city : citys) {
+            // 在最后一行后面添加新的一行
+            lastRowNum++;
+            HSSFRow dataRow = sheet.createRow(lastRowNum);
+            dataRow.createCell(0).setCellValue(city.getProvince());
+            dataRow.createCell(1).setCellValue(city.getCity());
+            dataRow.createCell(2).setCellValue(city.getOrder());
+
+            HSSFCell dateCell = dataRow.createCell(3);
+            setDateStyle(dateCell, workbook);
+            dateCell.setCellValue(city.getCityDay());
+
+            dataRow.createCell(4).setCellValue(city.getIsBigCity());
+            dataRow.createCell(5).setCellValue(city.getDescription());
+        }
+        for (int i = 0; i <= 5; i++) {
+            // 设置自适应列宽,必须数据全部插入后才调用
+            sheet.autoSizeColumn(i);
+        }
+        // 6.指定输出的文件名
+        String fileName = "city_date.xls";
+        fileOut = new FileOutputStream(fileName);
+        // 7.写文件
+        workbook.write(fileOut);
+    } finally {
+        // 8.关闭流
+        if (workbook != null) {
+            workbook.close();
+        }
+        if (fileOut != null) {
+            fileOut.close();
+        }
+    }
+}
+
+private static void setDateStyle(HSSFCell cell, HSSFWorkbook wb) {
+    HSSFDataFormat format = wb.createDataFormat();
+    HSSFCellStyle style = wb.createCellStyle();
+    style.setDataFormat(format.getFormat("yyyy年MM月dd日"));
+    cell.setCellStyle(style);
+}
+````
+
+# 8.头文件说明
+上面的代码使用到的类如下：
+```
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFDataFormat;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Row;
+```
+
+# 9.参考文章
+[Busy Developers' Guide to HSSF and XSSF Features](http://poi.apache.org/components/spreadsheet/quick-guide.html)
+[POI操作Excel](https://www.cnblogs.com/gdwkong/p/8669220.html)
+[Java POI操作Excel(User Model)](https://www.jianshu.com/p/e534d2741dc4)
+[Java使用POI操作Excel](https://www.cnblogs.com/fengyer/p/11615318.html)
+
+
