@@ -417,3 +417,14 @@ tree /home
 md5sum my_download.tgz
 sha512sum my_download.tgz
 sha512sum my_download.tgz
+
+CentOS7关闭防火墙和selinux
+在root用户下
+systemctl stop firewalld
+systemctl disable firewalld
+systemctl status firewalld
+vi /etc/selinux/config
+把SELINUX=enforcing 改成 SELINUX=disabled
+
+查看终端连接限制:
+cat /etc/ssh/sshd_config | grep -i max

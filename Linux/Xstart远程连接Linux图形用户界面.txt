@@ -45,3 +45,16 @@ firefox浏览器就会在当前windows终端打开，
 xclock安装命令：
 yum install xclock
 另外使用tigervnc也可以达到类似的目的，使用root用户在Linux上面安装服务，配合windows上面的vncview客户端即可。
+
+如果报错已经拒绝X11转移申请，
+可以参考[Xshell报错“The remote SSH server rejected X11 forwarding request.”](https://blog.csdn.net/salonzhou/article/details/16358711)
+
+如果报错如下日志：
+```
+[root@localhost ~]# firefox
+Failed to open connection to "session" message bus: Unable to autolaunch a dbus-daemon without a $DISPLAY for X11
+Running without a11y support!
+Error: no DISPLAY environment variable specified
+```
+可以尝试设置一下$DISPLAY参数。
+
