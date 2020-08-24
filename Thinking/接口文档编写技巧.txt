@@ -1,4 +1,4 @@
-1.基本的增删改查接口
+# 1.基本的增删改查接口
 project：项目名称
 object：对象，需要操作的对象，和表关联
 {id}：表的主键
@@ -12,10 +12,10 @@ object：对象，需要操作的对象，和表关联
 注意设计的URL不能冲突，
 比如多个path variable不能在同一个层级。
 
-2.url为多个单词，使用驼峰结构
+# 2.url为多个单词，使用驼峰结构
 proejct/myDesignObject POST
 
-3.返回单条结果和多条结果的区别
+# 3.返回单条结果和多条结果的区别
 单条结果直接是一个对象，
 多条结果是多个对象的List，
 表述如下：
@@ -27,7 +27,7 @@ result2 String
 多条结果返回的json中不需要体现出objects，
 只需要直接包含的List对象即可。
 
-4.返回的多个结果不是对象，是String等基本类型
+# 4.返回的多个结果不是对象，是String等基本类型
 表述如下：
 results List<result>
 result具体的字段描述:
@@ -36,22 +36,22 @@ result String
 如果是Result则是一个对象，
 另外只能是一个具体的字段。
 
-5.请求参数二选一
+# 5.请求参数二选一
 请求参数可能是PathVariable(RequestParam)
 或者Request Body的一种，
 如果URL中带了参数，就不要使用Request Body携带参数，
 这两种方式只能是二选一。
 
-6.表的创建时间和更新时间操作时机
+# 6.表的创建时间和更新时间操作时机
 创建对象的时候，创建时间填写为系统时间，
 更新对象的时候，更新时间填写为系统时间。
 
-7.URL中带有冒号:等特殊符号
+# 7.URL中带有冒号:等特殊符号
 使用@RequestParam代替@PathVariable
 即使用project/object？id={id}这种URL
 而不要使用project/object/{id}
 
-8.只有一个参数优先使用URL携带
+# 8.只有一个参数优先使用URL携带
 请求参数如果只有一个，
 优先在URL中携带这个参数，
 而不是在请求体中携带，
