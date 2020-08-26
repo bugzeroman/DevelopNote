@@ -1,0 +1,48 @@
+通过MySQL自带的mysql命令行工具，
+执行MySQL的相关命令。
+
+# 1.连接MySQL服务端
+mysql -uUserName -pPassword -h HostName_IP -P 3306 -D dbName
+
+-h: 主机名，连接数据库的主机名或者IP;
+-u: 用户名，连接数据库的用户名;
+-P: 端口，连接数据库的端口，默认是3306;
+-p: 密码，连接数据库的密码，-p后面直接跟密码，但不太安全，建议-p后回车，再输入密码；
+-D: 数据库名称，连接数据库的数据库名称；
+
+-p后面必须紧跟密码，不能有空格，
+否则会要求输入密码；
+其他参数后面可以有空格，
+比如-uroot和-u root是等价的。
+
+直接输入mysql等价于:
+mysql -uroot -h localhost
+
+# 2.查看所有数据库
+SHOW databases;
+
+# 3.查看当前使用的数据库
+SELECT database();
+
+# 4.切换到指定数据库
+USE mysql; 
+
+# 5.查看当前登陆用户
+SELECT user();
+
+# 6.查看所有用户
+SELECT user,host,authentication_string FROM mysql.user;
+
+# 7.执行sql脚本
+source create_table.sql
+或者：
+mysql -uroot -ppassword < dbname.sql
+
+区别在于上面需要进入交互命令行，
+但是可以执行多个sql脚本，
+下面只能一行执行一个sql脚本，
+适合在外部Shell脚本调用。
+
+# 8.退出mysql命令行
+quit;
+
