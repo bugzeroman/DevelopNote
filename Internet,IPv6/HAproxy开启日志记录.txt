@@ -1,0 +1,73 @@
+# 1.说明
+HAproxy在默认情况不会记录日志，
+不仅要在haproxy.conf中配置日志输出，
+还需要修改系统日志的配置文件。
+
+# 2.修改haproxy.conf
+在haproxy.conf文件中增加如下日志配置，
+defaults下面增加日志相关的配置：
+```
+defaults                      
+    log global
+    option httplog
+    log 127.0.0.1 local7
+```
+
+日志的级别为local0～local7，
+另外16～23保留为本地使用：
+|级别|代码|描述|
+|----|----|----|
+|emerg  |0 |系统不可用            |
+|alert  |1 |必须马上采取行动的事件|
+|crit   |2 |关键的事件            |
+|err    |3 |错误事件              |
+|warning|4 |警告事件              |
+|notice |5 |普通但重要的事件      |
+|info   |6 |有用的信息            |
+|debug  |7 |调试信息              |
+
+# 3.修改系统日志配置
+vim /etc/rsyslog.conf
+指定日志文件haproxy.log保存的位置，
+haproxy.log会自动生成：
+```
+$ModLoad imudp
+$UDPServerRun 514
+local7.* /root/haproxy/log/haproxy.log
+```
+由于haproxy的日志是用udp传输的,所以要启用rsyslog的udp监听。
+
+# 4.配置rsyslog的主配置文件，开启远程日志
+vim /etc/sysconfig/rsyslog
+```
+SYSLOGD_OPTIONS="-r -m 0 -c 2"
+```
+参数说明：
+```
+#-r 开启远程日志
+#-m 0 标记时间戳。单位是分钟，为0时，表示禁用该功能
+#-c 2 使用兼容模式，默认是 -c 5
+```
+
+# 5.重启rsyslog服务
+systemctl restart rsyslog
+
+# 6.重启haproxy服务
+/etc/init.d/haproxy restart
+或者：
+ps -ef | grep haproxy
+kill -9 PID
+/usr/local/haproxy/sbin/haproxy -f /usr/local/haproxy/conf/haproxy.cfg
+
+# 7.查看日志
+重启后查看haproxy.log日志：
+```
+2020-08-25T17:44:26+08:00 localhost haproxy[21028]: Proxy baidu started.
+```
+对应haproxy.conf如下配置生效了：
+```
+listen baidu
+    bind 0.0.0.0:18025
+    mode http
+    server baiduServer 180.101.49.131:80
+```
