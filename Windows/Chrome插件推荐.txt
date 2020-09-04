@@ -1,9 +1,86 @@
-# 1.说明
+# 0.说明
 推荐自己觉的好用的插件，
 感觉用起来还是比较舒服的。
+下面给出的插件下载地址，
+需要能够访问chrome网上应用店。
 
-# 2.设置Chrome背景颜色
-推荐使用护眼色插件：眼睛护航，
+# 1.眼睛护航
+把网页背景变成保护色或适合夜晚阅读的夜间模式，
+一些无法变色的小区块可以通过单击进行变色。
 此款插件可以随时改变网页的背景颜色，
 针对特定网站开启和关闭插件非常方便，
-详细请参考[护眼色插件：眼睛护航](http://chromecj.com/accessibility/2014-11/292.html)
+插件下载地址：
+https://chrome.google.com/webstore/detail/care-your-eyes/fidmpnedniahpnkeomejhnepmbdamlhl
+
+# 2.GoFullPage - Full Page Screen Capture
+完整可靠地捕获当前页面的屏幕截图，
+无需请求任何额外的权限。
+特别是可以完整截取整个网页，
+截图时滚动条会自动下拉，
+自动拼接成完整的一个网页，
+输出为图片或PDF。
+插件下载地址：
+https://chrome.google.com/webstore/detail/gofullpage-full-page-scre/fdpohaocaechififmbbbbbknoalclacl
+
+# 3.Adblock Plus 开发版
+阻止网页上面的各种广告、弹出窗口并抵御恶意软件~
+插件下载地址：
+https://chrome.google.com/webstore/detail/adblock-plus-development/ldcecbkkoecffmfljeihcmifjjdoepkn
+
+# 4.图片助手(ImageAssistant) 批量图片下载器
+一款用于嗅探、分析网页图片并提供批量下载等功能及在线收藏、检索、分享服务的浏览器扩展程序。
+批量下载图片功能非常好用，而且能够找到同一个图片的不同分辨率，
+选中需要下载的图片，一键下载。
+插件下载地址：
+https://chrome.google.com/webstore/detail/imageassistant-batch-imag/dbjbempljhcmhlfpfacalomonjpalpko
+
+# 5.crxMouse Chrome™ 手势
+原名:Gestures for Chrome(TM)汉化版。
+方便,快捷,充分发掘鼠标的所有操作。
+功能包括:鼠标手势,超级拖曳,滚轮手势,摇杆手势,平滑滚动,标签页列表等。
+插件下载地址：
+https://chrome.google.com/webstore/detail/crxmouse-chrome-gestures/jlgkpaicikihijadgifklkbpdajbkhjo
+
+# 6.JSON Formatter
+开源的Json格式化工具，
+让Json格式更适合阅读。
+插件下载地址：
+https://chrome.google.com/webstore/detail/json-formatter/bcjindcccaagfpapjjmafapmmgkkhgoa
+
+# 7.Proxy SwitchyOmega
+轻松快捷地管理和切换多个代理设置。
+插件下载地址：
+https://chrome.google.com/webstore/detail/proxy-switchyomega/padekgcemlokbadohgkifijomclgjgif
+
+# 8.Tampermonkey
+油猴脚本管理工具，
+可以下载更多脚本，
+实现Chrome浏览器的功能扩展，
+一个脚本类似于一个Chrome插件。
+插件下载地址：
+https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo
+
+# 9.SingleFile
+将一个完整的页面保存到单个 HTML 文件中。
+插件下载地址：
+https://chrome.google.com/webstore/detail/singlefile/mpiodijhokgodhhofbcjdecpffjipkle
+
+# 10.Text Mode
+通过简单的文本页面浏览网页而不受干扰。
+所有页面以文本形式加载(没有图像，动画或视频)，
+网页内容更容易扫描和阅读。
+插件下载地址：
+https://chrome.google.com/webstore/detail/text-mode/adelhekhakakocomdfejiipdnaadiiib
+
+# 11.Volume Control - 音量控制
+Chrome™的音量控制。 
+通过声音增强器增加音量。 
+使用音频控件分别设置每个标签的音量级别。
+这样当某个网页的音量过大或者过小的时候，
+就可以单独调节音量了。
+插件下载地址：
+https://chrome.google.com/webstore/detail/volume-control/lhhgpflelfbhnihnbjigpgdbahgkbghp
+
+
+
+
