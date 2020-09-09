@@ -1,0 +1,130 @@
+# 1.说明
+本文详细介绍微服务注册到Eureka的方法，
+即Eureka Client注册到Eureka Server，
+这里用任意一个Spring Cloud服务为例，
+比如下面已经创建好的Config Server模块，
+请参考[SpringCloud创建Config模块](https://www.jianshu.com/p/ea03df7d167c),
+在里面创建Eureka Client配置，
+把Config Server微服务注册到Eureka Server。
+
+# 2.添加依赖
+在pom.xml中增加eureka-client的依赖：
+```
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+    </dependency>
+</dependencies>
+```
+
+# 3.添加配置
+在application.yml中配置自己的主机名，
+以及注册的Eureka地址：
+```
+eureka:
+  instance:
+    #eureka客户端的实例名字（主机名）
+    hostname: config-service
+  client:
+    service-url:
+      #表示向注册中心注册自己
+      register-with-eureka: true
+      #表示需要去注册中心检索服务
+      fetch-registry: true
+      #与eureka server交互的地址，包括查询服务和注册服务
+      defaultZone: http://localhost:7001/eureka
+```
+
+# 4.添加注解
+在客户端的主启动类上面加EnableEurekaClient注解：
+```
+package com.yuwen.spring.config;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.config.server.EnableConfigServer;
+import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
+
+@SpringBootApplication
+@EnableConfigServer
+@EnableEurekaClient
+public class ConfigApplication {
+	public static void main(String[] args) {
+		SpringApplication.run(ConfigApplication.class, args);
+	}
+}
+```
+
+# 5.启动服务
+Config Server服务启动日志如下，
+注意要先启动Eureka Server服务。
+```
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v2.3.1.RELEASE)
+
+2020-09-09 16:43:54.699  INFO 11216 --- [           main] c.yuwen.spring.config.ConfigApplication  : No active profile set, falling back to default profiles: default
+2020-09-09 16:43:55.351  WARN 11216 --- [           main] o.s.boot.actuate.endpoint.EndpointId     : Endpoint ID 'service-registry' contains invalid characters, please migrate to a valid format.
+2020-09-09 16:43:55.473  INFO 11216 --- [           main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=37338f68-d6d5-3a56-8d91-37021e6160dc
+2020-09-09 16:43:56.076  INFO 11216 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 9009 (http)
+2020-09-09 16:43:56.086  INFO 11216 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2020-09-09 16:43:56.086  INFO 11216 --- [           main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.36]
+2020-09-09 16:43:56.203  INFO 11216 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2020-09-09 16:43:56.204  INFO 11216 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1491 ms
+2020-09-09 16:43:56.264  WARN 11216 --- [           main] c.n.c.sources.URLConfigurationSource     : No URLs will be polled as dynamic configuration sources.
+2020-09-09 16:43:56.264  INFO 11216 --- [           main] c.n.c.sources.URLConfigurationSource     : To enable URLs as dynamic configuration sources, define System property archaius.configurationSource.additionalUrls or make config.properties available on classpath.
+2020-09-09 16:43:56.278  INFO 11216 --- [           main] c.netflix.config.DynamicPropertyFactory  : DynamicPropertyFactory is initialized with configuration sources: com.netflix.config.ConcurrentCompositeConfiguration@24534cb0
+2020-09-09 16:43:56.350  WARN 11216 --- [           main] c.n.c.sources.URLConfigurationSource     : No URLs will be polled as dynamic configuration sources.
+2020-09-09 16:43:56.350  INFO 11216 --- [           main] c.n.c.sources.URLConfigurationSource     : To enable URLs as dynamic configuration sources, define System property archaius.configurationSource.additionalUrls or make config.properties available on classpath.
+2020-09-09 16:43:56.563  INFO 11216 --- [           main] o.s.s.concurrent.ThreadPoolTaskExecutor  : Initializing ExecutorService 'applicationTaskExecutor'
+2020-09-09 16:43:57.929  WARN 11216 --- [           main] ockingLoadBalancerClientRibbonWarnLogger : You already have RibbonLoadBalancerClient on your classpath. It will be used by default. As Spring Cloud Ribbon is in maintenance mode. We recommend switching to BlockingLoadBalancerClient instead. In order to use it, set the value of `spring.cloud.loadbalancer.ribbon.enabled` to `false` or remove spring-cloud-starter-netflix-ribbon from your project.
+2020-09-09 16:43:57.978  INFO 11216 --- [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoint(s) beneath base path '/actuator'
+2020-09-09 16:43:58.005  INFO 11216 --- [           main] o.s.c.n.eureka.InstanceInfoFactory       : Setting initial instance status as: STARTING
+2020-09-09 16:43:58.059  INFO 11216 --- [           main] com.netflix.discovery.DiscoveryClient    : Initializing Eureka in region us-east-1
+2020-09-09 16:43:58.119  INFO 11216 --- [           main] c.n.d.provider.DiscoveryJerseyProvider   : Using JSON encoding codec LegacyJacksonJson
+2020-09-09 16:43:58.119  INFO 11216 --- [           main] c.n.d.provider.DiscoveryJerseyProvider   : Using JSON decoding codec LegacyJacksonJson
+2020-09-09 16:43:58.234  INFO 11216 --- [           main] c.n.d.provider.DiscoveryJerseyProvider   : Using XML encoding codec XStreamXml
+2020-09-09 16:43:58.235  INFO 11216 --- [           main] c.n.d.provider.DiscoveryJerseyProvider   : Using XML decoding codec XStreamXml
+2020-09-09 16:43:58.394  INFO 11216 --- [           main] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2020-09-09 16:43:58.624  INFO 11216 --- [           main] com.netflix.discovery.DiscoveryClient    : Disable delta property : false
+2020-09-09 16:43:58.624  INFO 11216 --- [           main] com.netflix.discovery.DiscoveryClient    : Single vip registry refresh property : null
+2020-09-09 16:43:58.625  INFO 11216 --- [           main] com.netflix.discovery.DiscoveryClient    : Force full registry fetch : false
+2020-09-09 16:43:58.625  INFO 11216 --- [           main] com.netflix.discovery.DiscoveryClient    : Application is null : false
+2020-09-09 16:43:58.625  INFO 11216 --- [           main] com.netflix.discovery.DiscoveryClient    : Registered Applications size is zero : true
+2020-09-09 16:43:58.625  INFO 11216 --- [           main] com.netflix.discovery.DiscoveryClient    : Application version is -1: true
+2020-09-09 16:43:58.625  INFO 11216 --- [           main] com.netflix.discovery.DiscoveryClient    : Getting all instance registry info from the eureka server
+2020-09-09 16:43:58.825  INFO 11216 --- [           main] com.netflix.discovery.DiscoveryClient    : The response status is 200
+2020-09-09 16:43:58.826  INFO 11216 --- [           main] com.netflix.discovery.DiscoveryClient    : Starting heartbeat executor: renew interval is: 30
+2020-09-09 16:43:58.828  INFO 11216 --- [           main] c.n.discovery.InstanceInfoReplicator     : InstanceInfoReplicator onDemand update allowed rate per min is 4
+2020-09-09 16:43:58.831  INFO 11216 --- [           main] com.netflix.discovery.DiscoveryClient    : Discovery Client initialized at timestamp 1599641038830 with initial instances count: 0
+2020-09-09 16:43:58.832  INFO 11216 --- [           main] o.s.c.n.e.s.EurekaServiceRegistry        : Registering application CONFIG-SERVER with eureka with status UP
+2020-09-09 16:43:58.832  INFO 11216 --- [           main] com.netflix.discovery.DiscoveryClient    : Saw local status change event StatusChangeEvent [timestamp=1599641038832, current=UP, previous=STARTING]
+2020-09-09 16:43:58.834  INFO 11216 --- [nfoReplicator-0] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_CONFIG-SERVER/yuwen-asiainfo:config-server:9009: registering service...
+2020-09-09 16:43:58.859  INFO 11216 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 9009 (http) with context path ''
+2020-09-09 16:43:58.859  INFO 11216 --- [           main] .s.c.n.e.s.EurekaAutoServiceRegistration : Updating port to 9009
+2020-09-09 16:43:58.925  INFO 11216 --- [nfoReplicator-0] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_CONFIG-SERVER/yuwen-asiainfo:config-server:9009 - registration status: 204
+2020-09-09 16:43:59.150  INFO 11216 --- [           main] c.yuwen.spring.config.ConfigApplication  : Started ConfigApplication in 5.648 seconds (JVM running for 6.129)
+```
+
+# 6.查看服务
+这样客户端服务启动之后，
+访问Eureka页面http://localhost:7001，
+可以看到已经有CONFIG-SERVER注册了：
+EurekaServerPage.png
+注意上面的两个红框，
+分别对应微服务名称和主机名：
+```
+spring:
+  application:
+    # 微服务名称
+    name: config-server
+eureka:
+  instance:
+    #eureka客户端的实例名字（主机名）
+    hostname: config-service
+```
