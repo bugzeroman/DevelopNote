@@ -210,5 +210,4 @@ spring:
 ```
 
 # 9.Config服务注册到Eureka
-TODO
-
+请参考：[SpringCloud创建Eureka Client服务注册](https://www.jianshu.com/p/22a9e7b546f3)

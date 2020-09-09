@@ -115,7 +115,8 @@ Config Server服务启动日志如下，
 这样客户端服务启动之后，
 访问Eureka页面http://localhost:7001，
 可以看到已经有CONFIG-SERVER注册了：
-EurekaServerPage.png
+![](https://upload-images.jianshu.io/upload_images/11810589-110eb0753f05d7b5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 注意上面的两个红框，
 分别对应微服务名称和主机名：
 ```
