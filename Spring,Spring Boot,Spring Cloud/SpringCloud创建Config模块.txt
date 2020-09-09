@@ -1,0 +1,214 @@
+# 1.说明
+本文详细介绍Spring Cloud创建Config模块的方法，
+基于已经创建好的Spring Cloud父工程，
+请参考[SpringCloud创建项目父工程](https://www.jianshu.com/p/db69666c0432),
+创建Config模块这个子工程，
+作为Spring Cloud的配置中心,
+这个配置中心可以独立启动。
+然后配合创建好的Eureka子工程，
+请参考[SpringCloud创建Eureka模块](https://www.jianshu.com/p/25fc5936a8cd),
+把Config服务注册到Eureka。
+
+# 2.创建config模块
+这一步创建一个Maven Module，
+作为Spring Cloud的父工程下的一个子工程：
+在父工程spring-cloud-demo上右键 -> New -> Other... -> Maven -> Maven Project
+
+勾选Create a simple project(skip archetype selection),
+输入Module Name:config-server,
+查看Parent Project:spring-cloud-demo，
+如果不是自己选择的父工程，请重新选择。
+
+点击Finish完成工程创建。
+
+# 3.添加依赖
+在pom.xml中增加spring-cloud-config-server的依赖：
+```
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-config-server</artifactId>
+		</dependency>
+	</dependencies>
+```
+
+# 4.新增配置文件
+在src/main/resource目录下新增application.yml文件，
+并且增加如下配置：
+```
+server:
+  port: 9009
+
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://gitee.com/bugzeroman/spring-cloud-config.git
+```
+主要是配置中心需要使用到的git仓库，
+这里使用https协议的git地址。
+如果使用git协议的地址，
+需要配置ssh的私钥privateKey，
+同时strictHostKeyChecking要为false，
+否则会报错"reject HostKey : gitee.com",
+参考配置如下：
+```
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        git:
+          uri: git@gitee.com:bugzeroman/spring-cloud-config.git
+          strictHostKeyChecking: false
+          privateKey: |
+                       -----BEGIN RSA PRIVATE KEY-----
+                       MIIEowIBAAKCAQEAuThLh+LHK0g7g/dJ4IUCyOYg7JNXQDGYt4khUYnJIw5pxX/a
+                       ... please input real id_rsa ...
+                       UZp40gCDS64ve++Z/leNTMYH0YiAxNkcIp2Czvwm8P+hCkxvdgWgkbb5nuXfR1Gp
+                       2OrvwOk/z076Wo3kTl0Oh+Tt9EB7bf1h2MC23QrRXUim8r0+Vjl3
+                       -----END RSA PRIVATE KEY-----                       
+```
+
+# 5.新增主启动类
+在src/main/java目录下新增主启动类，
+Package:com.yuwen.spring.config
+Name:ConfigApplication
+然后修改ConfigApplication.java如下,
+注意一定要有EnableConfigServer注解，
+表示这是一个配置中心：
+```
+package com.yuwen.spring.config;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.config.server.EnableConfigServer;
+
+@SpringBootApplication
+@EnableConfigServer
+public class ConfigApplication {
+	public static void main(String[] args) {
+		SpringApplication.run(ConfigApplication.class, args);
+	}
+}
+
+```
+
+# 6.git仓库
+在上面我们指定了spring-cloud-config仓库的地址：
+```
+https://gitee.com/bugzeroman/spring-cloud-config.git
+git@gitee.com:bugzeroman/spring-cloud-config.git
+```
+在这个仓库下面我们上传各种配置文件，
+这样就可以通过配置中心config拉取到各种配置。
+现在新增一个application.yml如下，
+然后上传到仓库中即可。
+```
+spring:
+  profiles:
+    active:
+    - dev
+    
+---
+# 开发环境
+spring:
+  profiles: dev
+  application:
+    name: config-server-dev
+
+---
+# 测试环境
+spring:
+  profiles: test
+  application:
+    name: config-server-test
+```
+
+# 7.启动config
+右键主启动类ConfigApplication.java，
+Run As ... -> Java Application
+成功启动日志如下，
+可以看到对外提供的服务端口是9009：
+```
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v2.3.1.RELEASE)
+
+2020-09-09 15:53:28.680  INFO 19844 --- [           main] c.yuwen.spring.config.ConfigApplication  : No active profile set, falling back to default profiles: default
+2020-09-09 15:53:29.325  INFO 19844 --- [           main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=1d5d8597-77d3-3e14-9239-79e89f24c7a4
+2020-09-09 15:53:29.825  INFO 19844 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 9009 (http)
+2020-09-09 15:53:29.833  INFO 19844 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2020-09-09 15:53:29.833  INFO 19844 --- [           main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.36]
+2020-09-09 15:53:29.918  INFO 19844 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2020-09-09 15:53:29.918  INFO 19844 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1226 ms
+2020-09-09 15:53:30.162  INFO 19844 --- [           main] o.s.s.concurrent.ThreadPoolTaskExecutor  : Initializing ExecutorService 'applicationTaskExecutor'
+2020-09-09 15:53:31.160  INFO 19844 --- [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoint(s) beneath base path '/actuator'
+2020-09-09 15:53:31.201  INFO 19844 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 9009 (http) with context path ''
+2020-09-09 15:53:31.489  INFO 19844 --- [           main] c.yuwen.spring.config.ConfigApplication  : Started ConfigApplication in 3.957 seconds (JVM running for 4.284)
+2020-09-09 15:54:03.392  INFO 19844 --- [nio-9009-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2020-09-09 15:54:03.392  INFO 19844 --- [nio-9009-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2020-09-09 15:54:03.397  INFO 19844 --- [nio-9009-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 5 ms
+2020-09-09 15:54:04.760  INFO 19844 --- [nio-9009-exec-1] o.s.c.c.s.e.NativeEnvironmentRepository  : Adding property source: file:/C:/Users/yuwen/AppData/Local/Temp/config-repo-5990891065379764128/application.yml (document #0)
+```
+
+# 8.测试效果
+在浏览器中输入如下URL，
+分别对应不同的文本输出，
+表名拉取到了仓库中对应的配置。
+
+# 8.1.master下的application.yml
+http://localhost:9009/master/application.yml
+```
+{
+    "name": "master",
+    "profiles": [
+        "application.yml"
+    ],
+    "label": null,
+    "version": "c8a86decaab4b20d7470e09e6b9da50ed69d5d32",
+    "state": null,
+    "propertySources": [
+        {
+            "name": "https://gitee.com/bugzeroman/spring-cloud-config.git/application.yml (document #0)",
+            "source": {
+                "spring.profiles.active[0]": "dev"
+            }
+        }
+    ]
+}
+```
+
+# 8.2.开发环境
+http://localhost:9009/master/application-dev.yml
+```
+spring:
+  application:
+    name: config-server-dev
+  profiles:
+    active:
+    - dev
+```
+
+# 8.3.测试环境
+http://localhost:9009/master/application-test.yml
+```
+spring:
+  application:
+    name: config-server-test
+  profiles:
+    active:
+    - dev
+```
+
+# 9.Config服务注册到Eureka
+TODO
+
