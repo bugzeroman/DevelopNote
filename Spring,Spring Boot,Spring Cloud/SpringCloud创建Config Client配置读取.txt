@@ -154,10 +154,12 @@ Config Client服务启动日志如下，
 # 8.测试服务
 访问Config Client提供的Rest服务：
 http://localhost:8001/configInfo
-config-info-test.png
-修改bootstrap.yml中spring.cloud.config.profile为test，
+![](https://upload-images.jianshu.io/upload_images/11810589-199950276cf01b00.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+修改bootstrap.yml中spring.cloud.config.profile为dev，
 然后重新启动，再次访问上面的接口：
-config-info-dev.png
+![](https://upload-images.jianshu.io/upload_images/11810589-ff68c5de8b699587.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 可以看到两次分别拉取到了config-client-demo.yml中对应的配置。
 
 # 9.参考文章
