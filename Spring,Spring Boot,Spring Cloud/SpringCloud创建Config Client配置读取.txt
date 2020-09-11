@@ -1,0 +1,165 @@
+# 1.说明
+本文详细介绍配置中心客户端使用方法，
+即Config Client到Config Server读取配置，
+这里以创建Config Client服务为例，
+基于已经创建好的Config Server模块，
+请参考[SpringCloud创建Config模块](https://www.jianshu.com/p/ea03df7d167c),
+到配置中心读取配置。
+
+# 2.创建工程，添加依赖
+在父工程下面创建一个Maven模块config-client，
+在pom.xml中增加config client的依赖：
+```
+<dependencies>
+	<dependency>
+		<groupId>org.springframework.cloud</groupId>
+		<artifactId>spring-cloud-starter-config</artifactId>
+	</dependency>
+	
+    <dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-web</artifactId>
+	</dependency>
+</dependencies>
+```
+其中spring-boot-starter-web是spring boot应用，
+可以对外提供Rest服务，
+下面会通过Rest接口查询客户端读取到的配置。
+
+# 3.新增配置文件
+新增配置文件bootstrap.yml:
+```
+server:
+  port: 8001
+
+spring:
+  application:
+    name: config-client
+  cloud:
+    config:
+      label: master
+      name: config-client-demo
+      profile: test
+      uri: http://localhost:9009
+```
+上面的spring.cloud.config配置,
+指定了配置中心http://localhost:9009，
+拉取master分支下的config-client-demo.yml中的test配置。
+
+# 4.git仓库增加配置
+由于http://localhost:9009配置中心，
+指定了spring-cloud-config仓库的地址：
+```
+https://gitee.com/bugzeroman/spring-cloud-config.git
+```
+需要把config-client-demo.yml上传到仓库，
+这样客户端才能通过配置中心拉取到配置文件。
+config-client-demo.yml内容：
+```
+spring:
+  profiles:
+    active:
+    - test
+    
+---
+# 开发环境
+spring:
+  profiles: dev
+  application:
+    name: config-server-dev
+
+config:
+  info: config info dev
+
+---
+# 测试环境
+spring:
+  profiles: test
+  application:
+    name: config-server-test
+config:
+  info: config info test
+```
+
+# 5.新增查询接口
+ConfigClientController.java对外提供config.info参数的查询，
+config.info是从配置中心读取的。
+```
+package com.yuwen.spring.config.client.controller;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class ConfigClientController {
+
+	@Value("${config.info}")
+	private String configInfo;
+
+	@GetMapping("/configInfo")
+	public String getConfigInfo() {
+		return configInfo;
+	}
+}
+```
+
+# 6.新增启动类
+主启动类ConfigClientApplication.java，
+只要加上SpringBootApplication注解：
+```
+package com.yuwen.spring.config.client;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ConfigClientApplication {
+	public static void main(String[] args) {
+		SpringApplication.run(ConfigClientApplication.class, args);
+	}
+}
+```
+
+# 7.启动服务
+Config Client服务启动日志如下，
+注意要先启动Config Server服务：
+```
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v2.3.1.RELEASE)
+
+2020-09-11 15:59:00.454  INFO 19236 --- [           main] c.c.c.ConfigServicePropertySourceLocator : Fetching config from server at : http://localhost:9009
+2020-09-11 15:59:01.868  INFO 19236 --- [           main] c.c.c.ConfigServicePropertySourceLocator : Located environment: name=config-client-demo, profiles=[dev], label=master, version=befaf0fdb3897ac7b7de2a8df3192decb0192cb7, state=null
+2020-09-11 15:59:01.869  INFO 19236 --- [           main] b.c.PropertySourceBootstrapConfiguration : Located property source: [BootstrapPropertySource {name='bootstrapProperties-configClient'}, BootstrapPropertySource {name='bootstrapProperties-https://gitee.com/bugzeroman/spring-cloud-config.git/config-client-demo.yml (document #1)'}, BootstrapPropertySource {name='bootstrapProperties-https://gitee.com/bugzeroman/spring-cloud-config.git/application.yml (document #1)'}, BootstrapPropertySource {name='bootstrapProperties-https://gitee.com/bugzeroman/spring-cloud-config.git/config-client-demo.yml (document #0)'}, BootstrapPropertySource {name='bootstrapProperties-https://gitee.com/bugzeroman/spring-cloud-config.git/application.yml (document #0)'}]
+2020-09-11 15:59:01.874  INFO 19236 --- [           main] c.y.s.c.client.ConfigClientApplication   : No active profile set, falling back to default profiles: default
+2020-09-11 15:59:02.239  INFO 19236 --- [           main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=7db33b17-4254-3471-a240-faf5a3bf9fa9
+2020-09-11 15:59:02.660  INFO 19236 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8001 (http)
+2020-09-11 15:59:02.668  INFO 19236 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2020-09-11 15:59:02.668  INFO 19236 --- [           main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.36]
+2020-09-11 15:59:02.750  INFO 19236 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2020-09-11 15:59:02.750  INFO 19236 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 865 ms
+2020-09-11 15:59:02.847  INFO 19236 --- [           main] o.s.s.concurrent.ThreadPoolTaskExecutor  : Initializing ExecutorService 'applicationTaskExecutor'
+2020-09-11 15:59:03.248  INFO 19236 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8001 (http) with context path ''
+2020-09-11 15:59:03.531  INFO 19236 --- [           main] c.y.s.c.client.ConfigClientApplication   : Started ConfigClientApplication in 4.184 seconds (JVM running for 4.49)
+2020-09-11 15:59:30.056  INFO 19236 --- [nio-8001-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2020-09-11 15:59:30.056  INFO 19236 --- [nio-8001-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2020-09-11 15:59:30.060  INFO 19236 --- [nio-8001-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 4 ms
+```
+
+# 8.测试服务
+访问Config Client提供的Rest服务：
+http://localhost:8001/configInfo
+config-info-test.png
+修改bootstrap.yml中spring.cloud.config.profile为test，
+然后重新启动，再次访问上面的接口：
+config-info-dev.png
+可以看到两次分别拉取到了config-client-demo.yml中对应的配置。
+
+# 9.参考文章
+[Spring Cloud Config Server 官方手册](https://docs.spring.io/spring-cloud-config/docs/2.2.5.RELEASE/reference/html/#_spring_cloud_config_server)
+[Spring Cloud Config 中文手册](https://www.springcloud.cc/spring-cloud-config.html)
