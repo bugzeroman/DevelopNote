@@ -164,4 +164,4 @@ http://localhost:8001/configInfo
 
 # 9.参考文章
 [Spring Cloud Config Server 官方手册](https://docs.spring.io/spring-cloud-config/docs/2.2.5.RELEASE/reference/html/#_spring_cloud_config_server)
-[Spring Cloud Config 中文手册](https://www.springcloud.cc/spring-cloud-config.html)
+[Spring Cloud Config 中文手册](https://www.springcloud.cc/spring-cloud-greenwich.html#_spring_cloud_config)
