@@ -1,0 +1,90 @@
+# 1.说明
+本文详细介绍配置中心客户端使用方法，
+即Config Client到Config Server读取配置。
+读取配置的方式有两种，
+第一种是直接配置Configer Server的URL,
+第二种是配置service-id，通过Eureka获取Configer Server的URL。
+第一种方式请参考：
+[SpringCloud创建Config Client配置读取](https://www.jianshu.com/p/4f85126e46fe)
+下面基于这个创建好的Config Client，
+进一步介绍第二种方式。
+
+# 2.Config Server注册到Eureka
+请参考：[SpringCloud创建Eureka Client服务注册](https://www.jianshu.com/p/22a9e7b546f3),
+Config Server对应的application.yml:
+```
+server:
+  port: 9009
+
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://gitee.com/bugzeroman/spring-cloud-config.git
+          basedir: D:\Code\Learn\SpringCloud\config-dir
+          cloneOnStart: true
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    service-url:
+      register-with-eureka: true
+      fetch-registry: true
+      defaultZone: http://localhost:7001/eureka  
+```
+注意其中spring.application.name: config-server
+把Config Server注册到Eureka后，
+可以看到配置中心对外提供的服务名config-server。
+
+# 3.Config Client配置Config Server服务名
+首先Config Client也是要注册到Eureka，
+Config Client对应的application.yml
+```
+server:
+  port: 8001
+
+spring:
+  cloud:
+    config:
+      label: master
+      name: config-client-demo
+      profile: test
+      discovery:
+        enabled: true
+        service-id: config-server
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    service-url:
+      register-with-eureka: true
+      fetch-registry: true
+      defaultZone: http://localhost:7001/eureka     
+```     
+注意spring.cloud.config.discovery.service-id: config-server，
+已经不是原来的spring.cloud.config.uri: http://localhost:9009，
+这个配置项指定了配置中心的服务名，
+这样就能从Eureka上面发现Config Server，
+然后通过URL读取到对应的配置。
+
+# 4.两种方式的选择
+第一种方式直接配置Configer Server的URL,
+那就不需要客户端注册到Eureka，
+这个时候Eureka Client的配置就可以放到配置中心；
+
+第二种方式配置Configer Server的service-id，
+那就需要客户端注册到Eureka，
+这个时候Eureka Client的配置不能放到配置中心，
+客户端必须先注册到Eureka，
+才能通过service-id找到真实的配置中心URL。
+
+个人感觉第一种方式更简洁一下，
+bootstrap.yml只需要配置Configer Server的URL，
+Eureka Client的配置可以放到配置中心公用，
+然后Configer Server的URL建议使用主机名，
+在实际部署的时候通过映射把主机名和实际IP绑定。
