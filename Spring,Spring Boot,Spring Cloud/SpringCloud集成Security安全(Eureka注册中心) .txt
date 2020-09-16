@@ -20,8 +20,8 @@
 spring:
   security:
     user:
-      name: config
-      password: config123456
+      name: eureka
+      password: eureka123456
 ```
 
 # 4.Eureka Server，测试验证
@@ -30,9 +30,10 @@ spring:
 http://localhost:7001/
 首先会跳到登录界面，
 要求输入用户名密码：
-EurekaServerLogin.png
+![](https://upload-images.jianshu.io/upload_images/11810589-55625f4eff6d8728.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 认证成功后，访问到管理界面：
-EurekaServerIndex.png
+![](https://upload-images.jianshu.io/upload_images/11810589-10279c88c3a7f097.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 # 5.Eureka Server关闭csrf检验
 Security默认启用了csrf检验，
@@ -69,7 +70,7 @@ eureka:
 ```
 目前配置文件支持如下格式配置用户名密码：
 http://user:password@localhost:7001/eureka，
-HTTP基本身份验证将自动添加到Eureka Client。
+HTTP基本身份认证将自动添加到Eureka Client。
 对于更复杂的需求，
 可以创建类型为DiscoveryClientOptionalArgs的@Bean，
 并将ClientFilter实例注入其中。
