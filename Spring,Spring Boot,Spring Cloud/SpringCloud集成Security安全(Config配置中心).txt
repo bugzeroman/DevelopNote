@@ -35,7 +35,7 @@ http://localhost:9009/master/application-dev.yml
 
 # 5.Config Client配置用户名密码
 客户端要访问配置中心，
-需要修改application.yml，
+需要修改bootstrap.yml，
 配置上面的用户名密码：
 ```
 spring:
