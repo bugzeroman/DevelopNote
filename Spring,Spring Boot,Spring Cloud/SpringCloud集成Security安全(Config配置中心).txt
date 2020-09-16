@@ -1,0 +1,84 @@
+1.说明
+为了保护配置中心的敏感数据，
+需要对Config Server进行安全保护，
+本文基于Spring Security方案，
+为Config Server增加最简单的Basic安全认证。
+
+2.Config Server添加安全依赖
+修改pom.xml，添加spring-boot-starter-security依赖：
+```
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+```
+
+3.Config Server配置用户名密码
+修改application.yml，配置用户名密码：
+```
+spring:
+  security:
+    user:
+      name: config
+      password: config123456
+```
+
+4.启动Config Server，测试验证
+先只启动Config Server，
+通过浏览器的URL访问配置中心，
+http://localhost:9009/master/application-dev.yml
+首先会跳到登录界面，
+要求输入用户名密码：
+ConfigServerLogin.png
+输入成功后，访问到对应的配置：
+ConfigServerRead.png
+
+5.Config Client配置用户名密码
+客户端要访问配置中心，
+需要修改application.yml，
+配置上面的用户名密码：
+```
+spring:
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: config-server
+      username: config
+      password: config123456
+```
+如果使用的uri方式指定配置中心，
+不仅可以通过username和password配置用户名密码：
+```
+spring:
+  cloud:
+    config:
+      uri: http://localhost:9009
+      username: config
+      password: config123456
+```
+
+还可以在uri中配置用户名密码
+```
+spring:
+  cloud:
+    config:
+      uri: http://config:config123456@localhost:9009
+```
+如果在uri中指定了用户名密码，
+又在下面设置username和password，
+则以username和password配置的为准：
+```
+spring:
+  cloud:
+    config:
+      label: master
+      name: config-client-demo
+      profile: test
+      uri: http://config:configXXX@localhost:9009
+      username: config
+      password: config123456
+```
+上面的配置中URI的密码错误了，
+但是password配置的是正确的，
+Config Client仍然能够正确访问配置中心。
