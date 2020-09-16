@@ -1,0 +1,92 @@
+# 1.说明
+为了保护注册中心的服务安全，
+避免恶意服务注册到Eureka，
+需要对Eureka Server进行安全保护，
+本文基于Spring Security方案，
+为Eureka Server增加最简单的Basic安全认证。
+
+# 2.Eureka Server添加安全依赖
+修改pom.xml，添加spring-boot-starter-security依赖：
+```
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+```
+
+# 3.Eureka Server配置用户名密码
+修改application.yml，配置用户名密码：
+```
+spring:
+  security:
+    user:
+      name: config
+      password: config123456
+```
+
+# 4.Eureka Server，测试验证
+先只启动Eureka Server，
+通过浏览器的URL访问注册中心，
+http://localhost:7001/
+首先会跳到登录界面，
+要求输入用户名密码：
+EurekaServerLogin.png
+认证成功后，访问到管理界面：
+EurekaServerIndex.png
+
+# 5.Eureka Server关闭csrf检验
+Security默认启用了csrf检验，
+CSRF一般指跨站请求伪造攻击，
+要在Eureka Server端配置关闭csrf检验， 
+否则Eureka Client无法访问注册中心,
+新建类WebSecurityConfig.java如下：
+```
+package com.yuwen.spring.eureka.config;
+
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+
+@EnableWebSecurity
+public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+		http.csrf().disable();
+		super.configure(http);
+	}
+}
+```
+
+# 6.Eureka Client配置用户名密码
+客户端要访问配置中心，
+需要修改application.yml，
+配置上面的用户名密码：
+```
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka:eureka123456@localhost:7001/eureka
+```
+目前配置文件支持如下格式配置用户名密码：
+http://user:password@localhost:7001/eureka，
+HTTP基本身份验证将自动添加到Eureka Client。
+对于更复杂的需求，
+可以创建类型为DiscoveryClientOptionalArgs的@Bean，
+并将ClientFilter实例注入其中。
+注意由于Eureka的限制，
+不可能支持每台服务器的基本身份认证凭证，
+因此集群时只使用找到的第一组身份认证凭证。
+
+# 7.参考文章
+[Spring cloud eureka 安全认证基本配置](https://blog.csdn.net/appleasd123/article/details/90407126)
+[1.3. Authenticating with the Eureka Server](https://docs.spring.io/spring-cloud-netflix/docs/2.2.5.RELEASE/reference/html/)
+
+
+
+
+
+
+
+
+
+
