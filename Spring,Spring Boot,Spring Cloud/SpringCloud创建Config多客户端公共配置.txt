@@ -1,0 +1,144 @@
+# 1.说明
+基于已经创建好的Spring Cloud配置中心，
+在配置中心仅保存一套配置文件，
+多个客户端可以通过配置中心读取到相同的配置，
+而不需要在每个客户端重复配置一遍，
+下面以一个Config Client为例，
+抽取其中的公共配置到配置中心，
+且公共配置进一步细分为多个文件，
+从而实现多个客户端共享公共配置，
+解决微服务集群下配置文件维护的难题。
+
+# 2.Config Client的现有配置
+本地的application.yml：
+```
+# 开发环境
+server:
+  port: 8004
+
+config:
+  info: config info dev
+
+spring:
+  profiles: dev
+  application:
+    name: config-client-dev
+  cloud:
+    config:
+      label: master
+      name: gateway-server,eureka-client
+      profile: dev
+      uri: http://config:config123456@localhost:9009
+      
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: true    
+  client:
+    service-url:
+      register-with-eureka: true
+      fetch-registry: true
+      defaultZone: http://eureka:eureka123456@localhost:7001/eureka     
+```
+
+# 3.抽取自己的配置文件
+把Config Client自己的配置保存到config-client-dev.yml，
+并且提交到Config Server的仓库管理：
+```
+# 开发环境
+server:
+  port: 8004
+
+spring:
+  profiles: dev
+  application:
+    name: config-client-dev
+
+config:
+  info: config info dev
+```
+
+# 4.抽取访问Eureka的配置文件
+把访问Eureka的配置保存到eureka-client-dev.yml，
+并且提交到Config Server的仓库管理：
+```
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: true    
+  client:
+    service-url:
+      register-with-eureka: true
+      fetch-registry: true
+      defaultZone: http://eureka:eureka123456@localhost:7001/eureka 
+```
+
+# 5.抽取访问Config Server的配置文件
+删除原来的application.yml文件，
+本地新建bootstrap.yml:
+把访问Config Server的配置保存到bootstrap.yml:
+```
+spring:
+  cloud:
+    config:
+      label: master
+      name: config-client,eureka-client
+      profile: dev
+      uri: http://config:config123456@localhost:9009
+```
+这样每个Config Client本地都只需要这样一个bootstrap.yml。
+
+# 6.启动服务
+先启动Config Server，
+再启动Eureka Server，
+最后启动Config Client，
+发现Config Client能够正常启动，
+并且提供业务服务，配置成功。
+
+# 7.公共配置方案2
+由于Config Client会默认读取配置中心application.yml配置，
+可以通过application.yml作为公共配置文件，
+把所有的公共配置放进去，
+但是每个客户端都会读取到相同的配置，
+没有上面的方案1针对性强。
+
+# 8.Config Client修改bootstrap.yml
+去掉bootstrap.yml中spring.cloud.config.name属性的eureka-client:
+```
+spring:
+  cloud:
+    config:
+      label: master
+      name: config-client
+      profile: dev
+      uri: http://config:config123456@localhost:9009
+```
+
+# 9.抽取公共application-dev.yml文件
+新建application-dev.yml文件，
+把访问Eureka的配置放进去，
+也可以放入数据库连接等其他公共配置，
+并且提交到Config Server的仓库管理：
+```
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: true    
+  client:
+    service-url:
+      register-with-eureka: true
+      fetch-registry: true
+      defaultZone: http://eureka:eureka123456@localhost:7001/eureka 
+```
+
+# 10.重启服务
+重启服务成功后，
+发现Config Client仍然能够注册到Eureka,
+并且提供业务服务，方案2配置成功。
+另外如果config-client-dev.yml和application-dev.yml存在相同配置，
+则以config-client-dev.yml的配置为准。
+
+# 11.参考文章
+[Spring-Cloud-Config 多服务公共文件配置](https://blog.csdn.net/liangweihua123/article/details/82179785)
+
+
