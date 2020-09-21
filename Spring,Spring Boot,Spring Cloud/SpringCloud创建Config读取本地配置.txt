@@ -1,0 +1,129 @@
+# 1.说明
+Config Server获取配置支持的方式很多，
+包括Git仓库(github/gitee等)，任何与JDBC兼容的数据库，
+Subversion，Hashicorp Vault，Credhub和本地文件系统。
+Git仓库方式请参考：
+[SpringCloud创建Config模块](https://www.jianshu.com/p/ea03df7d167c)
+本文介绍使用本地配置的方式，
+包括本地类路径和文件系统来获取配置。
+
+# 2.Git方式
+Git方式中uri使用https协议：
+```
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://gitee.com/bugzeroman/spring-cloud-config.git
+```
+
+或者Git方式中uri使用git协议：
+```
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        git:
+          uri: git@gitee.com:bugzeroman/spring-cloud-config.git
+          strictHostKeyChecking: false
+          privateKey: |
+                       -----BEGIN RSA PRIVATE KEY-----
+                       MIIEowIBAAKCAQEAuThLh+LHK0g7g/dJ4IUCyOYg7JNXQDGYt4khUYnJIw5pxX/a
+                       ... please input real id_rsa ...
+                       UZp40gCDS64ve++Z/leNTMYH0YiAxNkcIp2Czvwm8P+hCkxvdgWgkbb5nuXfR1Gp
+                       2OrvwOk/z076Wo3kTl0Oh+Tt9EB7bf1h2MC23QrRXUim8r0+Vjl3
+                       -----END RSA PRIVATE KEY-----                       
+```
+
+# 3.本地配置方式
+本地配置方式包括本地类路径和文件系统两种方式，
+要使用本地配置方式，
+首先设置spring.profiles.active为native，
+然后spring.cloud.config.server.native.searchLocations指向任何静态的URL，
+这样Config Server启动时，
+才能加载到对应的配置文件。
+
+# 4.本地类路径方式
+通过在search-locations中指定classpath下的路径：
+```
+spring:
+  application:
+    name: config-server
+  profiles:
+    active: native
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: classpath:/config-server/gitee
+```
+
+# 5.本地文件系统方式
+通过在search-locations中指定file协议的本地路径：
+```
+spring:
+  application:
+    name: config-server
+  profiles:
+    active: native
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: file:///D:/spring-cloud-demo/config-server/src/main/resources/config-server/gitee
+```
+需要注意的是Windows中的绝对路径需要额外的/：
+```
+file:///${user.home}/config-repo
+```
+而且额外的/是需要转义的，所有上面有3个/；
+在Lunix环境下，只需要1个/即可:
+```
+file:/${user.home}/config-repo
+```
+
+# 6.启动测试
+Config Server启动后，
+访问http://localhost:9009/config-client-dev.yml:
+```
+server:
+  port: 8004
+spring:
+  application:
+    name: config-client-dev
+config:
+  info: config info dev
+```
+如果添加label,
+访问http://localhost:9009/master/config-client-dev.yml，
+同样能返回上面的结果。
+因为会将HTTP资源的{label}参数附加到搜索路径上的后缀，
+从搜索位置下与该名称相同的子目录查找属性文件，
+然而现在config-client-dev.yml在根目录，
+直接可以访问到，
+{label}没有任何对应的子目录，
+所以{label}不管修改为任何值，
+都只能返回上面的结果。
+
+# 7.更多说明
+searchLocations的默认值与本地Spring Boot应用程序相同，
+即[classpath:/, classpath:/config, file:./, file:./config]。
+这不会将application.properties从服务器公开给所有客户端，
+因为服务器中存在的所有属性源在被发送到客户端之前都已被删除。
+本地配置方式非常适合快速入门和测试，
+但是要在生产环境中使用它，
+需要确保文件系统可靠并且可以在Config Server的所有实例之间共享。
+
+推荐在隔离路径中的目录选择一种有意义的策略，
+比如设置每个应用程序的子目录或每种配置文件的子目录。
+
+
+
+
+
+
