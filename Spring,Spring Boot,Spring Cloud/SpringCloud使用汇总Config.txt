@@ -1,0 +1,239 @@
+# 1.Config Server对外提供的资源格式
+配置中心的HTTP服务有5种资源格式：
+```
+/{application}/{profile}[/{label}]
+
+/{application}-{profile}.yml
+/{label}/{application}-{profile}.yml
+
+/{application}-{profile}.properties
+/{label}/{application}-{profile}.properties
+```
+{application}对应spring.config.name，
+通常在Spring Boot应用默认中默认是application，
+{profile}是有效配置文件属性列表，
+多个直接使用逗号分隔，例如(dev,test)，
+{label}是可选的git标签,默认值为master。
+
+推荐使用格式:
+```
+/{label}/{application}-{profile}.yml
+```
+示例如下:
+```
+http://config-server.com:port/master/application-dev.yml
+```
+
+# 2.支持的数据来源获取配置
+Git仓库，包括任何与JDBC兼容的数据库，
+Subversion，Hashicorp Vault，Credhub和本地文件系统。
+详细设置请参考[SpringCloud创建Config读取本地配置](https://www.jianshu.com/p/d2ec482f1b9c)
+
+# 3.Config Client本地的配置会被覆盖
+## 3.1.profile本地覆盖远程
+bootstrap.yml中的spring.cloud.config.profile: test,
+config-client-demo.yml中的spring.profiles.active: - dev,
+测试结果为使用本地test配置。
+## 3.2.name远程覆盖本地
+bootstrap.yml中的spring.application.name: config-client
+被config-client-demo.yml中test的spring.application.name:config-client-test，
+测试结果为远程的config-client-test。
+同样的server.port: 8001这类的属性也会被覆盖。
+
+# 4.跳过SSL证书验证
+可以通过将git.skipSslValidation属性设置为true，
+来禁用配置服务器对Git服务器的SSL证书的验证，
+该属性默认值为false。
+```
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://example.com/my/repo
+          skipSslValidation: true
+```
+
+# 5.设置HTTP连接超时
+使用git.timeout属性，
+配置服务器等待获取HTTP连接的时间，
+单位为秒。
+```
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://example.com/my/repo
+          timeout: 4
+```
+如果要进一步配置超时阈值：
+使用spring.cloud.config.request-read-timeout配置读取超时。
+使用spring.cloud.config.request-connect-timeout配置连接超时。
+
+# 6.存储库可以将配置文件存储在子目录中
+用于搜索这些目录的模式可以指定为searchPaths，
+以下示例在顶层显示了一个配置文件，
+服务器在顶层和foo/子目录中以及名称以bar开头的任何子目录中搜索配置文件：
+```
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          searchPaths: foo,bar*
+```
+
+# 7.服务器配置为在启动时克隆存储库
+默认情况下，首次请求配置时，服务器会克隆远程存储库。
+如以下顶级示例所示，
+在前面的示例中，服务器在接受任何请求之前会在启动时克隆team-a的config-repo。
+在请求从存储库进行配置之前，不会克隆所有其他存储库。
+```
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://git/common/config-repo.git
+          repos:
+            team-a:
+                pattern: team-a-*
+                cloneOnStart: true
+                uri: https://git/team-a/config-repo.git
+            team-b:
+                pattern: team-b-*
+                cloneOnStart: false
+                uri: https://git/team-b/config-repo.git
+            team-c:
+                pattern: team-c-*
+                uri: https://git/team-a/config-repo.git
+```
+
+# 8.服务器从远程存储库强制拉取
+如果本地副本脏了，
+设置force-pull属性设置为true,
+可以使Config服务器从远程存储库强制拉取，
+如下所示：
+```
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo
+          force-pull: true
+```
+
+# 9.Git刷新率
+使用spring.cloud.config.server.git.refreshRate，
+指定配置服务器多久从Git后端获取更新的配置数据。
+单位为秒。
+默认值为0，
+即配置服务器将在每次请求时从Git存储库中获取更新的配置。
+
+# 10.查看actuator和health健康指示器
+http://localhost:9009/actuator
+```
+{
+    "_links": {
+        "self": {
+            "href": "http://localhost:9009/actuator",
+            "templated": false
+        },
+        "health": {
+            "href": "http://localhost:9009/actuator/health",
+            "templated": false
+        },
+        "health-path": {
+            "href": "http://localhost:9009/actuator/health/{*path}",
+            "templated": true
+        },
+        "info": {
+            "href": "http://localhost:9009/actuator/info",
+            "templated": false
+        }
+    }
+}
+```
+配置中心检查远程仓库是否可以连通，
+UP代表健康检查是可用的，
+所以配置中心提供的服务是可用的。
+http://localhost:9009/actuator/health
+```
+{
+    "status": "UP"
+}
+```
+
+配置运行状况指示器可以检查更多应用程序，
+以及自定义配置文件和自定义标签的检查。
+
+若要禁用健康状态指示器，
+可设置spring.cloud.config.server.health.enabled=false
+
+# 11.HTTP基本安全认证
+在服务器上使用HTTP Basic基本安全认证，
+则客户端需要知道密码，
+如果不是默认用户名，则需要用户名。
+可以通过配置服务器URI
+或通过单独的用户名和密码属性来指定用户名和密码：
+```
+spring:
+  cloud:
+    config:
+     uri: https://user:secret@myconfig.mycompany.com
+```     
+或者
+```
+spring:
+  cloud:
+    config:
+     uri: https://myconfig.mycompany.com
+     username: user
+     password: secret
+```
+spring.cloud.config.password和spring.cloud.config.username值会覆盖URI中提供的任何内容。
+
+# 12.指定配置文件检出目录
+使用基于vcs的后端(git、svn)，文件被检出或克隆到本地文件系统。
+默认情况下，它们被放在带有config-repo-前缀的系统临时目录中。
+可以通过设置 spring.cloud.config.server.git.basedir或者
+spring.cloud.config.server.svn.basedir，
+指定一个不位于系统临时结构中的目录。
+```
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://gitee.com/bugzeroman/spring-cloud-config.git
+          basedir: D:\Code\Learn\SpringCloud\config-dir
+          cloneOnStart: true
+```
+
+# 13.关闭配置中心
+配置中心默认是开启的true，
+关闭配置中心需要设置为false:
+```
+spring.cloud.config.enabled=false
+```
+
+# 14.Config客户端使用公共配置
+首先规划各个微服务：
+Config Server不注册到Eureka Server；
+Eureka Server通过URL连接到Config Server，获取自己微服务配置；
+Config Client通过URL连接到Config Server，获取自己微服务配置；
+Eureka Client通过URL连接到Config Server，获取连接Eureka Server的配置；
+
+Config Server连接的git仓库有如下文件：
+```
+eureka-server-dev.yml
+config-client-dev.yml
+eureka-client-dev.yml
+```
+
+Config Server本地有文件application.yml，
+其他微服务本地有这个文件bootstrap.yml。
+
