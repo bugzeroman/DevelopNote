@@ -1,0 +1,182 @@
+# 1.说明
+本文详细介绍Spring Cloud创建Eureka模块集群的方法，
+基于已经创建好的Spring Cloud Eureka Server模块，
+请参考[SpringCloud创建Eureka模块](https://www.jianshu.com/p/25fc5936a8cd),
+通过配置文件启动多个Eureka Server模块，
+演示Eureka Server集群的创建和使用方法， 
+包括2个Eureka Server服务作为集群，
+以及1个Eureka Client服务作为客户端。
+
+# 2.模块打包
+使用如下Maven命令，打包Eureka Server模块：
+```
+mvn clean install -DskipTests
+```
+打包成功后，在模块target目录下，
+可以找到jar包：
+eureka-server-0.0.1-SNAPSHOT.jar
+另外一个jar包没有用，不需要管：
+eureka-server-0.0.1-SNAPSHOT.jar.original
+
+# 3.配置文件
+Eureka Server 1对应eureka-server-dev-1.yml：
+```
+server:
+  port: 7001
+eureka:
+  instance:
+    hostname: eureka1
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://eureka1:7001/eureka,http://eureka2:7002/eureka
+  server:
+    enable-self-preservation: false
+```
+
+Eureka Server 2对应eureka-server-dev-2.yml：
+```
+server:
+  port: 7002
+eureka:
+  instance:
+    hostname: eureka2
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://eureka1:7001/eureka,http://eureka2:7002/eureka
+  server:
+    enable-self-preservation: false 
+```
+注意上面配置的eureka1，eureka2主机名，
+不能和原来单机的时候相同，使用localhost了，
+否则访问Eureka控制台页面的时候，
+会无法看到集群中的其他Eureka Server。
+另外eureka.client.service-url.defaultZone这个属性，
+可以配置Eureka集群中所有可用的实例，
+Eureka会自动排除掉与自身重复的实例：
+```
+http://eureka1:7001/eureka,http://eureka2:7002/eureka
+```
+
+# 4.配置主机名
+在Windows一台主机上启动这两个服务，
+需要修改C:\Windows\System32\drivers\etc\hosts,
+增加对应的主机名：
+```
+127.0.0.1 eureka1
+127.0.0.1 eureka2
+```
+这里为了演示，
+在同一个主机上部署了两个Eureka Server，
+eureka1和eureka2都对应本机的127.0.0.1，
+所以他们的端口不能相同为7001、7002,
+如果部署在不同的主机上面，
+可以配置成同一个端口，
+这样只需要主机名不同就行了。
+
+# 5.启动Eureka集群
+启动Eureka Server 1：
+```
+java -jar -Dspring.config.location=eureka-server-dev-1.yml eureka-server-0.0.1-SNAPSHOT.jar
+```
+
+启动Eureka Server 2：
+```
+java -jar -Dspring.config.location=eureka-server-dev-2.yml eureka-server-0.0.1-SNAPSHOT.jar
+```
+Eureka Server 1的启动日志，
+可以看到启动时，找到了集群的备用节点eureka2,
+同样Eureka Server 2的启动日志也是类似的：
+```
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v2.3.1.RELEASE)
+
+2020-09-22 17:51:43.902  INFO 16748 --- [           main] c.y.s.eureka.EurekaServerApplication     : No active profile set, falling back to default profiles: default
+2020-09-22 17:51:45.940  WARN 16748 --- [           main] o.s.boot.actuate.endpoint.EndpointId     : Endpoint ID 'service-registry' contains invalid characters, please migrate to a valid format.
+2020-09-22 17:51:46.124  INFO 16748 --- [           main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=c94dfcb8-a92b-3043-9fe7-9ab9d1567d69
+2020-09-22 17:51:47.247  INFO 16748 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 7001 (http)
+2020-09-22 17:51:47.262  INFO 16748 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2020-09-22 17:51:47.262  INFO 16748 --- [           main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.36]
+2020-09-22 17:51:47.407  INFO 16748 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2020-09-22 17:51:47.408  INFO 16748 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 3470 ms
+2020-09-22 17:51:47.506  WARN 16748 --- [           main] c.n.c.sources.URLConfigurationSource     : No URLs will be polled as dynamic configuration sources.
+2020-09-22 17:51:47.506  INFO 16748 --- [           main] c.n.c.sources.URLConfigurationSource     : To enable URLs as dynamic configuration sources, define System property archaius.configurationSource.additionalUrls or make config.properties available on classpath.
+2020-09-22 17:51:47.531  INFO 16748 --- [           main] c.netflix.config.DynamicPropertyFactory  : DynamicPropertyFactory is initialized with configuration sources: com.netflix.config.ConcurrentCompositeConfiguration@5c80cf32
+2020-09-22 17:51:48.152  INFO 16748 --- [           main] c.s.j.s.i.a.WebApplicationImpl           : Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+2020-09-22 17:51:48.295  INFO 16748 --- [           main] c.n.d.provider.DiscoveryJerseyProvider   : Using JSON encoding codec LegacyJacksonJson
+2020-09-22 17:51:48.297  INFO 16748 --- [           main] c.n.d.provider.DiscoveryJerseyProvider   : Using JSON decoding codec LegacyJacksonJson
+2020-09-22 17:51:48.561  INFO 16748 --- [           main] c.n.d.provider.DiscoveryJerseyProvider   : Using XML encoding codec XStreamXml
+2020-09-22 17:51:48.561  INFO 16748 --- [           main] c.n.d.provider.DiscoveryJerseyProvider   : Using XML decoding codec XStreamXml
+2020-09-22 17:51:49.245  WARN 16748 --- [           main] o.s.c.n.a.ArchaiusAutoConfiguration      : No spring.application.name found, defaulting to 'application'
+2020-09-22 17:51:49.246  WARN 16748 --- [           main] c.n.c.sources.URLConfigurationSource     : No URLs will be polled as dynamic configuration sources.
+2020-09-22 17:51:49.246  INFO 16748 --- [           main] c.n.c.sources.URLConfigurationSource     : To enable URLs as dynamic configuration sources, define System property archaius.configurationSource.additionalUrls or make config.properties available on classpath.
+2020-09-22 17:51:49.699  INFO 16748 --- [           main] o.s.s.concurrent.ThreadPoolTaskExecutor  : Initializing ExecutorService 'applicationTaskExecutor'
+2020-09-22 17:51:51.647  WARN 16748 --- [           main] ockingLoadBalancerClientRibbonWarnLogger : You already have RibbonLoadBalancerClient on your classpath. It will be used by default. As Spring Cloud Ribbon is in maintenance mode. We recommend switching to BlockingLoadBalancerClient instead. In order to use it, set the value of `spring.cloud.loadbalancer.ribbon.enabled` to `false` or remove spring-cloud-starter-netflix-ribbon from your project.
+2020-09-22 17:51:51.694  INFO 16748 --- [           main] o.s.c.n.eureka.InstanceInfoFactory       : Setting initial instance status as: STARTING
+2020-09-22 17:51:51.730  INFO 16748 --- [           main] com.netflix.discovery.DiscoveryClient    : Initializing Eureka in region us-east-1
+2020-09-22 17:51:51.730  INFO 16748 --- [           main] com.netflix.discovery.DiscoveryClient    : Client configured to neither register nor query for data.
+2020-09-22 17:51:51.740  INFO 16748 --- [           main] com.netflix.discovery.DiscoveryClient    : Discovery Client initialized at timestamp 1600768311739 with initial instances count: 0
+2020-09-22 17:51:51.791  INFO 16748 --- [           main] c.n.eureka.DefaultEurekaServerContext    : Initializing ...
+2020-09-22 17:51:51.793  INFO 16748 --- [           main] c.n.eureka.cluster.PeerEurekaNodes       : Adding new peer nodes [http://eureka2:7002/eureka/]
+2020-09-22 17:51:52.373  INFO 16748 --- [           main] c.n.d.provider.DiscoveryJerseyProvider   : Using JSON encoding codec LegacyJacksonJson
+2020-09-22 17:51:52.373  INFO 16748 --- [           main] c.n.d.provider.DiscoveryJerseyProvider   : Using JSON decoding codec LegacyJacksonJson
+2020-09-22 17:51:52.373  INFO 16748 --- [           main] c.n.d.provider.DiscoveryJerseyProvider   : Using XML encoding codec XStreamXml
+2020-09-22 17:51:52.373  INFO 16748 --- [           main] c.n.d.provider.DiscoveryJerseyProvider   : Using XML decoding codec XStreamXml
+2020-09-22 17:51:52.477  INFO 16748 --- [           main] c.n.eureka.cluster.PeerEurekaNodes       : Replica node URL:  http://eureka2:7002/eureka/
+2020-09-22 17:51:52.484  INFO 16748 --- [           main] c.n.e.registry.AbstractInstanceRegistry  : Finished initializing remote region registries. All known remote regions: []
+2020-09-22 17:51:52.484  INFO 16748 --- [           main] c.n.eureka.DefaultEurekaServerContext    : Initialized
+2020-09-22 17:51:52.493  INFO 16748 --- [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoint(s) beneath base path '/actuator'
+2020-09-22 17:51:52.514  INFO 16748 --- [           main] o.s.c.n.e.s.EurekaServiceRegistry        : Registering application UNKNOWN with eureka with status UP
+2020-09-22 17:51:52.516  INFO 16748 --- [     Thread-383] o.s.c.n.e.server.EurekaServerBootstrap   : Setting the eureka configuration..
+2020-09-22 17:51:52.516  INFO 16748 --- [     Thread-383] o.s.c.n.e.server.EurekaServerBootstrap   : Eureka data center value eureka.datacenter is not set, defaulting to default
+2020-09-22 17:51:52.517  INFO 16748 --- [     Thread-383] o.s.c.n.e.server.EurekaServerBootstrap   : Eureka environment value eureka.environment is not set, defaulting to test
+2020-09-22 17:51:52.538  INFO 16748 --- [     Thread-383] o.s.c.n.e.server.EurekaServerBootstrap   : isAws returned false
+2020-09-22 17:51:52.539  INFO 16748 --- [     Thread-383] o.s.c.n.e.server.EurekaServerBootstrap   : Initialized server context
+2020-09-22 17:51:52.539  INFO 16748 --- [     Thread-383] c.n.e.r.PeerAwareInstanceRegistryImpl    : Got 1 instances from neighboring DS node
+2020-09-22 17:51:52.539  INFO 16748 --- [     Thread-383] c.n.e.r.PeerAwareInstanceRegistryImpl    : Renew threshold is: 1
+2020-09-22 17:51:52.539  INFO 16748 --- [     Thread-383] c.n.e.r.PeerAwareInstanceRegistryImpl    : Changing status to UP
+2020-09-22 17:51:52.549  INFO 16748 --- [     Thread-383] e.s.EurekaServerInitializerConfiguration : Started Eureka Server
+2020-09-22 17:51:52.576  INFO 16748 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 7001 (http) with context path ''
+2020-09-22 17:51:52.576  INFO 16748 --- [           main] .s.c.n.e.s.EurekaAutoServiceRegistration : Updating port to 7001
+2020-09-22 17:51:53.160  INFO 16748 --- [           main] c.y.s.eureka.EurekaServerApplication     : Started EurekaServerApplication in 11.497 seconds (JVM running for 12.053)
+```
+
+# 6.查看Eureka服务
+访问http://eureka1:7001/
+EurekaServer1.png
+访问http://eureka2:7002/
+EurekaServer2.png
+可以从上面看出集群信息，
+Eureka Server 1对应的DS Replicas是eureka2;
+Eureka Server 2对应的DS Replicas是eureka1。
+
+# 7.配置Eureka Client
+Eureka Client访问Eureka Sever集群配置：
+```
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: true    
+  client:
+    service-url:
+      register-with-eureka: true
+      fetch-registry: true
+      defaultZone: http://eureka1:7001/eureka,http://eureka2:7002/eureka
+```
+只需要指定eureka.client.service-url.defaultZone这个属性，
+为所有Eureka Server集群信息即可，
+区别在于单机的时候配置一个Eureka Server即可。
+
+# 8.参考文章
+[Eureka集群搭建](https://www.cnblogs.com/xmf3628/p/11999956.html)
+[SpringCloud服务注册中心双节点集群(Eureka集群)](https://blog.csdn.net/xcbeyond/article/details/81503484)
+
+
