@@ -7,7 +7,7 @@
 下面演示启动两个Eureka Server实例组成集群。
 
 # 2.复制工程的方法
-最简单的方式把Eureka Server模块复制，
+常见的方法是把Eureka Server模块复制，
 然后修改对应的application.yml配置参数，
 然后右键模块中的主启动类，
 分别启动两个模块就可以了，
@@ -49,7 +49,7 @@ eureka:
     enable-self-preservation: false
 ```
 
-eureka-server-1对应的application-dev-2.yml：
+eureka-server-2对应的application-dev-2.yml：
 ```
 server:
   port: 7002
@@ -75,7 +75,7 @@ eureka:
 会自动发现微服务eureka-server，
 右键eureka-server模块，
 出现如下菜单：
-DuplicateAndOpenConfig.png
+![](https://upload-images.jianshu.io/upload_images/11810589-c0c8360794c131f7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 点击Duplicate Conifg创建出两个Eureka Server的实例，
 修改名称为eureka-server-1和eureka-server-2，
 然后就可以分别配置启动参数。
@@ -84,32 +84,34 @@ DuplicateAndOpenConfig.png
 点击Open Config修改配置，
 在Arguemts下面新增Program arguments参数：
 --spring.profiles.active=dev-1
-EurekaServer1Config.png
+![](https://upload-images.jianshu.io/upload_images/11810589-f5516b757d37fe30.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 点击Apply应用，
 然后Close关闭。
 
 同样右键eureka-server-2修改配置：
 --spring.profiles.active=dev-2
-EurekaServer2Config.png
+![](https://upload-images.jianshu.io/upload_images/11810589-6e1fc2126e0e617f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 配置好启动参数后，
 启动eureka-server-1和eureka-server-2实例即可：
-EurekaServerStarted.png
+![](https://upload-images.jianshu.io/upload_images/11810589-25d03c7d8827cd31.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 # 6.spring.profiles.active配置在VM arguments中
 和上面的步骤一样，
 新建eureka-server-3和eureka-server-4实例，
-右键eureka-server-1，
+右键eureka-server-3，
 点击Open Config修改配置，
 在Arguemts下面新增VM arguments参数：
 -Dspring.profiles.active=dev-1
-EurekaServer3Config.png
+![](https://upload-images.jianshu.io/upload_images/11810589-702f2ede193f029b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 点击Apply应用，
 然后Close关闭。
 
 同样右键eureka-server-4修改配置：
 -Dspring.profiles.active=dev-2
-EurekaServer4Config.png
+![](https://upload-images.jianshu.io/upload_images/11810589-28793917e10b226d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 配置好启动参数后，
 启动eureka-server-3和eureka-server-4实例即可。
@@ -122,22 +124,22 @@ EurekaServer4Config.png
 然后放到src/main/resource下的cluster目录下。
 
 --spring.config.location=classpath:cluster/eureka-server-dev-5.yml
-EurekaServer5Config.png
+![](https://upload-images.jianshu.io/upload_images/11810589-87311f5666f9711b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 --spring.config.location=classpath:cluster/eureka-server-dev-6.yml
-EurekaServer6Config.png
+![](https://upload-images.jianshu.io/upload_images/11810589-9d868fe14b9026a0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 # 8.spring.config.location配置在VM arguments中
 和上面的步骤一样，
 新建eureka-server-7和eureka-server-8实例：
 -Dspring.config.location=classpath:cluster/eureka-server-dev-5.yml
-EurekaServer7Config.png
+![](https://upload-images.jianshu.io/upload_images/11810589-5f709580f3a22d9e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 -Dspring.config.location=classpath:cluster/eureka-server-dev-5.yml
-EurekaServer8Config.png
+![](https://upload-images.jianshu.io/upload_images/11810589-75fd5ce6a3e3760e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 对应的集群启动成功：
-EurekaServerStarted2.png
+![](https://upload-images.jianshu.io/upload_images/11810589-3bbc4d2833d072d0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 # 9.只修改启动参数的方法
 不用复制配置文件，
