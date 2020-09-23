@@ -1,0 +1,169 @@
+# 1.说明
+下面这篇文章介绍了Eureka Server集群的启动方法，
+[SpringCloud创建Eureka模块集群](https://www.jianshu.com/p/854f1707e257)
+是通过jar包启动时指定配置文件的方式实现的。
+现在只有Eureka Server模块的源码，
+介绍在Eclipse中直接启动Eureka Server集群的方式，
+下面演示启动两个Eureka Server实例组成集群。
+
+# 2.复制工程的方法
+最简单的方式把Eureka Server模块复制，
+然后修改对应的application.yml配置参数，
+然后右键模块中的主启动类，
+分别启动两个模块就可以了，
+这个方法不多做介绍，
+很多Spring Cloud教学视频用的就是这种方式。
+
+# 3.复制配置文件的方法
+把对应的配置文件复制一遍，
+然后修改其中的参数，
+每个实例启动时通过启动参数，
+指定使用不同的配置文件，
+即可实现启动一套代码启动两个实例。
+指定配置文件启动的参数有两个：
+spring.profiles.active 
+spring.config.location
+上面两个参数效果下面会详细说明，
+而Eclipse中配置启动参数的方式也有两种，
+可以在Program arguments中配置参数，
+也可以在VM arguments中配置参数。
+
+# 4.配置文件说明1
+复制Eureka Server集群的配置文件：
+application-dev-1.yml
+application-dev-2.yml
+
+eureka-server-1对应的application-dev-1.yml：
+```
+server:
+  port: 7001
+eureka:
+  instance:
+    hostname: eureka1
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://eureka1:7001/eureka,http://eureka2:7002/eureka
+  server:
+    enable-self-preservation: false
+```
+
+eureka-server-1对应的application-dev-2.yml：
+```
+server:
+  port: 7002
+eureka:
+  instance:
+    hostname: eureka2
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://eureka1:7001/eureka,http://eureka2:7002/eureka
+  server:
+    enable-self-preservation: false 
+```
+
+文件名必须是application-{profile}.yml格式，
+且必须在src/main/resource目录下，
+这样才能使用spring.profiles.active参数指定profile，
+从而指定使用不同的配置文件。
+
+# 5.spring.profiles.active配置在Program arguments中
+首先在Eclipse中打开Boot Dashboard，
+会自动发现微服务eureka-server，
+右键eureka-server模块，
+出现如下菜单：
+DuplicateAndOpenConfig.png
+点击Duplicate Conifg创建出两个Eureka Server的实例，
+修改名称为eureka-server-1和eureka-server-2，
+然后就可以分别配置启动参数。
+
+右键eureka-server-1，
+点击Open Config修改配置，
+在Arguemts下面新增Program arguments参数：
+--spring.profiles.active=dev-1
+EurekaServer1Config.png
+点击Apply应用，
+然后Close关闭。
+
+同样右键eureka-server-2修改配置：
+--spring.profiles.active=dev-2
+EurekaServer2Config.png
+
+配置好启动参数后，
+启动eureka-server-1和eureka-server-2实例即可：
+EurekaServerStarted.png
+
+# 6.spring.profiles.active配置在VM arguments中
+和上面的步骤一样，
+新建eureka-server-3和eureka-server-4实例，
+右键eureka-server-1，
+点击Open Config修改配置，
+在Arguemts下面新增VM arguments参数：
+-Dspring.profiles.active=dev-1
+EurekaServer3Config.png
+点击Apply应用，
+然后Close关闭。
+
+同样右键eureka-server-4修改配置：
+-Dspring.profiles.active=dev-2
+EurekaServer4Config.png
+
+配置好启动参数后，
+启动eureka-server-3和eureka-server-4实例即可。
+
+# 7.spring.config.location配置在Program arguments中
+和上面的步骤一样，
+新建eureka-server-5和eureka-server-6实例修改配置。
+由于spring.config.location可以指定任意路径下的任意名称的配置文件，
+这里新建eureka-server-dev-5.yml和eureka-server-dev-6.yml，
+然后放到src/main/resource下的cluster目录下。
+
+--spring.config.location=classpath:cluster/eureka-server-dev-5.yml
+EurekaServer5Config.png
+
+--spring.config.location=classpath:cluster/eureka-server-dev-6.yml
+EurekaServer6Config.png
+
+# 8.spring.config.location配置在VM arguments中
+和上面的步骤一样，
+新建eureka-server-7和eureka-server-8实例：
+-Dspring.config.location=classpath:cluster/eureka-server-dev-5.yml
+EurekaServer7Config.png
+
+-Dspring.config.location=classpath:cluster/eureka-server-dev-5.yml
+EurekaServer8Config.png
+
+对应的集群启动成功：
+EurekaServerStarted2.png
+
+# 9.只修改启动参数的方法
+不用复制配置文件，
+只修改启动参数的方法，
+这种方式适合修改参数较少的情况，
+比如一个微服务集群只有启动端口不一样，
+其他参数都是一样的，
+可以使用同一个配置文件启动，
+然后在启动参数中指定不同的端口即可。
+
+和上面的步骤一样，
+新建server-1和server-2实例，
+使用同一个application-dev.yml：
+```
+server:
+  port: 7007
+```
+
+修改server-1和server-2配置：
+--server.port=7009
+--server.port=7010
+
+上面参数配置在Program arguments中，
+同样也可以配置在VM arguments中：
+-Dserver.port=7009
+-Dserver.port=7010
+
+# 10.参考文章
+[eclipse中创建的spring-boot项目在启动时指定加载那一个配置文件的设置](https://blog.csdn.net/weixin_37848710/article/details/82109697)
