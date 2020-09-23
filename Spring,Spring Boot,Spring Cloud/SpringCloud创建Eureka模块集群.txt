@@ -151,9 +151,11 @@ Eureka Server 1的启动日志，
 
 # 6.查看Eureka服务
 访问http://eureka1:7001/
-EurekaServer1.png
+![](https://upload-images.jianshu.io/upload_images/11810589-8c538ad5090d450b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 访问http://eureka2:7002/
-EurekaServer2.png
+![](https://upload-images.jianshu.io/upload_images/11810589-167797e8458232aa.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 可以从上面看出集群信息，
 Eureka Server 1对应的DS Replicas是eureka2;
 Eureka Server 2对应的DS Replicas是eureka1。
