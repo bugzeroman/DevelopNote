@@ -1,0 +1,155 @@
+1.关闭自我保护模式
+```
+eureka:
+  server:
+    enable-self-preservation: false
+```
+
+2.关闭客户端注册到Eureka
+```
+eureka:
+  client:         
+    enabled: false
+```
+
+3.公布服务IP地址而不是主机名
+当客户端向eureka注册时，
+设置prefer-ip-address为true，
+则将使用其IP地址而不是其主机名。
+```
+eureka:
+  instance:
+    hostname: client-hostname
+    prefer-ip-address: true
+```
+实际对外提供的地址就不是client-hostname,
+而是一个真实的IP，比如192.168.0.1。
+
+4.强制下线Eureka服务
+删除Eureka上面如下的服务：
+```
+SLINE-PM	n/a (2)	(2)	UP (2) - yuwen-asiainfo:sline-pm:18014 , yuwen-asiainfo:sline-pm:18015
+```
+
+使用Delete方法删除对应服务：
+http://fnc03:8761//eureka/apps/SLINE-PM/yuwen-asiainfo:sline-pm:18014
+
+如果Eureka开启了鉴权，
+则需要输入用户名密码。
+```
+username: eureka
+password: vq9mf6zUgdLQM4Ww
+```
+
+5.已经离线的服务导出返回异常
+调用Eureka上注册的服务发生异常，
+但是实际调用的服务是正常入库的：
+```
+feign.FeignException: status 404 reading 
+```
+这是由于下线的服务在Eureka上没有删除，
+导致了如上错误信息，
+强制下线Eureka服务即可解决。
+
+6.健康检查，发布给Eureka Server
+TODO
+
+7.修改Eureka实例ID
+普通的Eureka实例注册的ID等于其主机名，
+即每个主机仅提供一项服务，
+不能在一个主机上面区分多种微服务。
+Spring Cloud Eureka提供了明智的默认值：
+```
+${spring.cloud.client.hostname}:${spring.application.name}:${spring.application.instance_id:${server.port}}}
+```
+示例myhost:myappname:8080。
+
+在Spring Cloud，该值会被eureka.instance.instanceId覆盖，
+它提供了唯一标识符，
+如下application.yml所示：
+```
+eureka:
+  instance:
+    instanceId: ${spring.application.name}:${vcap.application.instance_id:${spring.application.instance_id:${random.value}}}
+```
+这样在部署的多个服务实例时就没有问题，
+因为在其中插入随机值以使实例唯一。
+
+在Cloud Foundry中，
+vcap.application.instance_id是在Spring Boot应用程序中自动填充的，
+因此不需要随机值。
+
+8.使用EurekaClient
+一旦拥有作为发现客户端的应用程序，
+就可以使用它从Eureka服务器发现服务实例。
+一种方法是使用本地com.netflix.discovery.EurekaClient,
+而不是Spring Cloud DiscoveryClient：
+```
+@Autowired
+private EurekaClient discoveryClient;
+
+public String serviceUrl() {
+    InstanceInfo instance = discoveryClient.getNextServerFromEureka("STORES", false);
+    return instance.getHomePageUrl();
+}
+```
+
+9.替代本机Netflix EurekaClient
+可以不使用原始Netflix EurekaClient，
+通常在某种包装器后面使用它会更方便。
+Spring Cloud通过逻辑Eureka服务标识符（VIP）
+而非物理URL支持Feign（REST客户端生成器）和Spring RestTemplate。
+要使用固定的物理服务器列表配置Ribbon，
+可以将<client>.ribbon.listOfServers设置为以逗号分隔的物理地址（或主机名）列表，
+其中<client>是客户端的ID。
+
+可以使用org.springframework.cloud.client.discovery.DiscoveryClient，
+它为发现客户端提供一个简单的API（非Netflix专用）：
+```
+@Autowired
+private DiscoveryClient discoveryClient;
+
+public String serviceUrl() {
+    List<ServiceInstance> list = discoveryClient.getInstances("STORES");
+    if (list != null && list.size() > 0 ) {
+        return list.get(0).getUri();
+    }
+    return null;
+}
+```
+
+10.区域划分指定
+把Eureka客户端部署到多个区域，
+则这些客户端在尝试使用其他区域中的服务之前，
+可以优先使用同一区域中的服务。
+
+11.保护Eureka服务器
+只需通过spring-boot-starter-security将Spring Security
+添加到服务器的类路径中即可保护Eureka服务器。
+默认情况下，当Spring Security在类路径上时，
+它将要求在每次向应用程序发送请求时都发送有效的CSRF令牌。
+Eureka客户通常不会拥有有效的跨站点请求伪造（CSRF）令牌，
+需要为/eureka/**端点禁用此要求：
+```
+@EnableWebSecurity
+class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.csrf().ignoringAntMatchers("/eureka/**");
+        super.configure(http);
+    }
+}
+```
+
+12.JDK 11支持
+Eureka服务器所依赖的JAXB模块已在JDK 11中删除。
+如果要在运行Eureka服务器时使用JDK 11，
+则必须在POM文件中包括这些依赖项：
+```
+<dependency>
+	<groupId>org.glassfish.jaxb</groupId>
+	<artifactId>jaxb-runtime</artifactId>
+</dependency>
+```
+
