@@ -79,51 +79,12 @@ eureka:
 vcap.application.instance_id是在Spring Boot应用程序中自动填充的，
 因此不需要随机值。
 
-8.使用EurekaClient
-一旦拥有作为发现客户端的应用程序，
-就可以使用它从Eureka服务器发现服务实例。
-一种方法是使用本地com.netflix.discovery.EurekaClient,
-而不是Spring Cloud DiscoveryClient：
-```
-@Autowired
-private EurekaClient discoveryClient;
-
-public String serviceUrl() {
-    InstanceInfo instance = discoveryClient.getNextServerFromEureka("STORES", false);
-    return instance.getHomePageUrl();
-}
-```
-
-9.替代本机Netflix EurekaClient
-可以不使用原始Netflix EurekaClient，
-通常在某种包装器后面使用它会更方便。
-Spring Cloud通过逻辑Eureka服务标识符（VIP）
-而非物理URL支持Feign（REST客户端生成器）和Spring RestTemplate。
-要使用固定的物理服务器列表配置Ribbon，
-可以将<client>.ribbon.listOfServers设置为以逗号分隔的物理地址（或主机名）列表，
-其中<client>是客户端的ID。
-
-可以使用org.springframework.cloud.client.discovery.DiscoveryClient，
-它为发现客户端提供一个简单的API（非Netflix专用）：
-```
-@Autowired
-private DiscoveryClient discoveryClient;
-
-public String serviceUrl() {
-    List<ServiceInstance> list = discoveryClient.getInstances("STORES");
-    if (list != null && list.size() > 0 ) {
-        return list.get(0).getUri();
-    }
-    return null;
-}
-```
-
-10.区域划分指定
+8.区域划分指定
 把Eureka客户端部署到多个区域，
 则这些客户端在尝试使用其他区域中的服务之前，
 可以优先使用同一区域中的服务。
 
-11.保护Eureka服务器
+9.保护Eureka服务器
 只需通过spring-boot-starter-security将Spring Security
 添加到服务器的类路径中即可保护Eureka服务器。
 默认情况下，当Spring Security在类路径上时，
@@ -142,7 +103,7 @@ class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 }
 ```
 
-12.JDK 11支持
+10.JDK 11支持
 Eureka服务器所依赖的JAXB模块已在JDK 11中删除。
 如果要在运行Eureka服务器时使用JDK 11，
 则必须在POM文件中包括这些依赖项：
