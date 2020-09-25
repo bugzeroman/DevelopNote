@@ -1,0 +1,141 @@
+# 1.说明
+本文介绍SpringCloud发现服务代码的开发，
+通过使用EurekaClient,DiscoveryClient来发现注册中心的服务等，
+从而可以自定义客户端对注册中心的高级用法。
+
+# 2.使用EurekaClient发现服务
+通过Spring自动注入的EurekaClient，
+不仅能发现服务实例，
+还能查看客户端连接等各种配置。
+
+## 2.1.代码
+```
+package com.yuwen.spring.config.client.controller;
+
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.netflix.eureka.EurekaClientConfigBean;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.netflix.appinfo.InstanceInfo;
+import com.netflix.discovery.EurekaClient;
+import com.netflix.discovery.EurekaClientConfig;
+import com.netflix.discovery.shared.Application;
+import com.netflix.discovery.shared.Applications;
+
+@RestController
+public class EurekaClientController {
+	private static Logger logger = LoggerFactory.getLogger(DiscoveryClientController.class);
+
+	@Autowired
+	private EurekaClient eurekaClient;
+
+	@GetMapping("/eureka")
+	public String getEurekaClient() {
+		EurekaClientConfig config = eurekaClient.getEurekaClientConfig();
+		if (!(config instanceof EurekaClientConfigBean)) {
+			return eurekaClient.toString();
+		}
+		EurekaClientConfigBean eurekaConfig = (EurekaClientConfigBean) config;
+		logger.info("serviceUrl=" + eurekaConfig.getServiceUrl());
+		Applications applications = eurekaClient.getApplications();
+		List<Application> registeredApplications = applications.getRegisteredApplications();
+		for (Application application : registeredApplications) {
+			logger.info("Application Name=" + application.getName());
+			List<InstanceInfo> instances = application.getInstances();
+			for (InstanceInfo instance : instances) {
+				StringBuilder sb = new StringBuilder();
+				sb.append(instance.getAppName()).append("\t").append(instance.getHostName()).append("\t")
+						.append(instance.getPort()).append("\t").append(instance.getVIPAddress());
+				logger.info("InstanceInfo=" + sb);
+			}
+		}
+
+		return eurekaClient.toString();
+	}
+}
+```
+
+## 2.2.测试
+使用浏览器访问：
+http://localhost:8005/eureka
+页面返回：
+```
+org.springframework.cloud.netflix.eureka.CloudEurekaClient@6715470c
+```
+控制台打印：
+```
+serviceUrl={fetch-registry=true, defaultZone=http://localhost:7007/eureka, register-with-eureka=true}
+Application Name=CONFIG-CLIENT
+InstanceInfo=CONFIG-CLIENT	192.168.171.1	8005	config-client
+```
+
+# 3.使用DiscoveryClient发现服务
+使用DiscoveryClient可以发现注册中心上的服务，
+注册中心可以是Eureka，也可以是Zookeeper等，
+因为不使用原始Netflix EurekaClient，
+所以在某种包装器后面的DiscoveryClient更易于使用。
+它也能提供通过服务名称查询对应的所有服务实例等功能。
+
+## 3.1.代码
+```
+package com.yuwen.spring.config.client.controller;
+
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class DiscoveryClientController {
+	private static Logger logger = LoggerFactory.getLogger(DiscoveryClientController.class);
+
+	@Autowired
+	private DiscoveryClient discoveryClient;
+
+	@GetMapping("/discovery")
+	public Object getDiscoveryClient() {
+		List<String> services = discoveryClient.getServices();
+		for (String service : services) {
+			logger.info("service=" + service);
+		}
+
+		String serviceId = "CONFIG-CLIENT";
+		List<ServiceInstance> instances = discoveryClient.getInstances(serviceId);
+		for (ServiceInstance instance : instances) {
+			StringBuilder sb = new StringBuilder();
+			sb.append(instance.getServiceId()).append("\t").append(instance.getHost()).append("\t")
+					.append(instance.getPort()).append("\t").append(instance.getUri());
+			logger.info("instance=" + sb);
+		}
+		return discoveryClient;
+	}
+}
+```
+
+## 3.1.测试
+使用浏览器访问：
+http://localhost:8005/discovery
+
+页面返回：
+```
+config-client00config-client0
+```
+控制台打印：
+```
+service=config-client
+instance=CONFIG-CLIENT	192.168.171.1	8005	http://192.168.171.1:8005
+```
+可以看到Eureka上面只有一个服务CONFIG-CLIENT，
+这个服务只有一个实例http://192.168.171.1:8005，
+其实就是提供http://localhost:8005/discovery这个服务的实例。
+
