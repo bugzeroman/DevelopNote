@@ -1,0 +1,193 @@
+# 1.说明
+本文详细介绍Spring Boot集成Actuator监控管理的方法，
+基于已经创建好的Spring Boot工程，
+然后引入Actuator依赖，
+介绍监控管理相关功能的使用。
+Spring Boot提供的准生产环境下的应用监控和管理功能，
+可以通过HTTP，JMX协议来进行操作，
+自动获得审计、运行状态及度量指标等信息。
+本文主要介绍通过HTTP进行监控和管理,
+另外通过配置SSL，能够支持HTTPS协议操作。
+
+# 2.引入依赖
+修改pom.xml文件，
+引入spring-boot-starter-actuator依赖：
+```
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+```
+实际使用的版本是2.3.1.RELEASE，
+后面的演示说明都是基于这个版本。
+
+# 3.启动服务
+配置文件和启动类都无需修改，
+只要是一个Spring Boot微服务就行。
+在application.yml文件指定了服务启动端口，
+方便后面使用HTTP访问：
+```
+server:
+  port: 8011
+```
+
+启动成功日志：
+```
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v2.3.1.RELEASE)
+
+17:17:10.366 [restartedMain] INFO  com.yuwen.spring.actuator.ActuatorApplication - Starting ActuatorApplication on yuwen-asiainfo with PID 9740 (D:\Code\Learn\SpringBoot\spring-boot-demo\actuator\target\classes started by yuwen in D:\Code\Learn\SpringBoot\spring-boot-demo\actuator)
+17:17:10.371 [restartedMain] INFO  com.yuwen.spring.actuator.ActuatorApplication - No active profile set, falling back to default profiles: default
+17:17:10.425 [restartedMain] INFO  org.springframework.boot.devtools.env.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+17:17:10.425 [restartedMain] INFO  org.springframework.boot.devtools.env.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+17:17:11.107 [restartedMain] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port(s): 8011 (http)
+17:17:11.118 [restartedMain] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8011"]
+17:17:11.118 [restartedMain] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+17:17:11.118 [restartedMain] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.36]
+17:17:11.164 [restartedMain] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+17:17:11.164 [restartedMain] INFO  org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 738 ms
+17:17:11.326 [restartedMain] INFO  org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor - Initializing ExecutorService 'applicationTaskExecutor'
+17:17:11.497 [restartedMain] INFO  org.springframework.boot.devtools.autoconfigure.OptionalLiveReloadServer - LiveReload server is running on port 35729
+17:17:11.500 [restartedMain] INFO  org.springframework.boot.actuate.endpoint.web.EndpointLinksResolver - Exposing 2 endpoint(s) beneath base path '/actuator'
+17:17:11.513 [restartedMain] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8011"]
+17:17:11.526 [restartedMain] INFO  org.springframework.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port(s): 8011 (http) with context path ''
+17:17:11.566 [restartedMain] INFO  com.yuwen.spring.actuator.ActuatorApplication - Started ActuatorApplication in 1.414 seconds (JVM running for 2.41)
+17:17:12.939 [RMI TCP Connection(9)-127.0.0.1] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+17:17:12.939 [RMI TCP Connection(9)-127.0.0.1] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+17:17:12.942 [RMI TCP Connection(9)-127.0.0.1] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+```
+请注意如下日志：
+```
+Exposing 2 endpoint(s) beneath base path '/actuator'
+```
+说明在基本路径'/actuator'下暴露2个端点。
+
+# 4.通过日志查看暴露的端点
+上面的日志只说明了暴露了2个端点，
+具体对外暴露的端点可以通过配置日志查看。
+
+修改log4j2.xml日志级别为Trace:
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+  <Appenders>
+    <Console name="Console" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+    </Console>
+  </Appenders>
+  <Loggers>
+    <Root level="TRACE">
+      <AppenderRef ref="Console"/>
+    </Root>
+  </Loggers>
+</Configuration>
+```
+
+重启服务可以看到如下日志：
+```
+17:20:34.665 [restartedMain] INFO  org.springframework.boot.actuate.endpoint.web.EndpointLinksResolver - Exposing 2 endpoint(s) beneath base path '/actuator'
+17:20:34.666 [restartedMain] TRACE org.springframework.beans.factory.support.DefaultListableBeanFactory - Eagerly caching bean 'webEndpointServletHandlerMapping' to allow for resolving potential circular references
+17:20:34.666 [restartedMain] TRACE org.springframework.beans.factory.support.DefaultListableBeanFactory - Invoking afterPropertiesSet() on bean with name 'webEndpointServletHandlerMapping'
+17:20:34.666 [restartedMain] TRACE org.springframework.boot.actuate.endpoint.web.servlet.WebMvcEndpointHandlerMapping - Register "{GET /actuator/health, produces [application/vnd.spring-boot.actuator.v3+json || application/vnd.spring-boot.actuator.v2+json || application/json]}" to java.lang.Object org.springframework.boot.actuate.endpoint.web.servlet.AbstractWebMvcEndpointHandlerMapping$OperationHandler.handle(javax.servlet.http.HttpServletRequest,java.util.Map<java.lang.String, java.lang.String>)
+17:20:34.666 [restartedMain] TRACE org.springframework.boot.actuate.endpoint.web.servlet.WebMvcEndpointHandlerMapping - Register "{GET /actuator/health/**, produces [application/vnd.spring-boot.actuator.v3+json || application/vnd.spring-boot.actuator.v2+json || application/json]}" to java.lang.Object org.springframework.boot.actuate.endpoint.web.servlet.AbstractWebMvcEndpointHandlerMapping$OperationHandler.handle(javax.servlet.http.HttpServletRequest,java.util.Map<java.lang.String, java.lang.String>)
+17:20:34.666 [restartedMain] TRACE org.springframework.boot.actuate.endpoint.web.servlet.WebMvcEndpointHandlerMapping - Register "{GET /actuator/info, produces [application/vnd.spring-boot.actuator.v3+json || application/vnd.spring-boot.actuator.v2+json || application/json]}" to java.lang.Object org.springframework.boot.actuate.endpoint.web.servlet.AbstractWebMvcEndpointHandlerMapping$OperationHandler.handle(javax.servlet.http.HttpServletRequest,java.util.Map<java.lang.String, java.lang.String>)
+17:20:34.667 [restartedMain] TRACE org.springframework.boot.actuate.endpoint.web.servlet.WebMvcEndpointHandlerMapping - Register "{GET /actuator, produces [application/vnd.spring-boot.actuator.v3+json || application/vnd.spring-boot.actuator.v2+json || application/json]}" to public java.util.Map<java.lang.String, java.util.Map<java.lang.String, org.springframework.boot.actuate.endpoint.web.Link>> org.springframework.boot.actuate.endpoint.web.servlet.WebMvcEndpointHandlerMapping$WebMvcLinksHandler.links(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse)
+```
+可以看到有4个URL服务端点：
+```
+GET /actuator/health 
+GET /actuator/health/** 
+GET /actuator/info 
+GET /actuator 
+```
+其中一个是/actuator自己，
+/actuator下面有3个URL，
+但是/health和/health/**其实是1个端点，
+所以日志中说是在基本路径下暴露2个端点。
+
+# 5.通过HTTP查看暴露的端点
+浏览器访问监控管理提供的基本路径：
+```
+http://localhost:8011/actuator
+```
+同样可以看到暴露出来的所有端点：
+```
+{
+    "_links": {
+        "self": {
+            "href": "http://localhost:8011/actuator",
+            "templated": false
+        },
+        "health": {
+            "href": "http://localhost:8011/actuator/health",
+            "templated": false
+        },
+        "health-path": {
+            "href": "http://localhost:8011/actuator/health/{*path}",
+            "templated": true
+        },
+        "info": {
+            "href": "http://localhost:8011/actuator/info",
+            "templated": false
+        }
+    }
+}
+```
+
+# 6.查看health端口
+访问上面查询出的health端口：
+```
+http://localhost:8011/actuator/health
+```
+
+返回结果：
+```
+{
+    "status": "UP"
+}
+```
+代表监控的微服务状态是正常运行的。
+
+# 7.查看info端口
+访问上面查询出的info端口：
+```
+http://localhost:8011/actuator/info
+```
+返回结果：
+```
+{}
+```
+返回结果为空，
+因为还没有在application.yml中设置参数。
+
+# 8.新增info参数
+在application.yml中新增info参数：
+```
+info:
+  description: spring boot actuator
+```
+在info下新增description参数，
+重启服务后访问info端口：
+```
+http://localhost:8011/actuator/info
+```
+返回结果：
+```
+{
+    "description": "spring boot actuator"
+}
+```
+可以看到新增的参数能够查询出来了，
+实际上在info下可以新增任意参数，
+都能够通过info端点查询出来。
+
+# 9.参考文档
+[Spring Boot Actuator: Production-ready Features](https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-features.html#production-ready-endpoints)
+
+
+
