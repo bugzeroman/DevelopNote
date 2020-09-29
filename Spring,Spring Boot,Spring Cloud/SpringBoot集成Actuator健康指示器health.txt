@@ -1,0 +1,435 @@
+# 1.说明
+本文详细介绍Actuator提供的HealthIndicators，
+即健康指示器的配置使用，
+利用自动配置的健康指标，
+检查正在运行的应用程序的状态，
+以及自定义健康指标的方法。
+监控软件通过调用健康指示器接口，
+在生产系统出现故障时发出提醒。
+
+# 2.查看健康指示器
+访问health端点：
+```
+http://localhost:8011/actuator/health
+```
+返回结果：
+```
+{
+    "status": "UP"
+}
+```
+
+# 3.显示详细信息
+health端点公开的信息可以配置，
+通过management.endpoint.health.show-details属性，
+可以配置为以下值之一：
+| 名称            | 描述                                                         |
+| --------------- | ------------------------------------------------------------ |
+| never           | 详细信息从不显示。                                           |
+| when-authorized | 详细信息仅显示给授权用户，可以使用management.endpoint.health.roles配置授权角色。|
+| always          | 详细信息显示给所有用户。                                     |
+默认值为never，
+所以上面返回结果显示的信息很少。
+
+当用户处于端点的一个或多个角色时，
+该用户被视为已被授权。
+如果端点没有配置授权角色（默认），
+则所有经过身份验证的用户都被视为已授权，
+可以使用management.endpoint.health.roles配置授权角色。
+
+下面设置show-details属性为always,
+显示所有的详细信息：
+```
+management:
+  endpoint:
+    health:
+      show-details: always
+```
+
+重启后再次访问health端点：
+```
+{
+    "status": "UP",
+    "components": {
+        "diskSpace": {
+            "status": "UP",
+            "details": {
+                "total": 2000397791232,
+                "free": 831475470336,
+                "threshold": 10485760,
+                "exists": true
+            }
+        },
+        "ping": {
+            "status": "UP"
+        }
+    }
+}
+```
+可以看到健康指示器下面多出来的两个指标，
+分别为diskSpace磁盘空间和ping检查。
+
+# 4.自动配置HealthIndicators
+在应用程序使用到相关功能的情况下，
+Spring Boot会自动配置以下HealthIndicators，
+这样访问health端点的时候就能看到对应指标：
+| 名称                         | 描述                                 |
+| ---------------------------- | -------------------------------------|
+| CassandraHealthIndicator     | 检查Cassandra数据库是否已启动。      |
+| CouchbaseHealthIndicator     | 检查Couchbase群集是否启动。          |
+| DiskSpaceHealthIndicator     | 检查磁盘空间是否不足。               |
+| DataSourceHealthIndicator    | 检查是否可以获取到DataSource的连接。 |
+| ElasticsearchHealthIndicator | 检查Elasticsearch群集是否启动。      |
+| InfluxDbHealthIndicator      | 检查InfluxDB服务器是否启动。         |
+| JmsHealthIndicator           | 检查JMS代理是否启动。                |
+| MailHealthIndicator          | 检查邮件服务器是否启动。             |
+| MongoHealthIndicator         | 检查Mongo数据库是否已启动。          |
+| Neo4jHealthIndicator         | 检查Neo4j服务器是否启动。            |
+| RabbitHealthIndicator        | 检查Rabbit服务器是否启动。           |
+| RedisHealthIndicator         | 检查Redis服务器是否启动。            |
+| SolrHealthIndicator          | 检查Solr服务器是否启动。             |
+
+# 5.配置DataSource指标
+下面演示配置DataSource指标的方法，
+同样的其他指标在引入相关功能后会自动配置。
+
+在引入数据库相关的starter之后，
+就会自动配置DataSource指标。
+在pom.xml中新增MySQL数据库依赖：
+```
+<dependency>
+	<groupId>mysql</groupId>
+	<artifactId>mysql-connector-java</artifactId>
+	<scope>runtime</scope>
+</dependency>
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-jdbc</artifactId>
+</dependency>
+```
+然后在application.yml中新增数据库配置：
+```
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://10.21.6.30:3306/demodb
+    username: demo
+    password: demo123456
+```
+
+重启后再次访问health端点：
+```
+{
+    "status": "UP",
+    "components": {
+        "db": {
+            "status": "UP",
+            "details": {
+                "database": "MySQL",
+                "validationQuery": "isValid()"
+            }
+        },
+        "diskSpace": {
+            "status": "UP",
+            "details": {
+                "total": 2000397791232,
+                "free": 831475470336,
+                "threshold": 10485760,
+                "exists": true
+            }
+        },
+        "ping": {
+            "status": "UP"
+        }
+    }
+}
+```
+可以看到多出来了db指标，
+连接的是MySQL数据库，
+并且数据库连接是正常的。
+
+故意将数据库的密码配置错误，
+重启后再次访问health端点：
+```
+{
+    "status": "DOWN",
+    "components": {
+        "db": {
+            "status": "DOWN",
+            "details": {
+                "error": "org.springframework.jdbc.CannotGetJdbcConnectionException: 
+                Failed to obtain JDBC Connection; nested exception is java.sql.SQLException: 
+                Access denied for user 'demo'@'10.21.6.30' (using password: YES)"
+            }
+        },
+        "diskSpace": {
+            "status": "UP",
+            "details": {
+                "total": 2000397791232,
+                "free": 831475466240,
+                "threshold": 10485760,
+                "exists": true
+            }
+        },
+        "ping": {
+            "status": "UP"
+        }
+    }
+}
+```
+发现db指标是DOWN状态了。
+
+# 6.启用和禁用指标
+默认所有指标都是启用的，
+可以通过设置management.health.defaults.enabled属性来禁用，
+设置为false就是禁用所有指标，
+然后可以单独启用某个指标。
+
+下面演示禁用所有指标，
+仅启用db指标：
+```
+management:
+  endpoint:
+    health:
+      show-details: always
+  health:
+    defaults:
+      enabled: false
+    db:
+      enabled: true
+```
+
+重启后再次访问health端点,
+就只能看到db指标了：
+```
+{
+    "status": "UP",
+    "components": {
+        "db": {
+            "status": "UP",
+            "details": {
+                "database": "MySQL",
+                "validationQuery": "isValid()"
+            }
+        }
+    }
+}
+```
+
+如果应用程序使用了数据库相关功能，
+但是不想对外开放db指标，
+可以单独禁用db指标：
+```
+management:
+  endpoint:
+    health:
+      show-details: always
+  health:
+    defaults:
+      enabled: true
+    db:
+      enabled: false
+```
+
+# 7.自定义HealthIndicators方法1
+要使用自定义健康信息，
+可以注册实现HealthIndicator接口的Spring beans。
+提供health()方法的实现并返回Health响应。
+Health响应应包括状态，
+并可以增加其他详细信息。
+
+以下代码演示了一个HealthIndicator的实现,
+名称为MyHealthIndicator，
+这样指标名称就是my，
+注意实现类的名称格式必须为XXXHealthIndicator：
+```
+package com.yuwen.spring.actuator.actuate.health;
+
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.stereotype.Component;
+
+@Component
+public class MyHealthIndicator implements HealthIndicator {
+
+	private static int num = 0;
+
+	@Override
+	public Health health() {
+		// 进行一些特定的健康检查
+		int errorCode = check();
+		if (errorCode != 0) {
+			return Health.down().withDetail("Error Code", errorCode).build();
+		}
+		return Health.up().build();
+	}
+
+	// 这里模拟检查，设置为一次正常一次异常
+	private int check() {
+		num++;
+		return num % 2;
+	}
+}
+```
+
+重启后访问health端点,
+检查结果为异常：
+```
+{
+    "status": "DOWN",
+    "components": {
+        "my": {
+            "status": "DOWN",
+            "details": {
+                "Error Code": 1
+            }
+        }
+    }
+}
+```
+
+再次访问health端点,
+检查结果为正常：
+```
+{
+    "status": "UP",
+    "components": {
+        "my": {
+            "status": "UP"
+        }
+    }
+}
+```
+
+如果只想显示my指标的结果：
+可以修改application.yml，
+禁用所有的内置指标:
+```
+management:
+  endpoint:
+    health:
+      show-details: always
+  health:
+    defaults:
+      enabled: false
+```
+
+# 8.修改自定义指标的名称
+如果不想修改实现类的名称，
+可以通过Component修改指标名称：
+```
+@Component("my1")
+public class MyHealthIndicator implements HealthIndicator
+```
+
+这样指标名称就从my改为my1了：
+```
+{
+    "status": "DOWN",
+    "components": {
+        "my1": {
+            "status": "DOWN",
+            "details": {
+                "Error Code": 1
+            }
+        }
+    }
+}
+{
+    "status": "UP",
+    "components": {
+        "my1": {
+            "status": "UP"
+        }
+    }
+}
+```
+
+# 9.自定义HealthIndicators方法2
+通过继承AbstractHealthIndicator抽象类，
+重写doHealthCheck方法，
+而不是直接实现HealthIndicator接口，
+功能比第一种要强大一点点，
+默认的DataSourceHealthIndicator、
+RedisHealthIndicator都是这种方法，
+代码回调中还做了异常的处理。
+
+以下代码演示了一个AbstractHealthIndicator的继承类，
+名称为My2HealthIndicator，
+这样指标名称就是my2：
+```
+package com.yuwen.spring.actuator.actuate.health;
+
+import org.springframework.boot.actuate.health.AbstractHealthIndicator;
+import org.springframework.boot.actuate.health.Health.Builder;
+import org.springframework.stereotype.Component;
+
+@Component
+public class My2HealthIndicator extends AbstractHealthIndicator {
+
+	private static int num = 0;
+
+	@Override
+	protected void doHealthCheck(Builder builder) throws Exception {
+		int errorCode = check();
+		if (errorCode != 0) {
+			builder.down().withDetail("code", errorCode).withDetail("num", num).build();
+			return;
+		}
+		builder.up().withDetail("code", errorCode).withDetail("num", num).build();
+	}
+
+	// 这里模拟检查，设置为一次成功一次失败
+	private int check() {
+		num++;
+		return num % 2;
+	}
+}
+```
+
+重启后访问health端点,
+检查结果为异常：
+```
+{
+    "status": "DOWN",
+    "components": {
+        "my1": {
+            "status": "DOWN",
+            "details": {
+                "Error Code": 1
+            }
+        },
+        "my2": {
+            "status": "DOWN",
+            "details": {
+                "code": 1,
+                "num": 1
+            }
+        }
+    }
+}
+```
+
+再次访问health端点,
+检查结果为正常：
+```
+{
+    "status": "UP",
+    "components": {
+        "my1": {
+            "status": "UP"
+        },
+        "my2": {
+            "status": "UP",
+            "details": {
+                "code": 0,
+                "num": 2
+            }
+        }
+    }
+}
+```
+
+# 10.参考文档
+[Spring Boot Actuator: Production-ready Features](https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-features.html#production-ready-endpoints)
+[Spring Boot (27) actuator服务监控与管理](https://www.cnblogs.com/baidawei/p/9183531.html)
