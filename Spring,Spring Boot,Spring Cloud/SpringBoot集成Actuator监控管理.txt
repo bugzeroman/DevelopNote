@@ -139,8 +139,8 @@ http://localhost:8011/actuator
 }
 ```
 
-# 6.查看health端口
-访问上面查询出的health端口：
+# 6.查看health端点
+访问上面查询出的health端点：
 ```
 http://localhost:8011/actuator/health
 ```
@@ -153,8 +153,8 @@ http://localhost:8011/actuator/health
 ```
 代表监控的微服务状态是正常运行的。
 
-# 7.查看info端口
-访问上面查询出的info端口：
+# 7.查看info端点
+访问上面查询出的info端点：
 ```
 http://localhost:8011/actuator/info
 ```
@@ -172,7 +172,7 @@ info:
   description: spring boot actuator
 ```
 在info下新增description参数，
-重启服务后访问info端口：
+重启服务后访问info端点：
 ```
 http://localhost:8011/actuator/info
 ```
