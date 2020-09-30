@@ -79,7 +79,10 @@ CREATE TABLE `city` (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 -- 修改表
+-- 添加列
 ALTER TABLE city ADD COLUMN city_level INT AFTER city_name;
+ALTER TABLE city ADD COLUMN logic_flag int not null default 1 comment '1:正常；0:(逻辑)删除。默认为1'
+AFTER description;
 
 -- 删除表
 DROP TABLE city;
