@@ -1,0 +1,72 @@
+# 1.IDEA安装目录
+D:\Packages\DevelopTools\idea
+
+# 2.调整字体
+File -> Settings -> Editor -> Font
+
+# 3.快捷键改成Eclipse操作模式
+File -> Settings -> Keymap -> 下拉框选择Eclipse
+Main-menu -> Code-Completion-Basic  类名自动完成  改成Alt+/
+Evalue Expression  执行选中代码  Ctrl+Shift+
+
+如果提示快捷键冲突，选择OK强制修改，
+然后按提示移除冲突的快捷键就行了，
+相当于抢占了其他功能的快捷键。
+
+# 4.代码格式化
+安装Save actions插件：
+File -> Settings -> Plugins，搜索“Save actions” 即可
+安装后配置：
+File -> Settings -> Other Settings -> Save Actions
+所有代码格式化打钩等
+然后在保存文件时，使用Ctrl+Shift+S保存时，即会自动格式化。
+
+# 5.设置Jdk
+进入任意一个project 空间，点击File -> Project Structure，
+进入Project Structure 页面，选择SDKs -> 添加 -> jdk，
+在弹出的jdk选择页面，选择jdk的安装根目录，确定即可。
+
+# 6.设置Maven
+File -> Settings -> Build,Exection,Deployment -> Build Tools -> Mavne
+Maven home directory填写自己安装的Maven:
+C:\Program Develop\apache-maven-3.3.9
+勾选User Settings File后面的Override,填写自己的settings.xml文件：
+C:\Program Develop\apache-maven-3.3.9\conf\settings.xml
+
+# 7.切换打开过的工程
+File -> Open Recent -> Manage Projects...
+在弹出的对话框中选择需要打开的工程。
+
+# 8.修改全局Settings
+在某个工程下面通过File -> Settings只能修改当前工程对应的配置。
+需要close project关闭工程，退出到最外层界面，
+在右下角Configure进入Settings修改全局的配置。+
+
+# 9.修改高亮显示
+Highlighting Level
+点击右下角带帽子的小人头，
+把高亮显示级别从Inspctions
+修改为Syntax,
+即可取消掉无用的波浪线。
+
+# 10.插件安装
+在线安装插件：
+File -> Settings -> Plugins -> Marketplace
+在搜索框输入要查找的插件即可。
+
+离线安装插件：
+File -> Settings -> Plugins -> 点击右上角齿轮按钮 -> Install Plugin from Disk...
+选择本地下载的插件安装包即可。
+
+插件安装好后，点击Restart IDEA重启生效。
+
+右边的Installed显示了已经安装好的插件，
+在插件下面可以选择Disable禁用,
+也可以Enable启动，
+还可以点击右边的小箭头，
+出现下拉框Uninstall卸载。
+
+需要注意显示Disable时，
+表示插件已经启用，
+左边插件旁边的复选框会打钩，
+禁用时就没有打钩，而且置灰。
