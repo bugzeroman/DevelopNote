@@ -102,7 +102,7 @@ See https://logging.apache.org/log4j/2.x/manual/configuration.html for instructi
 11:33:08.440 [main] FATAL org.apache.logging.log4j.Log4j2Test - fatal level log
 ```
 可以看到ERROR报错了，没有找到Log4j2的配置文件，
-使用了默认配置，只打印errors日志到console控制台，
+使用了默认配置，只打印error级别日志到console控制台，
 然后控制台输出了error和fatal两个级别的日志信息。
 
 # 5.日志级别
@@ -238,7 +238,7 @@ status控制Log4j2内部日志的输出级别，
 Log4j2会输出初始化、翻转和其他内部操作的详细信息。
 设置status="TRACE"对定位Log4j2问题非常有用。
 ```
-<Configuration status="WARN">
+<Configuration status="TRACE">
 ```
 也可以设置系统属性log4j2.debug，
 也会将Log4j2内部日志打印到控制台，
