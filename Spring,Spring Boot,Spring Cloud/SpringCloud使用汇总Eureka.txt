@@ -114,3 +114,11 @@ Eureka服务器所依赖的JAXB模块已在JDK 11中删除。
 </dependency>
 ```
 
+11.Eureka常用URL
+http://localhost:7007
+http://localhost:7007/eureka/apps
+http://localhost:7007/eureka/apps/CONFIG-CLIENT
+
+
+
+

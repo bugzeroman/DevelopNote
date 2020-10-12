@@ -8,7 +8,7 @@ Spring Boot包括许多内置的端点，
 也可以通过include和exclude属性通配，
 这会影响端点的Bean创建。
 要远程访问端点，还必须通过JMX或HTTP公开。
-大多数应用程序选择HTTP，
+大多数应用程序选择HTTP方式对外开放，
 其中/actuator前缀和端点的ID组成了对外暴露的URL。
 比如默认情况下，health端点映射到/actuator/health。
 
@@ -26,10 +26,10 @@ Spring Boot包括许多内置的端点，
 | env              | 从Spring的ConfigurableEnvironment中公开属性。                |
 | flyway           | 显示已应用的所有Flyway数据库迁移。                           |
 | health           | 显示应用程序运行状况信息。                                   |
-| httptrace        | 显示HTTP跟踪信息（默认情况下，最后100个HTTP请求-响应交换）。 |
+| httptrace        | 显示HTTP跟踪信息（默认情况下，记录最后100个HTTP请求-响应）。 |
 | info             | 显示任意应用程序信息。                                       |
 | integrationgraph | 显示Spring集成图。                                           |
-| loggers          | 显示和修改应用程序中记录器的配置。                           |
+| loggers          | 显示和修改应用程序中日志记录器的配置。                           |
 | liquibase        | 显示已应用的任何Liquibase数据库迁移。                        |
 | metrics          | 显示当前应用程序的"度量"信息。                               |
 | mappings         | 显示所有@RequestMapping路径的整理列表。                      |
@@ -48,7 +48,7 @@ Spring Boot包括许多内置的端点，
 
 # 3.默认公开端点
 由于端点可能包含敏感信息，
-因此应仔细考虑何时公开它们。
+因此要仔细考虑何时公开它们。
 下表显示了内置端点对于JMX或HTTP，
 是否默认对外公开的情况：
 | ID               | JMX  | HTTP |
