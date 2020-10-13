@@ -1,0 +1,366 @@
+# 1.说明
+本文介绍使用gRPC创建Java版本的RPC服务，
+包括通过.proto文件生成Java代码的方法，
+以及服务端和客户端代码使用示例。
+
+# 2.创建生成代码工程
+创建Maven工程，grpc-compile。
+
+## 2.1.修改pom.xml
+引入生成代码需要的jar包依赖，
+以及构建依赖配置：
+```
+<dependencies>
+	<dependency>
+		<groupId>io.grpc</groupId>
+		<artifactId>grpc-protobuf</artifactId>
+		<version>1.32.1</version>
+	</dependency>
+	<dependency>
+		<groupId>io.grpc</groupId>
+		<artifactId>grpc-stub</artifactId>
+		<version>1.32.1</version>
+	</dependency>
+</dependencies>
+<build>
+	<extensions>
+		<extension>
+			<groupId>kr.motd.maven</groupId>
+			<artifactId>os-maven-plugin</artifactId>
+			<version>1.6.2</version>
+		</extension>
+	</extensions>
+	<plugins>
+		<plugin>
+			<groupId>org.xolstice.maven.plugins</groupId>
+			<artifactId>protobuf-maven-plugin</artifactId>
+			<version>0.6.1</version>
+			<configuration>
+				<protocArtifact>com.google.protobuf:protoc:3.12.0:exe:${os.detected.classifier}</protocArtifact>
+				<pluginId>grpc-java</pluginId>
+				<pluginArtifact>io.grpc:protoc-gen-grpc-java:1.32.1:exe:${os.detected.classifier}</pluginArtifact>
+			</configuration>
+			<executions>
+				<execution>
+					<goals>
+						<goal>compile</goal>
+						<goal>compile-custom</goal>
+					</goals>
+				</execution>
+			</executions>
+		</plugin>
+	</plugins>
+</build>
+```
+
+## 2.2.创建.proto文件
+在src\main下面新建proto目录，
+在里面创建helloworld.proto文件：
+```
+// 显示声明使用proto3, 否则使用默认的proto2
+syntax = "proto3";
+
+// 生成类的包名
+option java_package = "com.asiainfo.yuwen.grpc.helloworld";
+// 生成类的文件名，否则默认生成的类名为proto文件名的驼峰命名
+option java_outer_classname = "HelloWorldProto";
+// 定义的所有消息、枚举和服务生成对应的多个类文件，而不是以内部类的形式出现
+option java_multiple_files = false;
+
+// greeting服务定义
+service Greeter {
+  // sayHello方法，格式为"方法名 请求参数 返回参数"
+  rpc SayHello (HelloRequest) returns (HelloReply) {}
+  // 另一个sayHello方法
+  rpc SayHelloAgain (HelloRequest) returns (HelloReply) {}
+}
+
+// 方法请求,包含用户名
+message HelloRequest {
+  string name = 1;
+}
+
+// 方法响应,包含响应的消息
+message HelloReply {
+  string message = 1;
+}
+```
+
+## 2.3.生成Java代码
+在grpc-compile下执行Maven编译命令：
+```
+mvn clean compile
+```
+会在target目录下生成代码:
+![](https://upload-images.jianshu.io/upload_images/11810589-b214c9f42d772b86.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+主要关注generated-sources目录：
+generated-sources\protobuf\grpc-java目录下生成了
+com\asiainfo\yuwen\grpc\helloworld\GreeterGrpc.java;
+generated-sources\protobuf\java目录下生成了
+com\asiainfo\yuwen\grpc\helloworld\HelloWorldProto.java。
+
+其中GreeterGrpc.java对应greeting服务定义，
+如果有多个服务，会对应生成多个java类，
+HelloWorldProto.java对应消息、枚举等对象的定义。
+由于生成的代码内容太多了，这里就不贴出来了。
+
+# 3.创建服务端工程
+创建Maven工程，grpc-server。
+
+## 3.1.修改pom.xml
+引入使用gRPC需要依赖的jar包:
+```
+<dependencies>
+	<dependency>
+		<groupId>io.grpc</groupId>
+		<artifactId>grpc-netty-shaded</artifactId>
+		<version>1.32.1</version>
+	</dependency>
+	<dependency>
+		<groupId>io.grpc</groupId>
+		<artifactId>grpc-protobuf</artifactId>
+		<version>1.32.1</version>
+	</dependency>
+	<dependency>
+		<groupId>io.grpc</groupId>
+		<artifactId>grpc-stub</artifactId>
+		<version>1.32.1</version>
+	</dependency>
+</dependencies>
+```
+
+## 3.2.拷贝生成的代码
+把上面生成的Java代码，
+GreeterGrpc.java和HelloWorldProto.java，
+拷贝到grpc-server的src/main/java目录下，
+可以从com这一层目录开始拷贝，
+这样就不用再手动创建包路径了。
+
+## 3.3.创建greeting服务实现类
+为了实现greeting服务定义的两个sayHello方法，
+需要继承GreeterGrpc.GreeterImplBase接口，
+创建实现类GreeterImpl.java：
+```
+package com.asiainfo.yuwen.grpc.helloworld.controller.impl;
+
+import com.asiainfo.yuwen.grpc.helloworld.GreeterGrpc;
+import com.asiainfo.yuwen.grpc.helloworld.HelloWorldProto.HelloReply;
+import com.asiainfo.yuwen.grpc.helloworld.HelloWorldProto.HelloRequest;
+
+import io.grpc.stub.StreamObserver;
+
+/**
+ * <pre>
+ * greeting服务实现类
+ * </pre>
+ */
+public class GreeterImpl extends GreeterGrpc.GreeterImplBase {
+
+	@Override
+	public void sayHello(HelloRequest req, StreamObserver<HelloReply> responseObserver) {
+		HelloReply reply = HelloReply.newBuilder().setMessage("Hello " + req.getName()).build();
+		responseObserver.onNext(reply);
+		responseObserver.onCompleted();
+	}
+
+	@Override
+	public void sayHelloAgain(HelloRequest req, StreamObserver<HelloReply> responseObserver) {
+		HelloReply reply = HelloReply.newBuilder().setMessage("Hello again " + req.getName()).build();
+		responseObserver.onNext(reply);
+		responseObserver.onCompleted();
+	}
+}
+```
+
+## 3.4.创建服务端启动类
+为了对外提供gRPC服务，
+需要创建服务端启动类GRPCServer.java:
+```
+package com.asiainfo.yuwen.grpc.server;
+
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
+import com.asiainfo.yuwen.grpc.helloworld.controller.impl.GreeterImpl;
+
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+
+/**
+ * gRPC服务启动类,启动时注册添加需要对外提供的服务类
+ */
+public class GRPCServer {
+
+	private Server server;
+
+	private void start() throws IOException {
+		// 服务运行端口
+		int port = 50051;
+		// 注册对外提供的服务
+		server = ServerBuilder.forPort(port).addService(new GreeterImpl()).build().start();
+		System.out.println("Server started, listening on " + port);
+
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				// 使用标准错误输出，因为日志记录器有可能在JVM关闭时被重置
+				System.err.println("*** shutting down gRPC server since JVM is shutting down");
+				try {
+					GRPCServer.this.stop();
+				} catch (InterruptedException e) {
+					e.printStackTrace(System.err);
+				}
+				System.err.println("*** server shut down");
+			}
+		});
+	}
+
+	private void stop() throws InterruptedException {
+		if (server != null) {
+			server.shutdown().awaitTermination(30, TimeUnit.SECONDS);
+		}
+	}
+
+	/**
+	 * 在主线程上等待终止，因为grpc库使用守护进程。
+	 */
+	private void blockUntilShutdown() throws InterruptedException {
+		if (server != null) {
+			server.awaitTermination();
+		}
+	}
+
+	/**
+	 * 启动服务Main方法
+	 */
+	public static void main(String[] args) throws IOException, InterruptedException {
+		final GRPCServer server = new GRPCServer();
+		server.start();
+		server.blockUntilShutdown();
+	}
+}
+```
+
+## 3.5.服务端启动
+通过执行GRPCServer的main方法，
+就能启动服务了，
+启动成功打印日志：
+```
+Server started, listening on 50051
+```
+
+# 4.创建服务端工程
+创建Maven工程，grpc-client。
+
+## 4.1.修改pom.xml
+操作步骤和上面服务端相同。
+
+## 4.2.拷贝生成的代码
+操作步骤和上面服务端相同。
+由于客户端和服务端都依赖了生成的代码，
+以及依赖相同的jar包，
+可以提取到common公共工程里面，
+这样方便其他工程依赖和后续修改。
+
+## 4.3.创建客户端调用类
+创建一个简单的客户端，
+用于测试greeting服务，
+创建GRPCClient.java:
+```
+package com.asiainfo.yuwen.grpc.client;
+
+import java.util.concurrent.TimeUnit;
+
+import com.asiainfo.yuwen.grpc.helloworld.GreeterGrpc;
+import com.asiainfo.yuwen.grpc.helloworld.HelloWorldProto.HelloReply;
+import com.asiainfo.yuwen.grpc.helloworld.HelloWorldProto.HelloRequest;
+
+import io.grpc.Channel;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
+
+/**
+ * 一个简单的客户端，测试greeting服务
+ */
+public class GRPCClient {
+
+	private final GreeterGrpc.GreeterBlockingStub greeterBlocStub;
+
+	/**
+	 * 构造使用现有通道访问服务端的客户端
+	 */
+	public GRPCClient(Channel channel) {
+		// 'channel'在这里是Channel,而不是ManagedChannel,所有它负责关闭
+
+		// 向代码传递通道可以使代码更容易测试，也可以更容易地重用通道。
+		// 同时这里创建的是同步(阻塞)RPC服务。
+		greeterBlocStub = GreeterGrpc.newBlockingStub(channel);
+	}
+
+	/** 向服务端发送请求 */
+	public void greet(String name) {
+		System.out.println("Will try to greet " + name + " ...");
+		HelloRequest request = HelloRequest.newBuilder().setName(name).build();
+		HelloReply response;
+		try {
+			response = greeterBlocStub.sayHello(request);
+		} catch (StatusRuntimeException e) {
+			System.out.println("WARNING, RPC failed: Status=" + e.getStatus());
+			return;
+		}
+		System.out.println("Greeting: " + response.getMessage());
+	}
+
+	/**
+	 * 客户端启动入口，可以支持填写2个参数，否则使用默认值。 第1个参数是用户名。 第2个参数是目标服务器，格式IP:Port。
+	 */
+	public static void main(String[] args) throws Exception {
+		String user = "world";
+		// 访问本机在50051端口上运行的服务
+		String target = "localhost:50051";
+		// 命令行用法帮助，允许将用户名和目标服务器作为命令行参数传入。
+		if (args.length > 0) {
+			if ("--help".equals(args[0])) {
+				System.err.println("Usage: [name [target]]");
+				System.err.println("");
+				System.err.println("  name    The name you wish to be greeted by. Defaults to " + user);
+				System.err.println("  target  The server to connect to. Defaults to " + target);
+				System.exit(1);
+			}
+			user = args[0];
+		}
+		if (args.length > 1) {
+			target = args[1];
+		}
+
+		// 创建到服务器的通信通道，通道是线程安全的和可重用的。
+		// 通常在应用程序开始时创建通道，并重用直到应用程序关闭。
+		ManagedChannel channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
+		try {
+			GRPCClient client = new GRPCClient(channel);
+			client.greet(user);
+		} finally {
+			// ManagedChannel使用像线程和TCP连接这样的资源。
+			// 为了防止泄漏这些资源，通道应该在不再使用时关闭。
+			channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
+		}
+	}
+}
+```
+
+## 4.4.客户端启动
+通过执行GRPCClient的main方法，
+就能启动客户端了，
+通过gRPC调用服务端成功后打印日志：
+```
+Will try to greet world ...
+Greeting: Hello world
+```
+
+# 5.参考文档
+[GRPC的JAVA使用介绍](https://blog.csdn.net/asfjgvajfghaklsbf/article/details/103141368)
+[Grpc系列一 第一个hello world 例子](https://blog.csdn.net/hry2015/article/details/71155868)
+
