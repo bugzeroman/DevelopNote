@@ -1,0 +1,443 @@
+# 0.说明
+ProtoBuf3语法指南，
+又称为proto3，
+是谷歌的Protocol Buffers第3个版本。
+本文基于官方英文版本翻译，
+加上了自己的理解少量修改，
+一共分为上下两部分。
+
+# 1.序言
+本指南描述了如何使用protocol buffer语言来构造protocol buffer数据，
+包括编写.proto文件的语法，
+以及如何从.proto文件生成数据访问类。
+本文涵盖了protocol buffer语言的proto3版本语法，
+而有关proto2版本语法的信息，
+请参阅[proto2语法指南](https://developers.google.com/protocol-buffers/docs/proto)。
+
+下面将通过一个一个示例，
+逐步展示文档中描述的许多特性。
+
+# 2.定义一个消息类型
+先来看一个非常简单的例子。
+假设你想定义一个"搜索请求"的消息格式，
+每一个请求含有一个查询字符串、
+你感兴趣的查询结果所在的页数，
+以及每一页查询结果的条数。
+下面是用于定义消息类型的.proto文件：
+```
+syntax = "proto3";
+
+message SearchRequest {
+  string query = 1;
+  int32 page_number = 2;
+  int32 result_per_page = 3;
+}
+```
+
+-文件的第一行指定了你正在使用proto3语法，如果你没有指定，编译器会默认使用proto2。这个必须是文件的非空非注释的第一个行。
+-SearchRequest消息定义了3个字段(名称/值对)，每个字段对应了需要在消息中承载的数据，且都有一个名字和一种类型。
+
+## 2.1.指定字段类型
+在上面的例子中，所有字段都是标量类型:
+两个整数类型(page_number和result_per_page)
+和一个字符串类型(query)。
+还可以为字段指定复合类型，
+包括枚举和其他消息类型。
+
+## 2.2.分配字段编号
+消息定义中的每个字段都有一个唯一的数字编号。
+这些编号用于在消息的二进制格式中标识字段，
+一旦编号被使用就不应该再改变。
+注意：[1,15]之内的编号在编码的时候会占用一个字节，
+包括字段编号和字段类型，
+可以在[Protocol Buffer Encoding](https://developers.google.com/protocol-buffers/docs/encoding#structure)中找到更多有关信息,
+[16,2047]之内的编号则占用2个字节。
+因此应该为频繁出现的消息元素保留数字[1,15]之内的编号，
+记住为将来可能添加的频繁出现的元素预留一些编号。
+最小的标识号可以从1开始，最大到2^29 - 1, or 536,870,911。
+不可以使用其中的[19000－19999]的标识号，
+从FieldDescriptor::kFirstReservedNumber到FieldDescriptor::kLastReservedNumber，
+Protobuf协议实现中对这些进行了预留。
+如果非要在.proto文件中使用这些预留的编号，
+编译时就会报警。
+同样你也不能使用早期保留的编号。
+
+## 2.3.指定字段规则
+消息字段的修饰符必须是如下之一：
+- singular：一个格式良好的消息中，应该有0个或者1个这种字段（但是不能超过1个）。这是proto3语法的默认字段规则。
+- repeated：一个格式良好的消息中，这种字段可以重复任意多次（包括0次）。重复的值的顺序将保持不变。相当于Java中的List列表。
+在proto3中，标量数值类型的重复字段默认使用packed编码。
+可以在[Protocol Buffer Encoding](https://developers.google.com/protocol-buffers/docs/encoding#structure)中找到关于打包编码的更多信息。
+
+## 2.4.添加更多消息类型
+在一个.proto文件中可以定义多个消息类型。
+如果想定义SearchRequest的响应消息格式SearchResponse，
+可以将它们添加到相同的.proto文件：
+```
+message SearchRequest {
+  string query = 1;
+  int32 page_number = 2;
+  int32 result_per_page = 3;
+}
+
+message SearchResponse {
+ ...
+}
+```
+
+## 2.5.添加注释
+要向.proto文件添加注释，
+请使用C/C++/Java风格的双斜杠（//）和/*…* /语法：
+```
+/* SearchRequest represents a search query, with pagination options to
+ * indicate which results to include in the response. */
+
+message SearchRequest {
+  string query = 1;
+  int32 page_number = 2;  // Which page number do we want?
+  int32 result_per_page = 3;  // Number of results to return per page.
+}
+```
+
+## 2.6.保留字段
+当你需要修改消息类型时，
+如果删除或者注释了某个字段，
+后来的用户可以在修改该消息类型时，
+可能会重用该字段的名称和数字编号。
+如果以后不小心加载了相同的.proto文件的旧版本，
+这可能会导致严重的问题，
+包括数据损坏、隐私问题等等。
+确保不会发生这种情况的一种方法是，
+指定保留已删除字段的名称(因为这也会导致JSON序列化问题)和数字编号。
+如果将来有任何用户试图使用这些字段标识符，
+protocol buffer的编译器会发出警告。
+```
+message Foo {
+  reserved 2, 15, 9 to 11;
+  reserved "foo", "bar";
+}
+```
+注意不要在一行reserved声明中同时包括字段的名称和数字编号。
+
+## 2.7.从.proto文件生成了什么？
+当使用protocol buffer编译器来运行.proto文件时，
+编译器将生成所选择语言的代码，
+这些代码可以操作在.proto文件中定义的消息类型，
+包括获取、设置字段值，
+将消息序列化到一个输出流中，
+以及从一个输入流中解析消息。
+
+- 对于c++，编译器会从每个.proto生成一个.h和.cc文件，并为文件中描述的每个消息类型生成一个类。
+- 对于Java，编译器为每一个消息类型生成了一个.java文件，以及用于创建消息类实例的特殊Builder类。
+- 对于Python，稍有不同，Python编译器为.proto文件中的每个消息类型生成一个含有静态描述符的模块，该模块与一个元类（metaclass）在运行时（runtime）被用来创建所需的Python数据访问类。
+- 对于Go，编译器会位每个消息类型生成了一个.pd.go文件。
+- 对于Ruby，编译器会为每个消息类型生成了一个.rb文件。
+- 对于Objective-C，编译器会为每个消息类型生成了一个pbobjc.h文件和pbobjcm文件，.proto文件中的每一个消息有一个对应的类。
+- 对于c#，编译器会为每个消息类型生成了一个.cs文件，.proto文件中的每一个消息有一个对应的类。
+- 对于Dart，编译器会为每个消息类型生成了一个.pb.dart文件，.proto文件中的每一个消息有一个对应的类。
+
+可以通过所选择的语言的教程(即将发布的proto3版本),
+了解更多关于每种语言使用api的信息。
+更多API细节，请参阅相关[API参考](https://developers.google.com/protocol-buffers/docs/reference/overview)(proto3版本也即将发布)。
+
+# 3.标量值类型
+一个标量消息字段可以是以下类型，
+表格显示了.proto文件中支持的类型，
+以及自动生成的类中对应语言的类型:
+| .proto Type | Notes                                                        | C++ Type | Java Type  | Python Type[2] | Go Type | Ruby Type                      | C# Type    | PHP Type          | Dart Type |
+| :---------- | :----------------------------------------------------------- | :------- | :--------- | :------------- | :------ | :----------------------------- | :--------- | :---------------- | :-------- |
+| double      |                                                              | double   | double     | float          | float64 | Float                          | double     | float             | double    |
+| float       |                                                              | float    | float      | float          | float32 | Float                          | float      | float             | double    |
+| int32       | 使用变长编码。编码负数的效率很低，如果你的字段可能有负数，使用sint32代替。 | int32    | int        | int            | int32   | Fixnum or Bignum (as required) | int        | integer           | int       |
+| int64       | 使用变长编码。编码负数的效率很低，如果你的字段可能有负数，使用sint64代替。 | int64    | long       | int/long[3]    | int64   | Bignum                         | long       | integer/string[5] | Int64     |
+| uint32      | 使用变长编码。                                               | uint32   | int[1]     | int/long[3]    | uint32  | Fixnum or Bignum (as required) | uint       | integer           | int       |
+| uint64      | 使用变长编码。                                               | uint64   | long[1]    | int/long[3]    | uint64  | Bignum                         | ulong      | integer/string[5] | Int64     |
+| sint32      | 使用变长编码。有符号的整型值。它们比普通的int32能更有效地编码负数。 | int32    | int        | int            | int32   | Fixnum or Bignum (as required) | int        | integer           | int       |
+| sint64      | 使用变长编码。有符号的整型值。它们比普通的int64能更有效地编码负数。 | int64    | long       | int/long[3]    | int64   | Bignum                         | long       | integer/string[5] | Int64     |
+| fixed32     | 总是4个字节。如果值经常大于228，则比uint32更有效。           | uint32   | int[1]     | int/long[3]    | uint32  | Fixnum or Bignum (as required) | uint       | integer           | int       |
+| fixed64     | 总是8个字节。如果值经常大于256，则比uint64更有效。           | uint64   | long[1]    | int/long[3]    | uint64  | Bignum                         | ulong      | integer/string[5] | Int64     |
+| sfixed32    | 总是4个字节。                                                | int32    | int        | int            | int32   | Fixnum or Bignum (as required) | int        | integer           | int       |
+| sfixed64    | 总是8个字节。                                                | int64    | long       | int/long[3]    | int64   | Bignum                         | long       | integer/string[5] | Int64     |
+| bool        |                                                              | bool     | boolean    | bool           | bool    | TrueClass/FalseClass           | bool       | boolean           | bool      |
+| string      | 字符串必须始终包含UTF-8编码或7位ASCII文本，且长度不能超过232。 | string   | String     | str/unicode[4] | string  | String (UTF-8)                 | string     | string            | String    |
+| bytes       | 可以包含不超过232的任意字节序列。                            | string   | ByteString | str            | []byte  | String (ASCII-8BIT)            | ByteString | string            | List      |
+你可以在[Protocol Buffer Encoding](https://developers.google.com/protocol-buffers/docs/encoding#structure)中，
+找到更多"序列化消息时这些类型如何编码"的信息。
+
+[1] 在java中，无符号32位和64位整型被表示成他们的相对的有符号整型类型，最高位储存在符号位中。
+[2] 在所有的情况下，设定值的时候，会执行类型检查以确保此值是有效的。
+[3] 64位或者无符号32位整型在解码时总是表示为long，但如果在设置字段时使用int，则可以表示为int。在所有情况下，值必须符合在设置时所使用的类型。请参阅[2]。
+[4] Python字符串在解码时表示为unicode，但如果给定ASCII字符串，则可以表示为str(这可能会改变)。
+[5] Integer在64位的机器上使用，string在32位机器上使用
+
+# 4.默认值
+在解析消息时，如果已编码的消息不包含特定的singular元素，
+则解析对象中的对应字段将被设置为该字段的默认值。
+对于不同类型的默认值如下：
+
+- 对于string，默认值是一个空string。
+- 对于byte，默认值是一个空的bytes。
+- 对于bool，默认值是false。
+- 对于数值类型，默认值是0。
+- 对于枚举类型，默认值是第一个定义的枚举值，且必须为0。
+- 对于消息类型，没有默认值，它的确切值取决于选择的语言，请参考[生成的代码指南](https://developers.google.com/protocol-buffers/docs/reference/overview)
+
+可重复字段的默认值为空，
+通常情况下是对应语言中空列表。
+注意对于标量消息字段，
+一旦消息被解析，
+就无法判断一个字段是否显式地设置为默认值，
+还是根本没有被设置:
+例如boolean值是否被显示设置为false，
+还是没有设置，而使用了默认值false。
+你应该在定义消息类型时牢记这一点。
+如果你不想让某个行为在默认情况下发生，
+就不要设置一个布尔值来开启某个行为。
+如果将标量消息字段设置为默认值，
+则该值将不会在传输时被序列化。
+有关默认值如何在生成代码中工作的详细信息，
+请参考所选语言的[生成的代码指南](https://developers.google.com/protocol-buffers/docs/reference/overview)。
+
+# 5.枚举
+在定义消息类型时，
+可能想为一个字段指定"预定义的值列表"中的一个值。
+假设给SearchRequest添加一个corpus字段，
+其中corpus的值可能是UNIVERSAL，WEB，IMAGES，LOCAL，NEWS，PRODUCTS或VIDEO中的一个
+只需要向消息定义中添加一个枚举（enum），
+并且为每个可能的值定义一个常量就可以了。
+在下面的例子中，
+添加了一个名为Corpus的枚举和所有可能的值，
+以及一个类型为Corpus的字段:
+```
+message SearchRequest {
+  string query = 1;
+  int32 page_number = 2;
+  int32 result_per_page = 3;
+  enum Corpus {
+    UNIVERSAL = 0;
+    WEB = 1;
+    IMAGES = 2;
+    LOCAL = 3;
+    NEWS = 4;
+    PRODUCTS = 5;
+    VIDEO = 6;
+  }
+  Corpus corpus = 4;
+}
+```
+如你所见，Corpus枚举的第一个常量映射为0,
+每个枚举类型必须将其第一个类型映射为0，
+且必须有一个0，
+这是因为要把这个0作为默认值。
+这个0必须为第一个元素，
+是为了兼容proto2语义，
+因为proto2的第一个枚举值总是默认值。
+为了定义别名，
+可以将不同的枚举常量映射到相同的值。
+为此，你需要将allow_alias选项设置为true，
+否则编译器会在找到别名时报告错误。
+```
+message MyMessage1 {
+  enum EnumAllowingAlias {
+    option allow_alias = true;
+    UNKNOWN = 0;
+    STARTED = 1;
+    RUNNING = 1;
+  }
+}
+message MyMessage2 {
+  enum EnumNotAllowingAlias {
+    UNKNOWN = 0;
+    STARTED = 1;
+    // RUNNING = 1;  // Uncommenting this line will cause a compile error inside Google and a warning message outside.
+  }
+}
+```
+
+枚举常量必须在32位整型值的范围内。
+因为enum值传输时使用可变编码，
+对负数不够高效，因此不推荐在enum中使用负数。
+如上所示，
+可以在一个消息定义的内部或外部定义枚举，
+这些枚举可以在.proto文件中的任何消息定义里使用。
+当然也可以在一个消息中定义一个枚举类型，
+而在另一个不同的消息中使用它，
+采用_MessageType_._EnumType_的语法格式。
+
+当对一个使用了枚举的.proto文件运行protocol buffer编译器的时候，
+生成的代码中将有一个对应的enum（对Java或C++来说），
+或者一个特殊的EnumDescriptor类（对 Python来说），
+它被用来在运行时生成的类中创建一系列的整型值符号常量。
+
+**注意:**生成的代码可能会受到特定于语言的枚举数限制，
+一种语言的枚举数低至数千，
+请注意你计划使用的语言的限制。
+
+在反序列化的过程中，
+无法识别的枚举值会被保存在消息中，
+尽管在反序列化消息时如何表示该值取决于选择的语言。
+在那些支持开放枚举类型超出指定范围之外的语言中（例如C++和Go），
+无法识别的值会被简单的表示成所支持的整型。
+在具有封闭枚举类型的语言中（例如Java），
+使用枚举中的一个类型来表示无法识别的值，
+并且可以使用特殊的访问器访问底层整数。
+在其他情况下，如果消息被序列化，
+那么无法识别的值仍将与消息一起序列化。
+
+关于如何在应用程序的消息中使用枚举的更多信息，
+请参考所选语言的[生成的代码指南](https://developers.google.com/protocol-buffers/docs/reference/overview)。
+
+## 5.1.保留字段
+枚举的保留字段和上面消息的保留字段基本相同：
+```
+enum Foo {
+  reserved 2, 15, 9 to 11, 40 to max;
+  reserved "FOO", "BAR";
+}
+```
+
+# 6.使用其他消息类型
+你可以将其他消息类型用作字段类型。
+例如在SearchResponse消息中包含Result消息，
+此时可以在相同的.proto文件中定义一个Result消息类型，
+然后在SearchResponse消息中指定一个Result类型的字段：
+```
+message SearchResponse {
+  repeated Result results = 1;
+}
+
+message Result {
+  string url = 1;
+  string title = 2;
+  repeated string snippets = 3;
+}
+```
+
+## 6.1.导入定义
+在上面的例子中，
+Result消息类型与SearchResponse是定义在同一文件中的。
+如果想要使用的消息类型已经在其他.proto文件中已经定义过了呢？
+你可以通过导入其他.proto文件中的定义来使用它们。
+要导入另一个.proto的定义，
+需要在文件的顶部添加一条导入声明：
+```
+import "myproject/other_protos.proto";
+```
+
+默认情况下，只能使用直接导入的.proto文件中的定义。
+但是有时可能需要将.proto文件移动到新的位置。
+可以在旧位置放置一个假的.proto文件，
+使用import public将所有导入转向到新位置，
+而不是直接移动.proto文件，
+并且修改所有调用的位置。
+任何导入包含import public的proto文件，
+都可以通过传递依赖导入公共依赖项。
+例如：
+```
+// new.proto
+// All definitions are moved here
+```
+
+```
+// old.proto
+// This is the proto that all clients are importing.
+import public "new.proto";
+import "other.proto";
+```
+
+```
+// client.proto
+import "old.proto";
+// You use definitions from old.proto and new.proto, but not other.proto
+```
+通过在编译器命令行参数中使用-I/--proto_path参数，
+protocal编译器会在指定目录搜索要导入的文件。
+如果没有指定目录，
+则在调用编译器的目录中查找。
+通常只需要配置proto_path为工程根目录，
+并且正确配置需要导入的名称即可。
+
+## 6.2.使用proto2消息类型
+在proto3中导入proto2的消息类型也是可以的，
+反之亦然，
+然而proto2枚举不可以直接在proto3语法中使用，
+如果仅仅在被导入的proto2消息中使用是可以的。
+
+# 7.嵌套类型
+可以在其他消息类型中定义和使用消息类型，
+在下面的例子中，
+Result消息就定义在SearchResponse消息内：
+```
+message SearchResponse {
+  message Result {
+    string url = 1;
+    string title = 2;
+    repeated string snippets = 3;
+  }
+  repeated Result results = 1;
+}
+```
+
+如果想在它的父消息类型的外部重用这个消息类型，
+需要使用_Parent_._Type_的形式的语法：
+```
+message SomeOtherMessage {
+  SearchResponse.Result result = 1;
+}
+```
+
+也可以将消息嵌套任意多层：
+```
+message Outer {                  // Level 0
+  message MiddleAA {  // Level 1
+    message Inner {   // Level 2
+      int64 ival = 1;
+      bool  booly = 2;
+    }
+  }
+  message MiddleBB {  // Level 1
+    message Inner {   // Level 2
+      int32 ival = 1;
+      bool  booly = 2;
+    }
+  }
+}
+```
+
+# 8.更新一个消息类型
+如果现有的消息类型不再满足新的需求，
+如果要在消息中添加一个额外的字段，
+但是同时保持旧版本写的代码仍然可用。
+不用担心，
+在不破坏任何现有代码的情况下更新消息类型非常简单，
+只要记住以下规则:
+
+- 不要更改任何现有字段的数字编号。
+- 如果增加新的字段，那么使用旧格消息格式的代码序列化的任何消息，仍然可以被新产生的代码解析。你应该记住这些元素的默认值，这样新代码就可以正确的和旧代码生成的消息交互。类似的，通过新代码产生的消息也可以被旧代码解析：只不过新的字段在解析时会被忽略掉。更多详细信息，请参阅无法识别字段章节的内容。
+可以删除字段，只要字段号不在更新的消息类型中再次使用。
+- 只要字段的数字编号在新的消息类型中不再使用，这些字段就可以移除，更好的做法可能是重命名那个字段，例如在字段前添加"OBSOLETE_"前缀，或者保留字段编号，以便将来不会意外地重用该数字。
+- int32、uint32、int64、uint64和bool是都是兼容的，这意味着可以将字段从其中一种类型更改为另一种类型，而不会破坏向前或向后的兼容性。如果解析出来的数字与对应的类型不相符，那么结果就像在C++中对它进行了强制类型转换一样，例如把一个64位数字当作int32来 读取，那么它就会被截断为32位的数字。
+- sint32和sint64是互相兼容的，但与其他整数类型不兼容。
+- string和bytes是兼容的，只要bytes是有效的UTF-8编码。
+- 嵌套消息与bytes是兼容的，只要bytes包含该消息的一个编码过的版本。
+- fixed32与sfixed32是兼容的，fixed64与sfixed64是兼容的。
+- 对于string、bytes和消息字段，optional与repeated是兼容的。给定重复字段的序列化数据作为输入，如果该字段是原始类型字段，则期望该字段是optional的，客户端将接受最后一个输入值;如果该字段是消息类型字段，则将合并所有输入元素。注意对于数值类型，包括布尔和枚举，这通常是不安全的。数值类型的repeated字段可以用packed格式序列化，然而对于optional字段时，将不能被正确解析。
+- enum兼容int32、uint32、int64和uint64，注意不兼容的值将被截断。然而在客户端反序列化之后可能会有不同的处理方式:例如，无法识别的proto3枚举类型将保留在消息中，但是在对消息进行反序列化时如何表示它是依赖于语言的。int字段总是保留它们的值。
+- 将一个值更改为一个新值的成员是安全的和二进制兼容的。如果保证代码不会一次设置多个字段，那么将多个字段移到一个新的字段中可能是安全的。将任何字段移动到现有字段中是不安全的。
+
+# 9.未知字段
+未知字段是格式良好的protocol buffer 序列化数据，
+但是解析器无法识别的字段。
+例如，当旧二进制文件解析带有新字段的新二进制文件发送的数据时，
+这些新字段在旧二进制文件中成为未知字段。
+最初，proto3总是在解析时丢弃未知字段，
+但在3.5版本中，重新引入了保留未知字段的功能，
+以匹配proto2的行为。
+在版本3.5及更高版本中，
+解析时会保留未知字段，并包含在序列化输出的数据中。
+
+# 10.参考文章
+[Language Guide (proto3)](https://developers.google.com/protocol-buffers/docs/proto3)
+[Protobuf3教程](https://blog.csdn.net/hulinku/article/details/80827018)
+[ProtoBuf v3 语法简介](https://www.jianshu.com/p/e9d6af587cf6)
+[gRPC之proto语法](https://jianshu.com/p/da7ed5914088)
