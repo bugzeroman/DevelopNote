@@ -1,0 +1,364 @@
+# 0.说明
+ProtoBuf3语法指南，
+又称为proto3，
+是谷歌的Protocol Buffers第3个版本。
+本文基于官方英文版本翻译，
+加上了自己的理解少量修改，
+一共分为上下两部分。
+
+# 1.Any
+Any类型消息允许在没有.proto定义的情况下，
+将消息作为嵌入类型使用。
+Any以bytes的形式包含任意序列化的消息，
+以及充当该消息类型的全局惟一标识符的URL
+从而解析为该消息类型。
+为了使用Any类型，
+需要使用声明import google/protobuf/any.proto:
+```
+import "google/protobuf/any.proto";
+
+message ErrorStatus {
+  string message = 1;
+  repeated google.protobuf.Any details = 2;
+}
+```
+
+给定的消息类型的默认类型URL是type. googleapis.com/_packagename_.messagename_。
+不同的语言实现将支持运行时库助手以类型安全的方式打包和解包Any值。
+例如在java中，Any类型会有特殊的pack()和unpack()访问器，
+在C++中会有PackFrom()和UnpackTo()方法：
+```
+// Storing an arbitrary message type in Any.
+NetworkErrorDetails details = ...;
+ErrorStatus status;
+status.add_details()->PackFrom(details);
+
+// Reading an arbitrary message from Any.
+ErrorStatus status = ...;
+for (const Any& detail : status.details()) {
+  if (detail.Is<NetworkErrorDetails>()) {
+    NetworkErrorDetails network_error;
+    detail.UnpackTo(&network_error);
+    ... processing network_error ...
+  }
+}
+```
+目前，用于Any类型的运行库仍在开发之中，
+如果你已经很熟悉proto2语法，
+可以使用Any替换任意的proto3消息，
+类似proto2消息的扩展方式。
+
+# 2.Oneof
+如果消息中有很多可选字段，
+且同时最多只会设置一个字段， 
+可以使用oneof特性加强这个行为，
+并且可以节省内存.
+
+Oneof字段类似于常规字段，
+不仅共享内存中的所有字段之外，
+而且最多可以同时设置一个字段。
+设置其中任何一个字段会清除其它成员字段。 
+可以使用case()或者WhichOneof()方法检查哪个oneof字段被设置了，
+这取决于选择使用的语言。
+
+## 2.1.使用Oneof
+为了在.proto中定义Oneof字段， 
+需要在字段名称前面加上oneof关键字，
+比如下面例子中的test_oneof:
+```
+message SampleMessage {
+  oneof test_oneof {
+    string name = 4;
+    SubMessage sub_message = 9;
+  }
+}
+```
+
+然后将oneof成员字段到test_oneof字段的定义中， 
+可以增加任意类型的字段，
+但是不能使用map和repeated字段。
+
+在生成的代码中，
+oneof字段具有与常规字段相同的getter和setter，
+有一个特殊的方法来检查oneof的哪个值被设置了，
+你可以在相应的语言API参考中,
+找到更多关于所选语言的oneof API介绍.
+
+## 2.2.Oneof 特性
+- 设置oneof字段会自动清楚其它oneof成员字段的值，所以设置多个字段之后，只有最后一次设置的字段会有值。
+```
+SampleMessage message;
+message.set_name("name");
+CHECK(message.has_name());
+message.mutable_sub_message();   // Will clear name field.
+CHECK(!message.has_name());
+```
+
+- 如果解析器遇到同一个oneof中有多个成员字段，只有最后一个字段会被解析到消息中。
+- oneof不支持repeated。
+- 反射API对oneof字段有效。
+- 如果将一个oneof字段设置为默认值(比如将一个int32的字段设置为0)，那么将设置该oneof字段的"case"，该值将在传输时序列化。
+- 如果使用C++,需确保代码不会导致内存泄漏。下面的代码会崩溃，因为sub_message已经通过调用set_name()被删除了。
+```
+SampleMessage message;
+SubMessage* sub_message = message.mutable_sub_message();
+message.set_name("name");      // Will delete sub_message
+sub_message->set_...            // Crashes here
+```
+
+- 同样在C++中，如果使用Swap()交换两个oneof消息，两个消息将拥有对方的值，在下面的例子中，msg1会拥有sub_message并且msg2会拥有name。
+```
+SampleMessage msg1;
+msg1.set_name("name");
+SampleMessage msg2;
+msg2.mutable_sub_message();
+msg1.swap(&msg2);
+CHECK(msg1.has_sub_message());
+CHECK(msg2.has_name());
+```
+
+## 2.3.向后兼容性问题
+当增加或者删除oneof字段时一定要小心，
+如果检查oneof的值返回None/NOT_SET，
+它意味着oneof字段没有被赋值，
+或者在一个不同的版本中赋值了。
+但是没有办法区分，
+因为没有办法判断未知字段是否是一个oneof字段。
+
+### 2.3.1.Tag重用问题：
+- 将字段从oneof移入或移除，在消息被序列化或者解析后，也许会失去一些信息，有些字段也许会被清除。但是可以安全地将单个字段移动到新的oneof中，并且如果已知只设置了一个字段，则可以移动多个字段。
+- 删除一个oneof字段然后再添加回来：在消息被序列化或者解析后，这可能会清除现在设置的oneof字段。
+- 分割或合并oneof：这与移动常规字段有类似的问题。
+
+# 3.Map
+如果你希望创建一个关联映射，
+作为数据定义的一部分,
+protocol buffer提供了一种方便快捷的语法：
+```
+map<key_type, value_type> map_field = N;
+```
+其中key_type可以是任意Integer或者string类型，
+即除了floating和bytes的任何标量类型，
+value_type可以是出来map之外的任意类型。
+
+如果想创建一个projects的映射，
+每个Projecct使用一个string作为key，
+可以这样定义：
+```
+map<string, Project> projects = 3;
+```
+
+- Map字段不能是repeated。
+- 序列化后的顺序和map迭代器的顺序是不确定的，所以不要依赖Map的特定顺序。
+- 当为.proto文件生成文本格式时，Map会按照key的顺序排序，数值化的key会按照数值排序。
+- 从序列化中解析或者合并时，如果有重复的key，则只使用最后一个key，当从文本格式中解析map时，如果存在重复的key，解析可能会失败。
+- 如果为Map字段提供了一个key但是没有value，则字段序列化时的行为是依赖于语言的。在c++、Java和Python中，类型的默认值是序列化的，而在其他语言中，则不会被序列化。
+
+生成的Map API目前可用于proto3支持的所有语言。
+可以在相关的API参考中找到有关所选语言的Map API的更多信息。
+
+## 3.1.向后兼容性
+Map语法序列化后等同于如下内容，
+因此即使是不支持Map语法的protocol buffer实现，
+也是可以处理数据的：
+```
+message MapFieldEntry {
+  key_type key = 1;
+  value_type value = 2;
+}
+
+repeated MapFieldEntry map_field = N;
+```
+任何支持Map的protocol buffers实现，
+都必须生成和接受上述定义的数据。
+
+# 4.包
+可以为.proto文件添加一个可选的package声明，
+用来防止不同的消息类型的命名冲突：
+```
+package foo.bar;
+message Open { ... }
+```
+
+在定义其他的消息类型时，
+可以使用包名+消息名的方式来声明字段类型：
+```
+message Foo {
+  ...
+  foo.bar.Open open = 1;
+  ...
+}
+```
+
+包声明生成代码的方式取决于选择的语言:
+- 在C++中，生成的类包装在C++命名空间中。例如Open将在命名空间foo::bar中。
+- 在Java中，包声明会变为java的一个包，除非在.proto文件中显式地使用java_package选项。
+- 在Python中，包声明会被忽略，因为Python模块是根据它们在文件系统中的位置来组织的。
+- 在Go中，包声明被用作Go包名，除非在.proto文件中显式地使用go_package选项。
+- 在Ruby中，生成的类被封装在嵌套的Ruby命名空间中，并转换为所需的Ruby大写样式(首字母大写;如果第一个字符不是一个字母，则使用PB_前缀)。例如Open将在命名空间Foo::Bar中。
+- 在C#中，包在转换为PascalCase后被用作命名空间，除非在.proto文件中显式地使用csharp_namespace选项。例如Open将位于命名空间Foo.Bar中。
+
+## 4.1.包和名称解析
+Protocol buffer语言中类型名称的解析类似于c++：
+首先搜索最内层的作用域，
+然后搜索下一层的作用域，
+以此类推，
+每个包会被看作是其父类包的"内部"。
+对于以"."开头的意味着是从最外围开始的。
+比如".foo.bar.Baz"。
+Protocol Buffer编译器会解析.proto文件中定义的所有类型名称。
+对于不同语言，
+代码生成器都知道如何引用具体的类型，
+即使它有不同的作用域规则。
+
+# 5.定义服务
+如果要将消息类型用在RPC(远程方法调用)系统中，
+可以在.proto文件中定义RPC服务接口，
+protocol buffer编译器将会根据所选的语言生成服务接口代码及存根。
+例如定义一个RPC服务并具有一个方法，
+该方法能够接收SearchRequest并返回SearchResponse，
+此时可以在.proto文件中进行如下定义：
+```
+service SearchService {
+  rpc Search(SearchRequest) returns (SearchResponse);
+}
+```
+与protocol buffer一起使用的最直接的RPC系统是gRPC，
+它是谷歌开发的与语言和平台无关的开放源码RPC系统。
+gRPC在protocol buffer方面工作得特别好，
+它允许使用一个特殊的protocol buffer编译器插件，
+从.proto文件直接生成相关的RPC代码。
+如果不想使用gRPC，
+也可以在自己的RPC实现中使用protocol buffer。
+可以在Proto2语言指南中找到更多相关信息。
+还有许多正在进行的第三方项目，
+使用protocol buffer开发RPC实现。
+有关我们所知道的项目的链接列表，
+请查看[第三方项目wiki页面](https://github.com/protocolbuffers/protobuf/blob/master/docs/third_party.md)。
+
+# 6.JSON映射
+Proto3支持JSON的编码规范，
+使它更容易在不同系统之间共享数据，
+在下表中按类型逐个描述对应编码。
+如果json编码的数据中缺少一个值，
+或者它的值为null，
+这个数据在protocol buffer解析时，
+会被表示成适当的默认值。
+如果一个字段在protocol buffer中有默认值，
+那么默认情况下它将在Json编码的数据中被省略，
+以节省空间。
+具体实现可以提供在JSON编码中提供选项，
+输出具有默认值的字段。
+| proto3                 | JSON          | JSON example                              | Notes                                                        |
+| :--------------------- | :------------ | :---------------------------------------- | :----------------------------------------------------------- |
+| message                | object        | `{"fooBar": v, "g": null, …}`             | 生成JSON对象。消息字段名称映射为小驼峰，并成为JSON对象的key。如果指定了'json_name字段选项，则指定的值将被用作key。解析器同时接受小驼峰名称(或json_name选项指定的名称)和原始的原型字段名称。"null"是所有字段类型的可接受的值，并被作为对应字段类型的默认值。 |
+| enum                   | string        | `"FOO_BAR"`                               | 使用proto中指定的枚举值的名称。解析器同时接受枚举名和整数值。 |
+| map<K,V>               | object        | `{"k": v, …}`                             | 所有的key都被转换成string。                                  |
+| repeated V             | array         | `[v, …]`                                  | null被视为空列表[]。                                         |
+| bool                   | true, false   | `true, false`                             |                                                              |
+| string                 | string        | `"Hello World!"`                          |                                                              |
+| bytes                  | base64 string | `"YWJjMTIzIT8kKiYoKSctPUB+"`              | JSON值是字符串编码的数据，使用带填充的标准base64编码。标准的或URL安全的base64编码，有没有填充都可以接受。 |
+| int32, fixed32, uint32 | number        | `1, -10, 0`                               | JSON值是一个十进制数。可以接受数字或字符串。                 |
+| int64, fixed64, uint64 | string        | `"1", "-10"`                              | JSON值将是一个十进制字符串。可以接受数字或字符串。           |
+| float, double          | number        | `1.1, -10.0, 0, "NaN", "Infinity"`        | JSON值是一个数字或特殊字符串值“NaN”、“Infinity”和“-Infinity”中的一个。可以接受数字或字符串。指数符号也被接受。-0被认为等于0。 |
+| Any                    | `object`      | `{"@type": "url", "f": v, … }`            | 如果一个Any有一个特别的JSON映射，则它会转换成如下形式：`{"@type": xxx, "value": yyy}`。否则，该值会被转换成一个JSON对象，`@type`字段将被插入，以指示实际的数据类型。 |
+| Timestamp              | string        | `"1972-01-01T10:00:20.021Z"`              | 使用RFC 3339，其中生成的输出将始终是Z标准化的，并使用0、3、6或9位小数。也接受除Z以外的偏移量。 |
+| Duration               | string        | `"1.000340012s", "1s"`                    | 生成的输出总是包含0、3、6或9个小数(取决于所需的精度)，后面跟着后缀s。任何小数都可以接受，只要它们能满足纳米秒的精确度，并且需要后缀s。 |
+| Struct                 | `object`      | `{ … }`                                   | 任意的JSON对象，参见struct.proto。                           |
+| Wrapper types          | various types | `2, "2", "foo", true, "true", null, 0, …` | 包装器在JSON中的表示方式类似于原始类型，但是nulll在数据转换和传输期间被允许和保留。 |
+| FieldMask              | string        | `"f.fooBar,h"`                            | 参见`field_mask.proto`.                                      |
+| ListValue              | array         | `[foo, bar, …]`                           |                                                              |
+| Value                  | value         |                                           | 任意JSON值，细节请参见 [google.protobuf.Value](https://developers.devsite.corp.google.com/protocol-buffers/docs/reference/google.protobuf.html#google.protobuf.Value)。 |
+| NullValue              | null          |                                           | JSON null                                                    |
+| Empty                  | object        | {}                                        | 空JSON对象                                                   |
+
+## 6.1.JSON选项
+proto3的JSON实现可以提供以下选项:
+- 带有默认值的字段:带有默认值的字段在proto3的JSON输出中默认被省略。有一个选项，可以覆盖此行为，输出字段可以携带默认值。
+- 忽略未知字段:默认情况下，proto3的JSON解析器应该拒绝未知字段，但是可以在解析中提供忽略未知字段的选项。
+- 使用原型字段名称而不是小驼峰名称:默认情况下，proto3的 JSON打印器应该将字段名称转换为小驼峰，并使用它作为JSON名称。有一个使用原型字段名称作为JSON名称的选项。proto3的 JSON解析器需要同时接受转换后的小驼峰名称和原型字段名。
+- 枚举值以整数而不是字符串的形式输出:在JSON输出中默认使用枚举值的名称。有一个选项，可以使用枚举值的数值来代替。
+
+# 7.选项
+proto文件中的单个声明可以用许多选项进行注释。
+选项不会改变声明的总体含义，
+但可能会影响在特定环境下处理声明的方式。
+可用选项的完整列表在google/protobuf/descriptor.proto中。
+
+一些选项是文件级别的，
+这意味着它们应该在顶级作用域中编写，
+而不是在任何消息、枚举或服务定义中。
+有些选项是消息级选项，
+这意味着它们应该写入消息定义中。
+有些选项是字段级选项，
+这意味着它们应该写入字段定义中。
+选项也可以写入枚举类型、枚举值、字段、服务类型和服务方法;
+但是到目前为止，
+并没有一种选项能作用于所有的类型。
+
+- java_package(文件选项):这个选项用于指定生成java类所在的包。如果在.proto文件中没有显示的声明java_package，就采用默认的包名。默认情况下将使用proto包(在.proto文件中使用package关键字指定)。然而默认包通常不能成为好的Java包，因为它不是以反向域名开始。如果不生成Java代码，则此选项无效。例如：
+```
+option java_package = "com.example.foo"; 
+```
+
+- java_multiple_files(文件选项):是否生成多个Java文件，true定义的所有消息、枚举和服务生成对应的多个类文件,false只有一个文件，所有对象以内部类的形式出现。例如：
+```
+option java_multiple_files = true;
+```
+
+- java_outer_classname(文件选项):这个选项指定要生成Java类的名称。如果在.proto文件中没有明确指定java_outer_classname，生成的class名称将会根据.proto文件的名称采用驼峰命名。比如foo_bar.proto生成的java类名为FooBar.java，如果不生成java代码，则该选项不起任何作用。例如：
+```
+option java_outer_classname = "Ponycopter";
+```
+
+- optimize_for(文件选项):可以设置为SPEED、CODE_SIZE或LITE_RUNTIME。这些值将通过如下方式对c++和Java代码生成器(可能还有第三方生成器)产生以下影响：
+    - SPEED(默认值):protocol buffer将生成用于序列化、解析和对消息类型执行其他常见操作的代码。这段代码经过了高度优化。
+    - CODE_SIZE:protocol buffer编译器将会生成最少的类，通过共享或基于反射的代码来实现序列化、解析和各种其他操作。因此生成的代码将比SPEED要小得多， 但操作将更慢。当然实现的类及其对外的API与SPEED模式都是一样的。这种模式在包含大量.proto文件的应用程序中非常有用，而且不需要把所有文件都快速保存下来。
+    - LITE_RUNTIME:protocol buffer编译器将生成只依赖于lite运行时库(libprotobuf-lite，而不是libprotobuf)的类。lite运行时比整个库小得多(大约小一个数量级)，但是省略了某些特性，比如描述符和反射。这对于运行在受限平台(如手机)上的应用程序尤其有用。编译器仍然会像在SPEED模式下那样生成所有方法的快速实现。生成的类将只以每种语言实现MessageLite接口，它只提供完整消息接口方法的一个子集。
+```
+option optimize_for = CODE_SIZE;
+```
+
+- cc_enable_arenas(文件选项):为C++生成的代码启用arena分配。
+- objc_class_prefix(文件选项):设置Objective-C类的前缀，该前缀被前置到所有Objective-C生成的类和枚举中。没有默认值。按照苹果公司的建议，应该使用3-5个大写字母之间的前缀。注意，所有两个字母的前缀都是苹果保留的。
+- deprecated(字段选项):如果设置为true则表示该字段已经被废弃，并且不应该在新的代码中使用。在大多数语言中没有实际的效果。在Java中，这会变成@Deprecated注解，将来其他语言的代码生成器也许会在字标识符中产生废弃注解，废弃注解会在编译器尝试使用该字段时发出警告。如果字段没有被使用，也不希望新用户使用它，可以考虑使用保留语句替换该字段声明。
+```
+int32 old_field = 6 [deprecated = true];
+```
+
+## 7.1.自定义选项
+Protocol Buffers允许定义和使用自己的选项。这是一个大多数人不需要的高级特性。如果您确实认为需要创建自己的选项，请参阅Proto2语言指南了解详细信息。注意创建自定义选项使用扩展，这只允许在proto3中自定义选项。
+
+# 8.生成代码类
+要生成Java、Python、C++、Go、Ruby、Objective-C或C#代码，
+可以通过在.proto文件中定义消息、枚举、服务等，
+需要在.proto上运行protocol buffer编译器protoc。
+如果还没有安装编译器，
+请[下载安装包](https://developers.google.com/protocol-buffers/docs/downloads)并按照README中的说明操作。
+对于Go，还需要为编译器安装一个特殊的代码生成器插件:
+可以在GitHub上的[golang/protobuf](https://github.com/golang/protobuf/)存储库中找到这个插件和安装说明。
+protocol buffer调用方式如下:
+```
+protoc --proto_path=IMPORT_PATH --cpp_out=DST_DIR --java_out=DST_DIR --python_out=DST_DIR --go_out=DST_DIR --ruby_out=DST_DIR --javanano_out=DST_DIR --objc_out=DST_DIR --csharp_out=DST_DIR path/to/file.proto
+```
+
+- IMPORT_PATH指定了一个目录，当解析import路径时在其中查找.proto文件。如果省略该值，则使用当前目录。可以通过多次传递--proto_path选项来指定多个导入目录;它们会被按照顺序搜索。-I=IMPORT_PATH是--proto_path的简化形式。
+
+    - --ccpp_out在DST_DIR中生成C++代码。更多信息请参见C++生成的代码参考。
+    - --cjava_out在DST_DIR中生成Java代码。更多信息请参见Java生成的代码参考。
+    - --cpython_out在DST_DIR中生成Python代码。有关更多信息，请参阅Python生成的代码参考。
+    - --cgo_out在DST_DIR中生成Go代码。更多信息请参见Go生成的代码参考。
+    - --cruby_out在DST_DIR中生成Ruby代码。Ruby生成的代码参考即将发布!
+    - --cobjc_out在DST_DIR中生成Objective-C代码。更多信息请参见Objective-C生成的代码参考。
+    - --ccsharp_out在DST_DIR中生成C#代码。更多信息请参见C#生成的代码参考。
+    - --cphp_out在DST_DIR中生成PHP代码。有关更多信息，请参阅PHP生成的代码参考。另外一个方便的地方是，如果DST_DIR以.zip或. JAR结尾，编译器将输出写入具有给定名称的单个zip格式存档文件，.JAR输出还将根据Java JAR规范提供一个清单文件。注意，如果输出存档已经存在，它将被覆盖;编译器不够聪明，无法向现有的归档文件中添加文件。
+
+- 必须提供一个或多个.proto文件作为输入。可以同时指定多个.proto文件。尽管文件的命名是相对于当前目录的，每个文件必须位于其IMPORT_PATH下，这样编译器才能确定它的规范名称。
+
+# 9.参考文章
+[Language Guide (proto3)](https://developers.google.com/protocol-buffers/docs/proto3)
+[Protobuf3教程](https://blog.csdn.net/hulinku/article/details/80827018)
+[ProtoBuf v3 语法简介](https://www.jianshu.com/p/e9d6af587cf6)
+[gRPC之proto语法](https://jianshu.com/p/da7ed5914088)
+
+
