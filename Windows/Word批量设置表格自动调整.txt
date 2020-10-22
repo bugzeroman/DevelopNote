@@ -1,0 +1,85 @@
+1.说明
+通过使用Word的宏功能，
+批量设置表格，
+根据窗口自动调整表格，
+使所有表格的宽度和窗口一样，
+而不用一个一个手动调整表格。
+
+宏是一个批量处理程序命令，
+正确地运用它可以提高工作效率。
+微软的office软件允许用户编写，
+叫VBA的脚本来增加其灵活性，
+进一步扩充它的能力。
+如完打开Word同时要使用某个功能，
+可以编写一段称之为宏的脚本。
+
+2.查看宏
+依次点击：
+视图 -> 宏 -> 查看宏(V)
+或者使用快捷键查看宏：
+Alt + F8
+LookCode.png
+
+3.新建宏
+在查看宏的界面，
+为了新建一个宏，
+需要先输入**宏名(M)**：
+AutoFitTableForWindow
+然后点击**创建(C)**:
+CreateCode.png
+打开VBA脚本编辑界面：
+DevelopVBInit.png
+
+4.开发宏
+初始的VBA脚本不实现任何功能：
+```
+Sub AutoFitTableForWindow()
+'
+' AutoFitTableForWindow 宏
+'
+'
+
+End Sub
+```
+
+需要开发代码， 
+实现打开指定Word文档，
+然后遍历文档中的所有表格，
+设置根据窗口自动调整表格，
+完整脚本内容如下：
+```
+Sub AutoFitTableForWindow()
+'
+' AutoFitTableForWindow 宏
+'
+'
+Dim oDoc As Document
+Dim oTable As Table
+Set oDoc = Documents.Open("C:\Users\yuwen\我的Word文档.docx")
+For Each oTable In oDoc.Tables
+oTable.AutoFitBehavior(wdAutoFitWindow)
+Next
+MsgBox "完成！"
+
+End Sub
+```
+
+5.运行宏
+宏开发完成后，
+再次进入查看宏界面，
+选择需要运行的宏，
+点击**运行(R)**即可。
+
+6.修改宏
+只要修改宏里面打开的文档名称，
+即可在不同的文档中，
+实现自动调整表格宽度的功能。
+这个宏只和指定的文档关联，
+运行宏的时候和当前打开的文档没有关系。
+```
+Set oDoc = Documents.Open("C:\Users\yuwen\我的Word文档.docx")
+```
+
+7.参考文档
+[批量设置word表格根据窗口自动调整](https://blog.csdn.net/meylovezn/article/details/81208289)
+[word宏](https://baike.baidu.com/item/word%E5%AE%8F/3888745?fr=aladdin)
