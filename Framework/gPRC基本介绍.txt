@@ -14,7 +14,8 @@ gRPC是一个现代的开源高性能RPC框架，
 gRPC提供了一种简单的方法来精确地定义服务，
 使用Protocol Buffers定义服务，
 为iOS、Android和后台支持服务自动生成可靠性很强的客户端功能库。
-基于HTTP/2传输层标准协议设计的。
+基于HTTP/2传输层标准协议设计的，
+可以设置为同步或者异步通讯。
 
 gRPC提供了支持多种编程语言的、
 对网络设备进行配置和管理的方法。
@@ -64,7 +65,6 @@ gRPC协议栈分层模型：
 gRPC网络采用客户端/服务器模型，
 使用HTTP/2协议传输报文:
 ![](https://upload-images.jianshu.io/upload_images/11810589-52f3dffd38349a44.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
 
 gRPC网络的工作机制：
 1. 服务器通过监听指定服务端口来等待客户端的连接请求。
