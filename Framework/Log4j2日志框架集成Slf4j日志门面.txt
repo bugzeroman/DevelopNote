@@ -1,0 +1,105 @@
+# 1.说明
+本文介绍使用日志门面Slf4j打印日志，
+底层日志实现使用Log4j2框架，
+方便以后切换底层日志实现，
+Log4j2可以替换成Logback等。
+
+# 2.依赖管理
+在pom.xml依赖管理中导入slf4j-api和log4j-bom：
+```
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.25</version>
+        </dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-bom</artifactId>
+			<version>2.12.1</version>
+			<scope>import</scope>
+			<type>pom</type>
+		</dependency>
+	</dependencies>
+</dependencyManagement>
+```
+
+# 3.依赖引入
+在pom.xml依赖中引入相关的jar包：
+```
+<dependencies>
+	<!-- slf4j+log4j2 日志框架 start -->
+    <dependency>
+		<groupId>org.slf4j</groupId>
+		<artifactId>slf4j-api</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>org.apache.logging.log4j</groupId>
+		<artifactId>log4j-slf4j-impl</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>org.apache.logging.log4j</groupId>
+		<artifactId>log4j-core</artifactId>
+	</dependency>
+	<!-- slf4j+log4j2 日志框架 end -->
+</dependencies>
+```
+
+# 4.日志配置
+在src/main/resource下面增加log4j2.xml文件：
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+  <Appenders>
+    <Console name="Console" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level [%l] - %msg%n"/>
+    </Console>
+  </Appenders>
+  <Loggers>
+    <Root level="DEBUG">
+      <AppenderRef ref="Console"/>
+    </Root>
+  </Loggers>
+</Configuration>
+```
+说明一下，
+虽然使用了日志门面，
+但是配置文件还是和底层日志实现相关的，
+这里Log4j2使用log4j2.xml配置文件，
+包括文件内容的格式，
+都要符合Log4j2规范，
+更多说明请参考[Log4j2完整XML参考(详细注释说明)](https://www.jianshu.com/p/3427a76134d6)。
+
+# 5.记录日志
+在记录日志的时候，
+使用Slf4j提供的日志工厂和日志类即可。
+
+```
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class UserController {
+	private Logger logger = LoggerFactory.getLogger(getClass());
+
+	public List<User> getUsersAll() {
+		logger.debug("UserController.getUsersAll() start");
+	}
+}
+```
+
+其中通过日志工厂获取日志类的时候，
+还有以下写法，
+注意在不同的类中使用时记得修改名称：
+```
+private Logger logger = LoggerFactory.getLogger(UserController.class);
+```
+
+# 6.输出日志
+可以看到如下日志：
+```
+2020-07-02 15:57:11.723 [http-nio-8088-exec-1] DEBUG [24] - UserController.getUsersAll() start
+```
+
+# 7.参考文章
+[SpringBoot集成Log4j2框架](https://www.jianshu.com/p/000467747f65)
