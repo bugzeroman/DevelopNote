@@ -60,10 +60,14 @@ https://chrome.google.com/webstore/detail/proxy-switchyomega/padekgcemlokbadohgk
 插件下载地址：
 https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo
 
-# 9.SingleFile
-将一个完整的页面保存到单个 HTML 文件中。
+# 9.GitHub加速
+国内Github下载很慢，用上了这个插件后下载很快。
+有多个加速通道可以选择，
+只要选择高亮显示的通道，
+下载方式和原来一样。
 插件下载地址：
-https://chrome.google.com/webstore/detail/singlefile/mpiodijhokgodhhofbcjdecpffjipkle
+https://chrome.google.com/webstore/detail/github%E5%8A%A0%E9%80%9F/mfnkflidjnladnkldfonnaicljppahpg
+https://github.com/fhefh2015/Fast-GitHub
 
 # 10.Text Mode
 通过简单的文本页面浏览网页而不受干扰。
@@ -81,6 +85,26 @@ Chrome™的音量控制。
 插件下载地址：
 https://chrome.google.com/webstore/detail/volume-control/lhhgpflelfbhnihnbjigpgdbahgkbghp
 
+# 12.Single html downloader
+可以保存整个网页，包括图片和样式。
+插件下载地址：
+https://chrome.google.com/webstore/detail/oahammdeiaankgiieafmgdpdoefadehl
 
+# 13.SingleFile
+将一个完整的页面保存到单个 HTML 文件中。
+插件下载地址：
+https://chrome.google.com/webstore/detail/singlefile/mpiodijhokgodhhofbcjdecpffjipkle
+
+# 14.Enable Copy
+解除一些受限制的页面，
+允许选择，复制，粘贴和右键单击。
+插件下载地址：
+https://chrome.google.com/webstore/detail/lmnganadkecefnhncokdlaohlkneihio
+
+# 15.FeHelper(前端助手)
+JSON自动格式化、手动格式化，支持排序、解码、下载等，
+更多功能可在配置页按需安装。
+插件下载地址：
+https://chrome.google.com/webstore/detail/pkgccpejnmalmdinmhkkfafefagiiiad
 
 
