@@ -1,0 +1,647 @@
+# 1.说明
+XML是EXtensible Markup Language，
+即可扩展标记语言,
+是一种通用的数据交换格式,
+它的平台无关性、语言无关性、系统无关性，
+给数据集成与交互带来了极大的方便。
+
+本文仅介绍Java语言下的XML解析，
+XML的解析方式分为四种：
+- 1.DOM解析方式
+- 2.SAX解析方式
+- 3.JDOM解析方式
+- 4.DOM4J解析方式
+
+其中DOM和SAX解析方式属于基础方法，
+是JDK提供的平台无关的解析方式；
+而JDOM和DOM4J解析方式属于扩展方法，
+需要依赖额外的Jar包，
+它们是在基础方法上扩展出来的，
+而且是专门为Java平台开发的。
+
+另外DOM模型是跨语言的，
+DOM在Javascript中也可以使用，
+即XML在任何语言中都是一样的模型，
+在不同的语言环境中解析方式都是一样的,
+只不过实现语法不同而已，
+只要理解了DOM，
+就可以使用类似的API进行操作，
+没有其他学习使用成本。
+
+# 2.数据准备
+下面是要解析的XML文件，
+名称为books.xml，
+放在工程的src/main/resources目录下：
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<bookstore>
+    <book id="1">
+        <name>Harry Potter</name>
+        <author>J. K. Rowling</author>
+        <year>1997</year>
+        <price>78</price>
+    </book>
+    <book id="2">
+        <name>Andersen's Fairy Tales</name>
+        <author>Andersen</author>
+        <year>1875</year>
+        <price>166</price>
+    </book>
+    <book id="3">
+        <name>The Little Prince</name>
+        <author>Antoine de Saint-Exupery</author>
+        <year>1943</year>
+        <price>19</price>
+    </book>
+</bookstore>
+```
+
+XML文件对应的Book.java类,
+用于保存从XML解析到的数据：
+```
+package org.w3c.dom;
+
+public class Book {
+    private int id;
+
+    private String name;
+
+    private String author;
+
+    private int year;
+
+    private double price;
+
+    /**
+     * @return the id
+     */
+    public int getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    /**
+     * @return the name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * @param name the name to set
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * @return the author
+     */
+    public String getAuthor() {
+        return author;
+    }
+
+    /**
+     * @param author the author to set
+     */
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    /**
+     * @return the year
+     */
+    public int getYear() {
+        return year;
+    }
+
+    /**
+     * @param year the year to set
+     */
+    public void setYear(int year) {
+        this.year = year;
+    }
+
+    /**
+     * @return the price
+     */
+    public double getPrice() {
+        return price;
+    }
+
+    /**
+     * @param price the price to set
+     */
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    @Override
+    public String toString() {
+        return "Book [id=" + id + ", name=" + name + ", author=" + author + ", year=" + year + ", price=" + price + "]";
+    }
+}
+```
+
+# 3.DOM解析方式
+DOM是Document Object Model，
+即文档对象模型。
+在应用程序中，
+基于DOM的XML分析器将,
+将XML文件全部载入到内存，
+组装成一颗DOM树，
+应用程序通过这个对象模型，
+来实现对XML数据的操作。
+通过DOM接口，
+应用程序可以在任何时候访问XML文档中的任何一部分数据，
+因此这种利用DOM接口的机制也被称作随机访问机制。
+由于XML本质上就是一种分层结构，
+DOM强制使用树模型来访问XML中的信息,
+所以这种方法是相当有效的。
+
+优点：
+- 1.形成了树结构，有助于理解对象模型，容易编写代码。
+- 2.解析过程后，树结构保存在内存中，操作灵活，方便修改。
+- 3.方便定位当前节点的父节点，子节点以及同级节点。
+
+缺点：
+- 1.由于文件是一次性读取，所以对内存的耗费比较大。
+- 2.如果XML文件比较大，容易影响解析性能，且可能会造成内存溢出，不适用于较大文档。
+
+解析代码DomParseXML.java：
+```
+package org.w3c.dom;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.SAXException;
+
+/**
+ * 用DOM方式解析xml文件,使用JDK提供的类库
+ */
+public class DomParseXML {
+
+    public static void main(String args[]) throws Exception {
+        String fileName = "src/main/resources/books.xml";
+
+        Document document = getDocument(fileName);
+
+        List<Book> books = getBooks(document);
+        for (Book book : books) {
+            System.out.println(book);
+        }
+    }
+
+    public static Document getDocument(String fileName) throws ParserConfigurationException, SAXException, IOException {
+        // 工厂类可以设置很多XML解析参数
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        // 将给定URI的内容解析为一个 XML文档,并返回Document对象
+        Document document = builder.parse(fileName);
+        return document;
+    }
+
+    public static List<Book> getBooks(Document document) throws Exception {
+
+        // 按文档顺序返回在文档中，具有book标签的所有Node
+        NodeList bookNodes = document.getElementsByTagName("book");
+
+        // 用于保存解析后的Book对象
+        List<Book> books = new ArrayList<Book>();
+        // 遍历具有book标签的所有Node
+        for (int i = 0; i < bookNodes.getLength(); i++) {
+            // 获取第i个book结点
+            Node node = bookNodes.item(i);
+            // 获取第i个book的所有属性
+            NamedNodeMap namedNodeMap = node.getAttributes();
+            // 获取已知名为id的属性值
+            String id = namedNodeMap.getNamedItem("id").getTextContent();
+            Book book = new Book();
+            book.setId(Integer.parseInt(id));
+
+            // 获取book结点的子节点,包含了text类型的换行
+            NodeList childNodes = node.getChildNodes();
+
+            // 按照顺序将book里面的属性加入数组
+            ArrayList<String> contents = new ArrayList<>();
+            // 这里由于偶数行是text类型无用节点，所以只取1,3,5,7节点
+            for (int j = 1; j < childNodes.getLength(); j += 2) {
+                Node childNode = childNodes.item(j);
+                String content = childNode.getFirstChild().getTextContent();
+                contents.add(content);
+            }
+
+            // 将数组中的内容按照顺序写入对象
+            book.setName(contents.get(0));
+            book.setAuthor(contents.get(1));
+            book.setYear(Integer.parseInt(contents.get(2)));
+            book.setPrice(Double.parseDouble(contents.get(3)));
+
+            // 将解析好的book加入返回列表
+            books.add(book);
+        }
+
+        return books;
+    }
+}
+```
+
+# 4.SAX解析方式
+SAX是Simple APIs for XML，
+即XML简单应用程序接口。
+与DOM不同，
+SAX提供的访问模式是一种顺序模式，
+这是一种快速读写XML数据的方式。
+当使用SAX分析器对XML文档进行分析时，
+会触发一系列事件，
+并激活相应的事件处理函数，
+应用程序通过这些事件处理函数实现对XML文档的读取，
+因此SAX接口的机制也被称作事件驱动机制。
+
+优点：
+- 1.采用事件驱动模式，对内存耗费比较小。
+- 2.适用于只处理XML文件中的数据时。
+
+缺点：
+- 1.编码比较麻烦，需要自定义事件处理类，配合SAX分析器使用。
+- 2.很难同时访问XML文件中的多处不同数据。
+
+解析代码SAXParseHandler.java：
+```
+package javax.xml.parsers;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.w3c.dom.Book;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
+
+/**
+ * 用SAX方式解析XML文件时需要的handler
+ */
+public class SAXParseHandler extends DefaultHandler {
+    // 存放解析到的book数组
+    private List<Book> books;
+    // 存放当前解析的book
+    private Book book;
+    // 存放当前节点值
+    private String content = null;
+
+    /**
+     * 开始解析XML文件时调用此方法
+     */
+    @Override
+    public void startDocument() throws SAXException {
+        super.startDocument();
+        System.out.println("开始解析XML文件");
+        books = new ArrayList<Book>();
+    }
+
+    /** 
+     * 完成解析XML文件时调用此方法
+     */
+    @Override
+    public void endDocument() throws SAXException {
+        super.endDocument();
+        System.out.println("完成解析XML文件");
+    }
+
+    /**
+     * 开始解析节点时调用此方法
+     */
+    @Override
+    public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+
+        super.startElement(uri, localName, qName, attributes);
+
+        // 当节点名为book时,获取book的属性id
+        if (qName.equals("book")) {
+            book = new Book();
+            String id = attributes.getValue("id");
+            book.setId(Integer.parseInt(id));
+        }
+
+    }
+
+    /**
+     *完成解析节点时调用此方法
+     *
+     *@param qName 节点名
+     */
+    @Override
+    public void endElement(String uri, String localName, String qName) throws SAXException {
+
+        super.endElement(uri, localName, qName);
+        if (qName.equals("name")) {
+            book.setName(content);
+        } else if (qName.equals("author")) {
+            book.setAuthor(content);
+        } else if (qName.equals("year")) {
+            book.setYear(Integer.parseInt(content));
+        } else if (qName.equals("price")) {
+            book.setPrice(Double.parseDouble(content));
+        } else if (qName.equals("book")) {
+            // 当结束当前book解析时,将该book添加到数组后置为空，方便下一次book赋值
+            books.add(book);
+            book = null;
+        }
+    }
+
+    /** 
+     * 此方法用来获取节点的值
+     */
+    @Override
+    public void characters(char[] ch, int start, int length) throws SAXException {
+
+        super.characters(ch, start, length);
+        // 将节点的内容保存到content,以便在完成解析节点时调用此方法,
+        // 根据节点名称把content赋给Book的相应字段
+        content = new String(ch, start, length);
+    }
+
+    public List<Book> getBooks() {
+        return books;
+    }
+}
+```
+
+解析代码SaxParseXML.java：
+```
+package javax.xml.parsers;
+
+import java.util.List;
+
+import org.w3c.dom.Book;
+
+/**
+ * 用SAX方式解析XML文件，使用JDK提供的类库
+ */
+public class SaxParseXML {
+
+    public static void main(String[] args) throws Exception {
+        String fileName = "src/main/resources/books.xml";
+        List<Book> books = getBooks(fileName);
+        for (Book book : books) {
+            System.out.println(book);
+        }
+    }
+
+    public static List<Book> getBooks(String fileName) throws Exception {
+        // SAXParserFactory可以设置XML解析参数
+        SAXParserFactory sParserFactory = SAXParserFactory.newInstance();
+        SAXParser parser = sParserFactory.newSAXParser();
+
+        SAXParseHandler handler = new SAXParseHandler();
+        // SAXParser解析XML文件时需要配合SAXParseHandler使用
+        parser.parse(fileName, handler);
+        // 从自定义的解析类SAXParseHandler中取出解析结果
+        return handler.getBooks();
+    }
+
+}
+```
+
+# 5.JDOM解析方式
+通过引入第三方jar包，
+简化与XML的交互，易于使用，
+使用类似于上面的DOM解析方式，
+但是比使用DOM解析方式更快。
+特征：
+- 1.仅使用具体类，而不使用接口。
+- 2.API大量使用了Collections类。
+
+引入jar包：
+```
+<dependency>
+    <groupId>org.jdom</groupId>
+    <artifactId>jdom2</artifactId>
+    <version>2.0.6</version>
+</dependency>
+```
+
+解析代码JdomParseXML.java：
+```
+package org.jdom2.input;
+
+import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.jdom2.Attribute;
+import org.jdom2.Document;
+import org.jdom2.Element;
+import org.w3c.dom.Book;
+
+/**
+ * 用JDOM方式解析xml文件
+ */
+public class JdomParseXML {
+
+    public static void main(String[] args) throws Exception {
+        String fileName = "src/main/resources/books.xml";
+        List<Book> books = getBooks(fileName);
+        for (Book book : books) {
+            System.out.println(book);
+        }
+    }
+
+    public static List<Book> getBooks(String fileName) throws Exception {
+        SAXBuilder saxBuilder = new SAXBuilder();
+        Document document = saxBuilder.build(new FileInputStream(fileName));
+        // 获取根节点bookstore
+        Element bookstore = document.getRootElement();
+        // 获取根节点的子节点，返回子节点的数组
+        List<Element> bookElements = bookstore.getChildren();
+        List<Book> books = new ArrayList<Book>();
+        for (Element bookElement : bookElements) {
+            // 获取Book的id属性值
+            Book book = getBookByElement(bookElement);
+            // 获取Book的name等其他元素的属性值
+            generateBookDetail(bookElement, book);
+
+            books.add(book);
+        }
+
+        return books;
+
+    }
+
+    public static Book getBookByElement(Element bookElement) {
+        Book book = new Book();
+        // 遍历bookElement的属性,获取id属性的值
+        List<Attribute> bookAttributes = bookElement.getAttributes();
+        for (Attribute attribute : bookAttributes) {
+            if (attribute.getName().equals("id")) {
+                String id = attribute.getValue();
+                book.setId(Integer.parseInt(id));
+            }
+        }
+        return book;
+    }
+
+    public static void generateBookDetail(Element bookElement, Book book) {
+        // 获取Book标签下的其它标签的值
+        List<Element> children = bookElement.getChildren();
+        for (Element child : children) {
+            String nodeName = child.getName();
+            String nodeValue = child.getValue();
+            if (nodeName.equals("name")) {
+                book.setName(nodeValue);
+            } else if (nodeName.equals("author")) {
+                book.setAuthor(nodeValue);
+            } else if (nodeName.equals("year")) {
+                book.setYear(Integer.parseInt(nodeValue));
+            } else if (nodeName.equals("price")) {
+                book.setPrice(Double.parseDouble(nodeValue));
+            }
+        }
+    }
+}
+```
+
+# 6.DOM4J解析方式
+DOM4J是基于JDOM的一个智能分支，
+包含了更多的改进和功能，
+DOM4J最新的发布包是2020年4月的。
+而JDOM最新的发布包是2015年2月的。
+
+通过引入第三方jar包，，
+使用类似于上面的SAX解析方式，
+所以比JDOM有着更好的性能。
+
+特征：
+- 1.JDOM的一个智能分支，它合并了许多超出基本XML文档表示的功能。
+- 2.它使用接口和抽象基本类方法。
+- 3.具有性能优异、灵活性好、功能强大和极端易用的特点。
+
+引入jar包：
+```
+<dependency>
+    <groupId>org.dom4j</groupId>
+    <artifactId>dom4j</artifactId>
+    <version>2.1.3</version>
+</dependency>
+```
+
+解析代码Dom4jParseXML .java：
+```
+package org.dom4j.io;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import org.dom4j.Attribute;
+import org.dom4j.Document;
+import org.dom4j.Element;
+import org.w3c.dom.Book;
+
+/**
+ * 用DOM4J方式解析XML文件
+ *
+ */
+public class Dom4jParseXML {
+
+    public static void main(String[] args) throws Exception {
+        String fileName = "src/main/resources/books.xml";
+        List<Book> books = getBooks(fileName);
+        for (Book book : books) {
+            System.out.println(book);
+        }
+    }
+
+    public static List<Book> getBooks(String fileName) throws Exception {
+        SAXReader reader = new SAXReader();
+        File file = new File(fileName);
+        Document document = reader.read(file);
+
+        Element bookstore = document.getRootElement();
+        Iterator<Element> bookElements = bookstore.elementIterator();
+
+        List<Book> books = new ArrayList<Book>();
+        while (bookElements.hasNext()) {
+            Element bookElement = bookElements.next();
+            // 获取Book的id属性值
+            Book book = getBookByElement(bookElement);
+            // 获取Book的name等其他元素的属性值
+            generateBookDetail(bookElement, book);
+
+            books.add(book);
+        }
+        return books;
+    }
+
+    public static Book getBookByElement(Element bookElement) {
+        Book book = new Book();
+        // 遍历bookElement的属性,获取id属性的值
+        List<Attribute> attributes = bookElement.attributes();
+        for (Attribute attribute : attributes) {
+            if (attribute.getName().equals("id")) {
+                String id = attribute.getValue();
+                book.setId(Integer.parseInt(id));
+            }
+        }
+        return book;
+    }
+
+    public static void generateBookDetail(Element bookElement, Book book) {
+        // 获取Book标签下的其它标签的值
+        Iterator<Element> details = bookElement.elementIterator();
+        while (details.hasNext()) {
+            Element child = details.next();
+            String nodeName = child.getName();
+            String nodeValue = child.getStringValue();
+            if (nodeName.equals("name")) {
+                book.setName(nodeValue);
+            } else if (nodeName.equals("author")) {
+                book.setAuthor(nodeValue);
+            } else if (nodeName.equals("year")) {
+                book.setYear(Integer.parseInt(nodeValue));
+            } else if (nodeName.equals("price")) {
+                book.setPrice(Double.parseDouble(nodeValue));
+            }
+        }
+    }
+}
+```
+
+# 7.总结
+DOM4J性能最好，连Sun的JAXM也在用DOM4J。
+目前许多开源项目中大量采用DOM4J，
+例如大名鼎鼎的Hibernate也用DOM4J来读取XML配置文件。
+如果不考虑可移植性，那就采用DOM4J。
+
+SAX表现较好，这要依赖于它特定的解析方式－事件驱动。
+一个SAX检测即将到来的XML流，
+但并没有载入到内存，
+当然当XML流被读入时，
+会有部分文档暂时保存在内存中。
+
+DOM和JDOM在性能测试时表现不佳，
+在测试10M文档时内存溢出。
+在小文档情况下还值得考虑使用DOM和JDOM。
+另外，DOM仍是一个非常好的选择。
+DOM实现广泛应用于多种编程语言。
+它还是许多其它与XML相关的标准的基础，
+因为它正式获得W3C推荐，
+所以在某些类型的项目中可能也需要它，
+如在JavaScript中使用DOM。
+
+# 8.参考文档
+[Java解析XML文件](https://blog.csdn.net/zflovecf/article/details/78908788)
+[XML解析——Java中XML的四种解析方式](https://www.cnblogs.com/longqingyang/p/5577937.html)
