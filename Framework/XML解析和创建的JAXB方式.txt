@@ -1,0 +1,223 @@
+# 1.说明
+JAXB是Java Architecture for XML Binding，
+即用于XML绑定的Java体系结构，
+JAXB作为JDK的一部分，
+能便捷地将Java对象与XML进行相互转换。
+JAXB能将Java对象的内容写到XML文件，
+也能读取XML文件反向生成Java对象。
+JAXB是一个业界标准，
+是一项可以根据XML Schema产生Java类的技术。
+下面的示例代码基于JDK8,
+不需要额外引入jar包，
+只需要几个注解，
+就可以方便使用JAXB功能。
+
+# 2.JAXBContext类
+通过使用JAXBContext类，
+生成上下文对象，
+然后生成Marshaller对象，
+用于把Java对象转成XML文件，
+再生成Unmarshaller对象，
+把上面生成的XML文件转换成Java对象。
+
+这里演示Person类和XML的互相转换，
+下面首先定义Person.java类，
+注意在类名上面使用@XmlRootElement注解，
+在属性的set方法上面使用@XmlElement注解：
+```
+package javax.xml.bind;
+
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
+public class Person {
+    private int id;
+
+    private String name;
+
+    private String gender;
+
+    private String addr;
+
+    public Person() {
+    }
+
+    public Person(String name, String gender, String addr) {
+        this.name = name;
+        this.gender = gender;
+        this.addr = addr;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    @XmlElement
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    @XmlElement
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    @XmlElement
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public String getAddr() {
+        return addr;
+    }
+
+    @XmlElement
+    public void setAddr(String addr) {
+        this.addr = addr;
+    }
+
+    @Override
+    public String toString() {
+        return "Person [id=" + id + ", name=" + name + ", gender=" + gender + ", addr=" + addr + "]";
+    }
+}
+```
+
+下面给出JAXBContextParseXML.java类，
+演示了Java对象到XML的转换，
+以及XML到Java对象的转换:
+```
+package javax.xml.bind;
+
+import java.io.File;
+
+/**
+ * 使用JAXBContext上下文对象，通过实体对象直接生成XML，以及把XML直接解析成对应的实体类实例
+ *
+ */
+public class JAXBContextParseXML {
+    public static final String FILE_NAME = "src/main/resources/person.xml";
+
+    public static void main(String[] args) throws Exception {
+        java2XML();
+        xml2java();
+    }
+
+    /**
+     * 通过实体对象直接生成XML
+     */
+    public static void java2XML() throws Exception {
+        Person person = new Person("yuwen", "男", "南京");
+
+        File file = new File(FILE_NAME);
+        // 根据Person类生成上下文对象
+        JAXBContext jc = JAXBContext.newInstance(Person.class);
+        // 从上下文中获取Marshaller对象，用于把bean转换为xml
+        Marshaller ma = jc.createMarshaller();
+        // 以下是为生成xml做的一些配置
+        // 格式化输出，即按标签自动换行，否则就是一行输出
+        ma.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+        // 设置编码（默认编码就是utf-8）
+        ma.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+        // 是否省略xml头信息，默认不省略（false）
+        ma.setProperty(Marshaller.JAXB_FRAGMENT, false);
+
+        // 编组，把Person对象转换为xml
+        ma.marshal(person, file);
+        System.out.println("generateXML=" + file.getName());
+    }
+
+    /**
+     * 把XML直接解析成对应的实体类实例
+     */
+    public static void xml2java() throws Exception {
+        // 从上下文中获取Unmarshaller对象
+        JAXBContext jc = JAXBContext.newInstance(Person.class);
+        Unmarshaller uma = jc.createUnmarshaller();
+
+        // 把XML文件解析为Person对象
+        File file = new File(FILE_NAME);
+        Person person = (Person) uma.unmarshal(file);
+        System.out.println(person);
+    }
+}
+```
+
+输出的控制台内容如下：
+```
+generateXML=person.xml
+Person [id=0, name=yuwen, gender=男, addr=南京]
+```
+
+输出的person.xml如下：
+```
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<person>
+    <addr>南京</addr>
+    <gender>男</gender>
+    <id>0</id>
+    <name>yuwen</name>
+</person>
+```
+
+# 3.JAXB类
+通过JAXB类提供的静态方法，
+可以帮助使用者简单，快速上手JAXB。
+为了性能上的考虑，
+JAXB将会对JAXBContext做缓存。
+
+示例代码JAXBParseXML.java如下：
+```
+package javax.xml.bind;
+
+import java.io.File;
+
+/**
+ * 使用JAXB的静态方法（推荐），通过实体对象直接生成XML，以及把XML直接解析成对应的实体类实例
+ *
+ */
+public class JAXBParseXML {
+    public static final String FILE_NAME = "src/main/resources/person.xml";
+
+    public static void main(String[] args) throws Exception {
+        java2XML();
+        xml2Java();
+    }
+
+    /**
+     * 通过实体对象直接生成XML
+     */
+    public static void java2XML() throws Exception {
+        Person person = new Person("yuwen", "男", "南京");
+        File file = new File(FILE_NAME);
+        // 输出到文件
+        JAXB.marshal(person, file);
+        System.out.println("generateXML=" + file.getAbsolutePath());
+        // 输出到控制台
+        JAXB.marshal(person, System.out);
+    }
+
+    /**
+     * 把XML直接解析成对应的实体类实例
+     */
+    public static void xml2Java() throws Exception {
+        File file = new File(FILE_NAME);
+        Person person = JAXB.unmarshal(file, Person.class);
+        System.out.println(person);
+    }
+}
+
+```
+
+# 4.参考文章
+[JABX 教程](https://www.w3cschool.cn/jaxb2/)
+[JAXB教程–入门](https://blog.csdn.net/dnc8371/article/details/106705657)
