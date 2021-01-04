@@ -13,10 +13,11 @@ tar -zxvf elasticsearch-6.2.2.tar.gz
 
 # 3.配置环境变量
 安装jdk，修改.bashrc文件，配置jdk目录
+```
 export JAVA_HOME=/usr/java/jdk1.8.0_151
 export PATH=$PATH:$JAVA_HOME/bin
 export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
-
+```
 # 4.修改配置文件config/elasticsearch.yml
 集群名称,建议修改成自己的，防止误用默认集群
 cluster.name: yuwenes
