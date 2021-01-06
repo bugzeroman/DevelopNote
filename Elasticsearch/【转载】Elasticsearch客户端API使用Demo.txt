@@ -28,6 +28,7 @@ Elasticsearch¿Í»§¶ËAPIÊ¹ÓÃDemo£¬
 ¸ÃÀàĞÍÎ»ÓÚË÷ÒımegacorpÄÚ¡£
 ¸ÃË÷Òı±£´æÔÚÎÒÃÇµÄElasticsearch¼¯ÈºÖĞ¡£
 Êµ¼ùÖĞÕâ·Ç³£¼òµ¥£¨¾¡¹Ü¿´ÆğÀ´ÓĞºÜ¶à²½Öè£©£¬ÎÒÃÇ¿ÉÒÔÍ¨¹ıÒ»ÌõÃüÁîÍê³ÉËùÓĞÕâĞ©¶¯×÷£º
+```
 curl -XPUT 'localhost:9200/megacorp/employee/1?pretty' -H 'Content-Type: application/json' -d'
 {
     "first_name" : "John",
@@ -37,6 +38,7 @@ curl -XPUT 'localhost:9200/megacorp/employee/1?pretty' -H 'Content-Type: applica
     "interests": [ "sports", "music" ]
 }
 '
+```
 
 ×¢Òâ£¬Â·¾¶/megacorp/employee/1°üº¬ÁËÈı²¿·ÖµÄĞÅÏ¢£º
 megacorp Ë÷ÒıÃû³Æ
@@ -47,6 +49,7 @@ employee ÀàĞÍÃû³Æ
 ºÜ¼òµ¥£¡ÎŞĞè½øĞĞÖ´ĞĞ¹ÜÀíÈÎÎñ£¬Èç´´½¨Ò»¸öË÷Òı»òÖ¸¶¨Ã¿¸öÊôĞÔµÄÊı¾İÀàĞÍÖ®ÀàµÄ£¬¿ÉÒÔÖ±½ÓÖ»Ë÷ÒıÒ»¸öÎÄµµ¡£ElasticsearchÄ¬ÈÏµØÍê³ÉÆäËûÒ»ÇĞ£¬Òò´ËËùÓĞ±ØĞèµÄ¹ÜÀíÈÎÎñ¶¼ÔÚºóÌ¨Ê¹ÓÃÄ¬ÈÏÉèÖÃÍê³É¡£
 
 # 4.½øĞĞÏÂÒ»²½Ç°£¬ÈÃÎÒÃÇÔö¼Ó¸ü¶àµÄÔ±¹¤ĞÅÏ¢µ½Ä¿Â¼ÖĞ
+```
 curl -XPUT 'localhost:9200/megacorp/employee/2?pretty' -H 'Content-Type: application/json' -d'
 {
     "first_name" :  "Jane",
@@ -65,6 +68,7 @@ curl -XPUT 'localhost:9200/megacorp/employee/3?pretty' -H 'Content-Type: applica
     "interests":  [ "forestry" ]
 }
 '
+```
 
 # 5.¼ìË÷ÎÄµµ
 Ä¿Ç°ÎÒÃÇÒÑ¾­ÔÚElasticsearchÖĞ´æ´¢ÁËÒ»Ğ©Êı¾İ£¬½ÓÏÂÀ´¾ÍÄÜ×¨×¢ÓÚÊµÏÖÓ¦ÓÃµÄÒµÎñĞèÇóÁË¡£µÚÒ»¸öĞèÇóÊÇ¿ÉÒÔ¼ìË÷µ½µ¥¸ö¹ÍÔ±µÄÊı¾İ¡£
@@ -72,6 +76,7 @@ curl -XPUT 'localhost:9200/megacorp/employee/3?pretty' -H 'Content-Type: applica
 curl -XGET 'localhost:9200/megacorp/employee/1?pretty'
 
 ·µ»Ø½á¹û°üº¬ÁËÎÄµµµÄÒ»Ğ©ÔªÊı¾İ£¬ÒÔ¼°_sourceÊôĞÔ£¬ÄÚÈİÊÇJohnSmith¹ÍÔ±µÄÔ­Ê¼JSONÎÄµµ£º
+```
 {
   "_index" :   "megacorp",
   "_type" :    "employee",
@@ -86,15 +91,19 @@ curl -XGET 'localhost:9200/megacorp/employee/1?pretty'
       "interests":  [ "sports", "music" ]
   }
 }
+```
 
 ÌáÊ¾£º½«HTTPÃüÁîÓÉPUT¸ÄÎªGET¿ÉÒÔÓÃÀ´¼ìË÷ÎÄµµ£¬Í¬ÑùµÄ£¬¿ÉÒÔÊ¹ÓÃDELETEÃüÁîÀ´É¾³ıÎÄµµ£¬ÒÔ¼°Ê¹ÓÃHEADÖ¸ÁîÀ´¼ì²éÎÄµµÊÇ·ñ´æÔÚ¡£Èç¹ûÏë¸üĞÂÒÑ´æÔÚµÄÎÄµµ£¬Ö»ĞèÔÙ´ÎPUT¡£
 
 # 6.ÇáÁ¿ËÑË÷
 Ò»¸öGETÊÇÏàµ±¼òµ¥µÄ£¬¿ÉÒÔÖ±½ÓµÃµ½Ö¸¶¨µÄÎÄµµ¡£ÏÖÔÚ³¢ÊÔµã¶ùÉÔÎ¢¸ß¼¶µÄ¹¦ÄÜ£¬±ÈÈçÒ»¸ö¼òµ¥µÄËÑË÷£¡
 µÚÒ»¸ö³¢ÊÔµÄ¼¸ºõÊÇ×î¼òµ¥µÄËÑË÷ÁË¡£ÎÒÃÇÊ¹ÓÃÏÂÁĞÇëÇóÀ´ËÑË÷ËùÓĞ¹ÍÔ±£º
+```
 curl -XGET 'localhost:9200/megacorp/employee/_search?pretty'
+```
 
 ¿ÉÒÔ¿´µ½£¬ÎÒÃÇÈÔÈ»Ê¹ÓÃË÷Òı¿âmegacorpÒÔ¼°ÀàĞÍemployee£¬µ«ÓëÖ¸¶¨Ò»¸öÎÄµµID²»Í¬£¬Õâ´ÎÊ¹ÓÃ_search¡£·µ»Ø½á¹û°üÀ¨ÁËËùÓĞÈı¸öÎÄµµ£¬·ÅÔÚÊı×éhitsÖĞ¡£Ò»¸öËÑË÷Ä¬ÈÏ·µ»ØÊ®Ìõ½á¹û¡£
+```
 {
    "took":      6,
    "timed_out": false,
@@ -145,6 +154,7 @@ curl -XGET 'localhost:9200/megacorp/employee/_search?pretty'
       ]
    }
 }
+```
 
 ×¢Òâ£º·µ»Ø½á¹û²»½ö¸æÖªÆ¥ÅäÁËÄÄĞ©ÎÄµµ£¬»¹°üº¬ÁËÕû¸öÎÄµµ±¾Éí£ºÏÔÊ¾ËÑË÷½á¹û¸ø×îÖÕÓÃ»§ËùĞèµÄÈ«²¿ĞÅÏ¢¡£
 
@@ -152,6 +162,7 @@ curl -XGET 'localhost:9200/megacorp/employee/_search?pretty'
 curl -XGET 'localhost:9200/megacorp/employee/_search?q=last_name:Smith&pretty'
 
 ÎÒÃÇÈÔÈ»ÔÚÇëÇóÂ·¾¶ÖĞÊ¹ÓÃ_search¶Ëµã£¬²¢½«²éÑ¯±¾Éí¸³Öµ¸ø²ÎÊıq=¡£·µ»Ø½á¹û¸ø³öÁËËùÓĞµÄSmith£º
+```
 {
    ...
    "hits": {
@@ -181,10 +192,12 @@ curl -XGET 'localhost:9200/megacorp/employee/_search?q=last_name:Smith&pretty'
       ]
    }
 }
+```
 
 # 7.Ê¹ÓÃ²éÑ¯±í´ïÊ½ËÑË÷
 Query-stringËÑË÷Í¨¹ıÃüÁî·Ç³£·½±ãµØ½øĞĞÁÙÊ±ĞÔµÄ¼´Ï¯ËÑË÷£¬µ«ËüÓĞ×ÔÉíµÄ¾ÖÏŞĞÔ£¨²Î¼ûÇáÁ¿ËÑË÷£©¡£ElasticsearchÌá¹©Ò»¸ö·á¸»Áé»îµÄ²éÑ¯ÓïÑÔ½Ğ×ö²éÑ¯±í´ïÊ½£¬ËüÖ§³Ö¹¹½¨¸ü¼Ó¸´ÔÓºÍ½¡×³µÄ²éÑ¯¡£
 ÁìÓòÌØ¶¨ÓïÑÔ£¨DSL£©£¬Ö¸¶¨ÁËÊ¹ÓÃÒ»¸öJSONÇëÇó¡£ÎÒÃÇ¿ÉÒÔÏñÕâÑùÖØĞ´Ö®Ç°µÄ²éÑ¯ËùÓĞSmithµÄËÑË÷£º
+```
 curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: application/json' -d'
 {
     "query" : {
@@ -194,11 +207,13 @@ curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: a
     }
 }
 '
+```
 
 ·µ»Ø½á¹ûÓëÖ®Ç°µÄ²éÑ¯Ò»Ñù£¬µ«»¹ÊÇ¿ÉÒÔ¿´µ½ÓĞÒ»Ğ©±ä»¯¡£ÆäÖĞÖ®Ò»ÊÇ£¬²»ÔÙÊ¹ÓÃquery-string²ÎÊı£¬¶øÊÇÒ»¸öÇëÇóÌåÌæ´ú¡£Õâ¸öÇëÇóÊ¹ÓÃJSON¹¹Ôì£¬²¢Ê¹ÓÃÁËÒ»¸ömatch²éÑ¯£¨ÊôÓÚ²éÑ¯ÀàĞÍÖ®Ò»£¬ºóĞø½«»áÁË½â£©¡£
 
 # 8.¸ü¸´ÔÓµÄËÑË÷
 ÏÖÔÚ³¢ÊÔÏÂ¸ü¸´ÔÓµÄËÑË÷¡£Í¬ÑùËÑË÷ĞÕÊÏÎªSmithµÄ¹ÍÔ±£¬µ«Õâ´ÎÎÒÃÇÖ»ĞèÒªÄêÁä´óÓÚ30µÄ¡£²éÑ¯ĞèÒªÉÔ×÷µ÷Õû£¬Ê¹ÓÃ¹ıÂËÆ÷filter£¬ËüÖ§³Ö¸ßĞ§µØÖ´ĞĞÒ»¸ö½á¹¹»¯²éÑ¯¡£
+```
 curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: application/json' -d'
 {
     "query" : {
@@ -218,10 +233,13 @@ curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: a
 }
 '
 ```
+
+```
 #1# Õâ²¿·ÖÓëÎÒÃÇÖ®Ç°Ê¹ÓÃµÄmatch²éÑ¯Ò»Ñù¡£
 #2# Õâ²¿·ÖÊÇÒ»¸örange¹ıÂËÆ÷£¬ËüÄÜÕÒµ½ÄêÁä´óÓÚ30µÄÎÄµµ£¬ÆäÖĞgt±íÊ¾_´óÓÚ(_greatthan)¡£
 ```
 Ä¿Ç°ÎŞĞèÌ«¶àµ£ĞÄÓï·¨ÎÊÌâ£¬ºóĞø»á¸üÏêÏ¸µØ½éÉÜ¡£Ö»ĞèÃ÷È·ÎÒÃÇÌí¼ÓÁËÒ»¸ö¹ıÂËÆ÷ÓÃÓÚÖ´ĞĞÒ»¸ö·¶Î§²éÑ¯£¬²¢¸´ÓÃÖ®Ç°µÄmatch²éÑ¯¡£ÏÖÔÚ½á¹ûÖ»·µ»ØÁËÒ»¸ö¹ÍÔ±£¬½ĞJaneSmith£¬32Ëê¡£
+```
 {
    ...
    "hits": {
@@ -241,10 +259,12 @@ curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: a
       ]
    }
 }
+```
 
 # 9.È«ÎÄËÑË÷
 ½ØÖ¹Ä¿Ç°µÄËÑË÷Ïà¶Ô¶¼ºÜ¼òµ¥£ºµ¥¸öĞÕÃû£¬Í¨¹ıÄêÁä¹ıÂË¡£ÏÖÔÚ³¢ÊÔÏÂÉÔÎ¢¸ß¼¶µã¶ùµÄÈ«ÎÄËÑË÷¡ª¡ªÒ»Ïî´«Í³Êı¾İ¿âÈ·ÊµºÜÄÑ¸ã¶¨µÄÈÎÎñ¡£
 ËÑË÷ÏÂËùÓĞÏ²»¶ÅÊÑÒ£¨rockclimbing£©µÄ¹ÍÔ±£º
+```
 curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: application/json' -d'
 {
     "query" : {
@@ -254,8 +274,10 @@ curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: a
     }
 }
 '
+```
 
 ÏÔÈ»ÎÒÃÇÒÀ¾ÉÊ¹ÓÃÖ®Ç°µÄmatch²éÑ¯ÔÚaboutÊôĞÔÉÏËÑË÷"rockclimbing"¡£µÃµ½Á½¸öÆ¥ÅäµÄÎÄµµ£º
+```
 {
    ...
    "hits": {
@@ -287,6 +309,7 @@ curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: a
       ]
    }
 }
+```
 
 ```
 #3#£¬#4# Ïà¹ØĞÔµÃ·Ö
@@ -298,6 +321,7 @@ ElasticsearchÄ¬ÈÏ°´ÕÕÏà¹ØĞÔµÃ·ÖÅÅĞò£¬¼´Ã¿¸öÎÄµµ¸ú²éÑ¯µÄÆ¥Åä³Ì¶È¡£µÚÒ»¸ö×î¸ßµÃ·Öµ
 # 10.¶ÌÓïËÑË÷
 ÕÒ³öÒ»¸öÊôĞÔÖĞµÄ¶ÀÁ¢µ¥´ÊÊÇÃ»ÓĞÎÊÌâµÄ£¬µ«ÓĞÊ±ºòÏëÒª¾«È·Æ¥ÅäÒ»ÏµÁĞµ¥´Ê»òÕß¶ÌÓï¡£±ÈÈç£¬ÎÒÃÇÏëÖ´ĞĞÕâÑùÒ»¸ö²éÑ¯£¬½öÆ¥ÅäÍ¬Ê±°üº¬"rock"ºÍ"climbing"£¬²¢ÇÒ¶şÕßÒÔ¶ÌÓï"rockclimbing"µÄĞÎÊ½½ô°¤×ÅµÄ¹ÍÔ±¼ÇÂ¼¡£
 Îª´Ë¶Ômatch²éÑ¯ÉÔ×÷µ÷Õû£¬Ê¹ÓÃÒ»¸ö½Ğ×ömatch_phraseµÄ²éÑ¯£º
+```
 curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: application/json' -d'
 {
     "query" : {
@@ -307,8 +331,10 @@ curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: a
     }
 }
 '
+```
 
 ºÁÎŞĞüÄî£¬·µ»Ø½á¹û½öÓĞJohnSmithµÄÎÄµµ¡£
+```
 {
    ...
    "hits": {
@@ -329,10 +355,12 @@ curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: a
       ]
    }
 }
+```
 
 # 11.¸ßÁÁËÑË÷
 Ğí¶àÓ¦ÓÃ¶¼ÇãÏòÓÚÔÚÃ¿¸öËÑË÷½á¹ûÖĞ¸ßÁÁ²¿·ÖÎÄ±¾Æ¬¶Î£¬ÒÔ±ãÈÃÓÃ»§ÖªµÀÎªºÎ¸ÃÎÄµµ·ûºÏ²éÑ¯Ìõ¼ş¡£ÔÚElasticsearchÖĞ¼ìË÷³ö¸ßÁÁÆ¬¶ÎÒ²ºÜÈİÒ×¡£
 ÔÙ´ÎÖ´ĞĞÇ°ÃæµÄ²éÑ¯£¬²¢Ôö¼ÓÒ»¸öĞÂµÄhighlight²ÎÊı£º
+```
 curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: application/json' -d'
 {
     "query" : {
@@ -347,8 +375,10 @@ curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: a
     }
 }
 '
+```
 
 µ±Ö´ĞĞ¸Ã²éÑ¯Ê±£¬·µ»Ø½á¹ûÓëÖ®Ç°Ò»Ñù£¬Óë´ËÍ¬Ê±½á¹ûÖĞ»¹¶àÁËÒ»¸ö½Ğ×öhighlightµÄ²¿·Ö¡£Õâ¸ö²¿·Ö°üº¬ÁËaboutÊôĞÔÆ¥ÅäµÄÎÄ±¾Æ¬¶Î£¬²¢ÒÔHTML±êÇ©<em></em>·â×°£º
+```
 {
    ...
    "hits": {
@@ -375,12 +405,15 @@ curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: a
    }
 }
 ```
+
+```
 #5# Ô­Ê¼ÎÄ±¾ÖĞµÄ¸ßÁÁÆ¬¶Î
 ¹ØÓÚ¸ßÁÁËÑË÷Æ¬¶Î£¬¿ÉÒÔÔÚhighlightingreferencedocumentationÁË½â¸ü¶àĞÅÏ¢¡£
 ```
 # 12.·ÖÎö
 ÖÕÓÚµ½ÁË×îºóÒ»¸öÒµÎñĞèÇó£ºÖ§³Ö¹ÜÀíÕß¶Ô¹ÍÔ±Ä¿Â¼×ö·ÖÎö¡£ElasticsearchÓĞÒ»¸ö¹¦ÄÜ½Ğ¾ÛºÏ£¨aggregations£©£¬ÔÊĞíÎÒÃÇ»ùÓÚÊı¾İÉú³ÉÒ»Ğ©¾«Ï¸µÄ·ÖÎö½á¹û¡£¾ÛºÏÓëSQLÖĞµÄGROUPBYÀàËÆµ«¸üÇ¿´ó¡£
 ¾Ù¸öÀı×Ó£¬ÍÚ¾ò³ö¹ÍÔ±ÖĞ×îÊÜ»¶Ó­µÄĞËÈ¤°®ºÃ£º
+```
 curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: application/json' -d'
 {
   "aggs": {
@@ -390,8 +423,10 @@ curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: a
   }
 }
 '
+```
 
 ÔİÊ±ºöÂÔµôÓï·¨£¬Ö±½Ó¿´¿´½á¹û£º
+```
 {
    ...
    "hits": { ... },
@@ -414,8 +449,10 @@ curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: a
       }
    }
 }
+```
 
 ¿ÉÒÔ¿´µ½£¬Á½Î»Ô±¹¤¶ÔÒôÀÖ¸ĞĞËÈ¤£¬Ò»Î»¶ÔÁÖµØ¸ĞĞËÈ¤£¬Ò»Î»¶ÔÔË¶¯¸ĞĞËÈ¤¡£ÕâĞ©¾ÛºÏ²¢·ÇÔ¤ÏÈÍ³¼Æ£¬¶øÊÇ´ÓÆ¥Åäµ±Ç°²éÑ¯µÄÎÄµµÖĞ¼´Ê±Éú³É¡£Èç¹ûÏëÖªµÀ½ĞSmithµÄ¹ÍÔ±ÖĞ×îÊÜ»¶Ó­µÄĞËÈ¤°®ºÃ£¬¿ÉÒÔÖ±½ÓÌí¼ÓÊÊµ±µÄ²éÑ¯À´×éºÏ²éÑ¯£º
+```
 curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: application/json' -d'
 {
   "query": {
@@ -432,8 +469,10 @@ curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: a
   }
 }
 '
+```
 
 all_interests¾ÛºÏÒÑ¾­±äÎªÖ»°üº¬Æ¥Åä²éÑ¯µÄÎÄµµ£º
+```
   ...
   "all_interests": {
      "buckets": [
@@ -447,8 +486,9 @@ all_interests¾ÛºÏÒÑ¾­±äÎªÖ»°üº¬Æ¥Åä²éÑ¯µÄÎÄµµ£º
         }
      ]
   }
-  
+```
 ¾ÛºÏ»¹Ö§³Ö·Ö¼¶»ã×Ü¡£±ÈÈç£¬²éÑ¯ÌØ¶¨ĞËÈ¤°®ºÃÔ±¹¤µÄÆ½¾ùÄêÁä£º
+```
 curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: application/json' -d'
 {
     "aggs" : {
@@ -463,8 +503,10 @@ curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: a
     }
 }
 '
+```
 
 µÃµ½µÄ¾ÛºÏ½á¹ûÓĞµã¶ù¸´ÔÓ£¬µ«Àí½âÆğÀ´»¹ÊÇºÜ¼òµ¥µÄ£º
+```
   ...
   "all_interests": {
      "buckets": [
@@ -491,7 +533,8 @@ curl -XGET 'localhost:9200/megacorp/employee/_search?pretty' -H 'Content-Type: a
         }
      ]
   }
-  
+```
+
 Êä³ö»ù±¾ÊÇµÚÒ»´Î¾ÛºÏµÄ¼ÓÇ¿°æ¡£ÒÀÈ»ÓĞÒ»¸öĞËÈ¤¼°ÊıÁ¿µÄÁĞ±í£¬Ö»²»¹ıÃ¿¸öĞËÈ¤¶¼ÓĞÁËÒ»¸ö¸½¼ÓµÄavg_ageÊôĞÔ£¬´ú±íÓĞÕâ¸öĞËÈ¤°®ºÃµÄËùÓĞÔ±¹¤µÄÆ½¾ùÄêÁä¡£
 ¼´Ê¹ÏÖÔÚ²»Ì«Àí½âÕâĞ©Óï·¨Ò²Ã»ÓĞ¹ØÏµ£¬ÒÀÈ»ºÜÈİÒ×ÁË½âµ½¸´ÔÓ¾ÛºÏ¼°·Ö×éÍ¨¹ıElasticsearchÌØĞÔÊµÏÖµÃºÜÍêÃÀ¡£¿ÉÌáÈ¡µÄÊı¾İÀàĞÍºÁÎŞÏŞÖÆ¡£
 
