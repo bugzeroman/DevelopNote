@@ -1,0 +1,127 @@
+# 1.说明
+Elasticsearch单机安装，
+基于Elasticsearch的7.10.1版本，
+在Linux上安装Elasticsearch单机,
+使用安装包elasticsearch-7.10.1-linux-x86_64.tar.gz。
+
+# 2.安装规划
+vi /etc/hosts
+10.43.159.14 ai-14
+useradd -g hadoop -s /bin/bash -md /home/elasticsearch elasticsearch
+elasticsearch/ai1234
+
+# 3.登陆elasticsearch用户，获取并且解压安装包
+tar -zxvf elasticsearch-7.10.1-linux-x86_64.tar.gz
+
+# 4.JDK安装
+由于elasticsearch安装包自带jdk：
+elasticsearch-7.10.1/jdk
+所以不需要另外安装jdk了。
+
+当然也可以使用自己安装的jdk，
+修改.bashrc文件，配置jdk目录
+```
+export JAVA_HOME=/usr/java/jdk11
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+```
+注意elasticsearch要求的JDK版本，
+只能使用JDK11及以上的版本。
+
+# 5.修改配置文件config/elasticsearch.yml
+集群名称,建议修改成自己的，防止误用默认集群
+cluster.name: yuwenes
+
+配置外网可以访问
+network.host: 0.0.0.0
+配置访问端口
+http.port: 9200
+
+配置ES的节点名称
+node.name: node-1
+修改集群信息为本机：
+cluster.initial_master_nodes: ["node-1"]
+
+# 6.启动elasticsearch
+./bin/elasticsearch
+
+如果需要服务常驻后台,添加-d参数：
+./bin/elasticsearch -d
+
+启动时添加pid进程，方便关闭服务：
+./bin/elasticsearch -d -p pid.txt
+
+注意不允许使用root用户启动。
+
+服务启动后，
+想要停止后台elasticsearch服务，
+查看pid.txt文件或者
+使用JDK的jps或者
+使用grep命令，
+找到elasticsearch对应的进程，
+kill掉即可。
+
+# 7.查看启动日志
+```
+[2021-01-06T16:52:47,182][INFO ][o.e.n.Node] [ai-14] 
+JVM home [/home/elasticsearch/elasticsearch-7.10.1/jdk], 
+using bundled JDK [true]
+```
+表示使用的是ES内置的JDK。
+
+```
+[2021-01-06T16:52:59,012][INFO ][o.e.h.AbstractHttpServerTransport] [ai-14] 
+publish_address {127.0.0.1:9200}, bound_addresses {[::1]:9200}, {127.0.0.1:9200}
+```
+表示ES的HTTP服务端口为9200,
+而且同时绑定到IPv6和IPv4地址上面。
+
+```
+[2021-01-06T16:52:55,594][INFO ][o.e.t.TransportService   ] [ai-14] 
+publish_address {127.0.0.1:9300}, bound_addresses {[::1]:9300}, {127.0.0.1:9300}
+```
+表示ES进程之间TCP通信端口为9300,
+单机安装的时候应该用不到。
+
+# 8.客户端验证
+## 8.1.进程查看
+JDK的jps查看到如下进程
+7324 Elasticsearch
+
+## 8.2.本地验证
+curl localhost:9200
+返回如下结果表示成功：
+```
+{
+  "name" : "node-1",
+  "cluster_name" : "yuwenes",
+  "cluster_uuid" : "_na_",
+  "version" : {
+    "number" : "7.10.1",
+    "build_flavor" : "default",
+    "build_type" : "tar",
+    "build_hash" : "1c34507e66d7db1211f66f3513706fdf548736aa",
+    "build_date" : "2020-12-05T01:00:33.671820Z",
+    "build_snapshot" : false,
+    "lucene_version" : "8.7.0",
+    "minimum_wire_compatibility_version" : "6.8.0",
+    "minimum_index_compatibility_version" : "6.0.0-beta1"
+  },
+  "tagline" : "You Know, for Search"
+}
+```
+
+## 8.3.浏览器访问,查看外网是否能访问
+10.43.159.14:9200
+返回同上的结果表示成功。
+
+# 9.问题解决
+如果安装过程中遇到问题，
+请参考文章:
+[Elasticsearch单机安装](https://www.jianshu.com/p/5e30924aa44c)
+
+如果没有配置外网可以访问，
+即network.host参数使用默认值，
+不需要额外的配置，
+安装的时候使用所有默认参数，
+即可成功启动服务。
