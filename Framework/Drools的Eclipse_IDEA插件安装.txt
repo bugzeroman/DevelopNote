@@ -1,0 +1,61 @@
+# 1.说明
+Drools使用时不是必须依赖插件的，
+只是在安装了相应的插件之后，
+在开发工具中能识别到对应的drools文件，
+能够进行一些智能提示。
+以及使用插件提供的便捷功能。
+
+# 2.Eclipse插件
+在Eclipse的插件市场中没有找到Drools插件，
+只能使用离线方式安装，
+先从Drools的官方下载渠道
+[Download](https://www.drools.org/download/download.html)
+下载名称为Drools and jBPM tools的ZIP包：
+droolsjbpm-tools-distribution-7.47.0.Final.zip
+解压后有两种安装方式。
+
+## 2.1.Eclipse本地插件安装方法
+Eclipse -> Help -> Install New Software -> Add...
+在弹出的对话框内点击Local，
+选择之前解压文件的目录：
+…/binaries/org.drools.updatesite
+然后一路Next安装完毕。
+
+## 2.2.直接拷贝插件到Eclipse安装目录
+拷贝解压后…/binaries/org.drools.updatesite下的
+features和plugins两个目录，
+直接粘贴到Eclipse安装目录下即可。
+
+具体操作请参考：
+[Drools教程（基础篇）—— Eclipse插件安装](https://blog.csdn.net/qq_22141079/article/details/79429374)
+[Drools7.12.0教程：Eclipse中安装Drools插件和Drools 运行时](https://blog.csdn.net/sinat_25551085/article/details/83213701)
+
+# 3.IDEA插件
+在IDEA最近的版本中已经内置了Drools插件，
+不需要另外安装，
+在Settings中搜索drools关键字，
+能够找到即说明有Drools插件了。
+
+如果需要安装请操作：
+IDEA -> File -> Settings -> Plugins -> 搜索Drools -> 安装JBoss Drools support
+
+# 4.通过插件创建工程
+Eclipse安装好Drools插件后，
+可以通过插件创建Drools工程，
+File -> New -> Other... -> Drools -> Drools Project
+创建时可以选择三个Drools提供的使用样例，
+Drools工程创建好后，
+其java目录下的三个java文件分别对应了resources目录下，
+三种不同的Drools规则的编写方式：
+```
+DroolsTest.java         -> Samples.drl
+DecisionTableTest.java  -> Samples.xls
+ProcessTest.java        -> sample.bpmn
+```
+具体操作请参考：
+[Drools教程（基础篇）——创建项目](https://blog.csdn.net/qq_22141079/article/details/79429347)
+其中最常用的是drl文件方式。
+但是没有必要使用这种繁琐的创建方式，
+可以参考另一篇文章,
+不依赖插件也能方便创建Drools工程，
+[Drools创建Maven工程]()
