@@ -1,0 +1,204 @@
+# 1.说明
+本文介绍创建Drools的Maven工程的方法，
+仅使用Eclipse开发工具，
+不使用Drools的相关插件，
+先创建一个Maven工程，
+然后引入Drools的相关依赖即可，
+最后再写一个基于drl文件的Demo测试。
+
+# 2.创建Maven工程
+Eclipse -> File -> New -> Other... -> Maven -> Maven Project
+配置名称drools-drl-examples等信息，
+创建一个简单Maven工程。
+
+# 3.引入Pom依赖
+在pom.xml引入Drools的相关依赖，
+使用drools-bom管理Drools各种jar包版本，
+完整pom.xml如下：
+```
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.ai.prd</groupId>
+	<artifactId>drools-drl-examples</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<description>drools drl rule file examples</description>
+
+	<properties>
+		<drools.version>7.47.0.Final</drools.version>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.drools</groupId>
+				<artifactId>drools-bom</artifactId>
+				<version>${drools.version}</version>
+				<scope>import</scope>
+				<type>pom</type>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.kie</groupId>
+			<artifactId>kie-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.drools</groupId>
+			<artifactId>drools-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.drools</groupId>
+			<artifactId>drools-compiler</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.drools</groupId>
+			<artifactId>drools-mvel</artifactId>
+		</dependency>
+	</dependencies>
+</project>
+```
+
+# 4.新建kmodule.xml配置文件
+在src/main/resources下
+新建/META-INF/kmodule.xml，
+注意必须有META-INF目录，
+否则Drools加载不到配置文件。
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<kmodule xmlns="http://jboss.org/kie/6.0.0/kmodule">
+    <kbase name="rules" packages="com.sample.rules">
+        <ksession name="ksession-rules"/>
+    </kbase>
+</kmodule>
+```
+新建的kbase名称为rules，
+指定了规则文件在com.sample.rules包路径下，
+其中新建了ksession名称为ksession-rules。
+名称可以自定义，只要保证唯一就行，
+包路径是保存具体规则文件的目录。
+
+# 5.新建Sample.drl规则文件
+在src/main/resources下
+新建com/sample/rules/Sample.drl：
+```
+package com.sample.rules
+ 
+import com.sample.DroolsTest.Message;
+ 
+rule "Hello World"
+    when
+        m : Message( status == Message.HELLO, myMessage : message )
+    then
+        System.out.println( myMessage );
+        m.setMessage( "Goodbye cruel world" );
+        m.setStatus( Message.GOODBYE );
+        update( m );
+end
+
+rule "GoodBye"
+    when
+        Message( status == Message.GOODBYE, myMessage : message )
+    then
+        System.out.println( myMessage );
+end
+```
+注意第一行的package一定要是com.sample.rules，
+才能和kmodule.xml文件中的配置匹配上。
+
+规则"Hello World"匹配Message类型的输入，
+当Message的属性status为Message.HELLO时,
+会执行打印Message的属性message等操作。
+这里的语法基本上和Java相同，
+还是比较容易理解的。
+
+注意Message是Java类，
+需要先导入才能使用：
+import com.sample.DroolsTest.Message;
+
+# 6.新建DroolsTest测试类
+DroolsTest.java初始化Drools工具，
+并且测试上面配置的规则，
+并且Message类也定义在其内部：
+```
+package com.sample;
+
+import org.kie.api.KieServices;
+import org.kie.api.runtime.KieContainer;
+import org.kie.api.runtime.KieSession;
+
+/**
+ * This is a sample class to launch a rule.
+ */
+public class DroolsTest {
+
+	public static final void main(String[] args) {
+		try {
+			// load up the knowledge base
+			KieServices ks = KieServices.Factory.get();
+			KieContainer kContainer = ks.getKieClasspathContainer();
+			KieSession kSession = kContainer.newKieSession("ksession-rules");
+
+			// go !
+			Message message = new Message();
+			message.setMessage("Hello World");
+			message.setStatus(Message.HELLO);
+			kSession.insert(message);
+			kSession.fireAllRules();
+		} catch (Throwable t) {
+			t.printStackTrace();
+		}
+	}
+
+	public static class Message {
+
+		public static final int HELLO = 0;
+		public static final int GOODBYE = 1;
+
+		private String message;
+
+		private int status;
+
+		public String getMessage() {
+			return this.message;
+		}
+
+		public void setMessage(String message) {
+			this.message = message;
+		}
+
+		public int getStatus() {
+			return this.status;
+		}
+
+		public void setStatus(int status) {
+			this.status = status;
+		}
+
+	}
+
+}
+```
+注意这里获取KieSession的参数ksession-rules，
+要和上面kmodule.xml文件中的配置一致。
+
+# 7.运行测试类
+执行DroolsTest的main方法，
+输出结果如下：
+```
+Hello World
+Goodbye cruel world
+```
+第一行输出是因为匹配上了规则"Hello World"，
+第二行输出是因为匹配上了规则"GoodBye"，
+虽然测试类中只输入了一个Message事实，
+但是Message在匹配上规则"Hello World"之后，
+被修改了参数，并通知Drools数据有更新，
+所以能进一步匹配上规则"GoodBye"。
+
+# 8.参考文章
+[Drools规则引擎入门demo](https://www.jianshu.com/p/6881a9ae2c15)
+[Drools教程（基础篇）——创建项目](https://blog.csdn.net/qq_22141079/article/details/79429347)

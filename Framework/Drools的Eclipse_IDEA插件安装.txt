@@ -58,4 +58,4 @@ ProcessTest.java        -> sample.bpmn
 但是没有必要使用这种繁琐的创建方式，
 可以参考另一篇文章,
 不依赖插件也能方便创建Drools工程，
-[Drools创建Maven工程]()
+[Drools创建Maven工程](https://www.jianshu.com/p/d68090648230)
