@@ -1,0 +1,458 @@
+# 1.说明
+为了更好的在项目中使用Drools,
+需要把Drools集成到Spring Boot,
+下面介绍集成的方法，
+并且开发简单的Demo和测试用例。
+
+# 2.创建Maven工程
+pom.xml工程信息：
+```
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.ai.prd</groupId>
+	<artifactId>drools-spring-boot-demo</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<description>Drools integrats into the Spring Boot</description>
+</project>
+```
+
+# 3.引入Spring Boot相关依赖
+引入spring-boot-starter-web作为Web工程，对外提供Rest服务，
+引入spring-boot-starter-log4j2日志框架，打印测试匹配结果，
+引入spring-boot-starter-test测试框架，开发Junt5测试用例：
+```
+<properties>
+	<spring-boot.version>2.3.1.RELEASE</spring-boot.version>
+</properties>
+
+<dependencyManagement>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-dependencies</artifactId>
+			<version>${spring-boot.version}</version>
+			<type>pom</type>
+			<scope>import</scope>
+		</dependency>
+	</dependencies>
+</dependencyManagement>
+
+<dependencies>
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-web</artifactId>
+		<exclusions>
+			<exclusion>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-logging</artifactId>
+			</exclusion>
+		</exclusions>
+	</dependency>
+	
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-log4j2</artifactId>
+	</dependency>
+
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-test</artifactId>
+		<exclusions>
+			<!-- 单元测试不使用Junit4,使用Junit5 -->
+			<exclusion>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+			</exclusion>
+			<exclusion>
+				<groupId>org.junit.vintage</groupId>
+				<artifactId>junit-vintage-engine</artifactId>
+			</exclusion>
+		</exclusions>
+	</dependency>
+</dependencies>
+```
+
+# 4.引入Drools相关依赖
+通过kie-spring引入Drools相关的jar包，
+其依赖的spring版本都排除掉，
+以上一步的spring boot依赖为准。
+```
+<properties>
+	<drools.version>7.47.0.Final</drools.version>
+</properties>
+<dependencies>
+	<dependency>
+		<groupId>org.kie</groupId>
+		<artifactId>kie-spring</artifactId>
+		<version>${drools.version}</version>
+		<exclusions>
+			<!-- 依赖的spring版本全部以spring boot依赖的为准 -->
+			<exclusion>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-tx</artifactId>
+			</exclusion>
+			<exclusion>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-beans</artifactId>
+			</exclusion>
+			<exclusion>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-core</artifactId>
+			</exclusion>
+			<exclusion>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-context</artifactId>
+			</exclusion>
+		</exclusions>
+	</dependency>
+</dependencies>
+```
+
+# 5.开发启动类
+启动类DroolsApplication.java:
+```
+package com.ai.prd.drools;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class DroolsApplication {
+	public static void main(String[] args) {
+		SpringApplication.run(DroolsApplication.class, args);
+	}
+}
+```
+
+# 6.开发Rest服务
+操作的对象Person,
+Person.java：
+```
+package com.ai.prd.drools.entity;
+
+public class Person {
+	private String name;
+
+	private int age;
+}
+```
+
+对外提供的Rest服务，
+可以对Person对象进行规则匹配，
+提供了两个接口，
+单个和批量的操作接口：
+PersonRuleController.java:
+```
+package com.ai.prd.drools.controller;
+
+import java.util.List;
+
+import org.kie.api.runtime.KieContainer;
+import org.kie.api.runtime.KieSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.ai.prd.drools.entity.Person;
+
+@RestController
+@RequestMapping("rule/person")
+public class PersonRuleController {
+
+	@Autowired
+	private KieContainer kieContainer;
+
+	@PostMapping("one")
+	public void fireAllRules4One(@RequestBody Person person) {
+		KieSession kSession = kieContainer.newKieSession();
+		try {
+			kSession.insert(person);
+			kSession.fireAllRules();
+		} finally {
+			kSession.dispose();
+		}
+	}
+
+	@PostMapping("list")
+	public void fireAllRules4List(@RequestBody List<Person> persons) {
+		KieSession kSession = kieContainer.newKieSession();
+		try {
+			for (Person person : persons) {
+				kSession.insert(person);
+			}
+			kSession.fireAllRules();
+		} finally {
+			kSession.dispose();
+		}
+	}
+}
+```
+
+# 7.初始化Drools
+在上面PersonRuleController中需要用到KieContainer，
+这个必须在Spring中先初始化才能使用，
+相关功能由DroolsAutoConfiguration.java提供：
+```
+package com.ai.prd.drools.config;
+
+import java.io.IOException;
+
+import org.kie.api.KieBase;
+import org.kie.api.KieServices;
+import org.kie.api.builder.KieBuilder;
+import org.kie.api.builder.KieFileSystem;
+import org.kie.api.builder.KieModule;
+import org.kie.api.builder.KieRepository;
+import org.kie.api.builder.ReleaseId;
+import org.kie.api.runtime.KieContainer;
+import org.kie.api.runtime.KieSession;
+import org.kie.internal.io.ResourceFactory;
+import org.kie.spring.KModuleBeanFactoryPostProcessor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.core.io.support.ResourcePatternResolver;
+
+/**
+ * 配置Drools的服务类，方便在Rest接口中调用。 该类负责加载具体的drl规则文件， 不再需要kmodule.xml配置文件了。
+ */
+@Configuration
+public class DroolsAutoConfiguration {
+
+	private static final String RULES_PATH = "rules/com/ai/prd/";
+
+	@Bean
+	@ConditionalOnMissingBean(KieFileSystem.class)
+	public KieFileSystem kieFileSystem() throws IOException {
+		KieFileSystem kieFileSystem = getKieServices().newKieFileSystem();
+		for (Resource file : getRuleFiles()) {
+			kieFileSystem.write(ResourceFactory.newClassPathResource(RULES_PATH + file.getFilename(), "UTF-8"));
+		}
+		return kieFileSystem;
+	}
+
+	private Resource[] getRuleFiles() throws IOException {
+		ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
+		return resourcePatternResolver.getResources("classpath*:" + RULES_PATH + "**/*.*");
+	}
+
+	@Bean
+	@ConditionalOnMissingBean(KieContainer.class)
+	public KieContainer kieContainer() throws IOException {
+		final KieRepository kieRepository = getKieServices().getRepository();
+
+		kieRepository.addKieModule(new KieModule() {
+			@Override
+			public ReleaseId getReleaseId() {
+				return kieRepository.getDefaultReleaseId();
+			}
+		});
+
+		KieBuilder kieBuilder = getKieServices().newKieBuilder(kieFileSystem());
+		kieBuilder.buildAll();
+
+		return getKieServices().newKieContainer(kieRepository.getDefaultReleaseId());
+	}
+
+	private KieServices getKieServices() {
+		return KieServices.Factory.get();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean(KieBase.class)
+	public KieBase kieBase() throws IOException {
+		return kieContainer().getKieBase();
+	}
+
+	// 不能反复被使用，释放资源后需要重新获取。
+	// @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+	@Bean
+	@ConditionalOnMissingBean(KieSession.class)
+	public KieSession kieSession() throws IOException {
+		return kieContainer().newKieSession();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean(KModuleBeanFactoryPostProcessor.class)
+	public KModuleBeanFactoryPostProcessor kiePostProcessor() {
+		return new KModuleBeanFactoryPostProcessor();
+	}
+}
+```
+
+# 8.开发规则文件
+在DroolsAutoConfiguration中指定了drl规则文件
+所在目录rules/com/ai/prd/，
+在src/main/resources/rules/com/ai/prd/目录下新建文件
+ai-rules.drl：
+```
+package com.ai.prd
+ 
+import com.ai.prd.drools.entity.Person;
+import com.ai.prd.drools.action.PersonRuleAction;
+
+// 根据名字匹配指定的人
+rule "1.find target person"
+    when
+        $p : Person( name == "bob" )
+    then
+        PersonRuleAction.doParse($p, drools.getRule());
+        System.out.println("Rule name is [" + drools.getRule().getName() + "]"); 
+    	System.out.println("Rule package is [" + drools.getRule().getPackageName() + "]");
+end
+
+// 根据年龄匹配找到打工人
+rule "2.find the work person"
+    when
+        $p : Person( age >= 25 && age < 65 )      
+    then
+        System.out.println( $p + " is a work person！" );
+end
+```
+规则1匹配名字为bob的人，并且调用工具类PersonRuleAction打印相关日志，
+同时打印规则的名称和包路径到控制台。
+规则2匹配年龄在25到65之间的打工人，
+然后把匹配到的人直接打印到控制台。
+
+# 9.规则处理类
+PersonRuleAction.java在匹配到相应规则时被调用，
+此处仅实现日志打印的功能：
+```
+package com.ai.prd.drools.action;
+
+import org.drools.core.definitions.rule.impl.RuleImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.ai.prd.drools.entity.Person;
+
+/**
+ * 触发Person相关的规则后的处理类
+ * 
+ * @author yuwen
+ *
+ */
+public class PersonRuleAction {
+	private static Logger LOG = LoggerFactory.getLogger(PersonRuleAction.class);
+
+	// 目前只实现记录日志功能
+	public static void doParse(Person person, RuleImpl rule) {
+		LOG.debug("{} is matched Rule[{}]!", person, rule.getName());
+	}
+}
+```
+
+# 10.新建日志配置文件
+在src/main/resources目录下，
+新建日志配置文件Log4j2.xml：
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+	<Appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout
+				pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+		</Console>
+		<RollingFile name="RuleResultFile"
+			fileName="log/rule_result.log"
+			filePattern="log/backup/rule_result-%i.log">
+			<PatternLayout
+				pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level [%l] - %msg%n" />
+			<Policies>
+				<SizeBasedTriggeringPolicy size="10MB" />
+			</Policies>
+			<DefaultRolloverStrategy max="10" />
+		</RollingFile>
+	</Appenders>
+	<Loggers>
+		<Logger name="com.ai.prd.drools.action" level="DEBUG"
+			additivity="true">
+			<AppenderRef ref="RuleResultFile" />
+		</Logger>
+		<Root level="INFO">
+			<AppenderRef ref="Console" />
+		</Root>
+	</Loggers>
+</Configuration>
+```
+日志文件配置后，
+PersonRuleAction类打印的日志
+不仅会输出到log/rule_result.log，
+也会输出到控制台。
+
+# 11.开发Junit5测试用例
+针对上面PersonRuleController提供的Rest接口，
+开发两个Junit5的测试用例，
+在src/test/java/目录下
+创建PersonRuleControllerTest.java:
+```
+package com.ai.prd.drools.controller;
+
+import java.util.Arrays;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import com.ai.prd.drools.entity.Person;
+
+@SpringBootTest
+public class PersonRuleControllerTest {
+
+	@Autowired
+	PersonRuleController controller;
+
+	@Test
+	public void testOnePerson() {
+		Person bob = new Person();
+		bob.setName("bob");
+
+		controller.fireAllRules4One(bob);
+	}
+
+	@Test
+	public void testTwoPerson() {
+		Person bob = new Person();
+		bob.setAge(33);
+
+		Person other = new Person();
+		other.setAge(88);
+
+		controller.fireAllRules4List(Arrays.asList(bob, other));
+	}
+}
+```
+
+# 12.运行测试用例
+PersonRuleControllerTest执行后，
+控制台输出：
+```
+14:22:04.851 [main] WARN  org.drools.compiler.kie.builder.impl.KieBuilderImpl - File 'rules/com/ai/prd/ai-rules.drl' is in folder 'rules/com/ai/prd' but declares package 'com.ai.prd'. It is advised to have a correspondance between package and folder names.
+14:22:06.753 [main] INFO  org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor - Initializing ExecutorService 'applicationTaskExecutor'
+14:22:07.063 [main] INFO  com.ai.prd.drools.controller.PersonRuleControllerTest - Started PersonRuleControllerTest in 3.279 seconds (JVM running for 4.452)
+14:22:07.279 [main] DEBUG com.ai.prd.drools.action.PersonRuleAction - Person [name=bob, birthDay=null, age=0, address=null] is matched Rule[1.find target person]!
+Rule name is [1.find target person]
+Rule package is [com.ai.prd]
+Person [name=null, birthDay=null, age=33, address=null] is a work person！
+14:22:07.649 [SpringContextShutdownHook] INFO  org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor - Shutting down ExecutorService 'applicationTaskExecutor'
+```
+
+# 13.错误解决
+cannot be cast to org.drools.compiler.kie.builder.impl.InternalKieModule
+大概率是rule规则文件有问题，
+格式，中英文字符，语法等问题，
+请确保规则文件正确。
+可以安装相应插件打开规则文件，
+请参考:
+[Drools的Eclipse_IDEA插件安装](https://www.jianshu.com/p/73f425942350)
+
+# 14.参考文章
+[Drools规则引擎 系列教程（一）SpringBoot整合 & 快速集成上手](https://www.jianshu.com/p/1a757830fc17)
+[《Drools7.0.0.Final规则引擎教程》之Springboot集成](https://blog.csdn.net/wo541075754/article/details/75314694)
+[Drools创建Maven工程](https://www.jianshu.com/p/d68090648230)
