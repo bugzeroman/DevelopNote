@@ -1,0 +1,350 @@
+# 1.说明
+基于fast-drools-spring-boot-starter,
+能够方便的将规则引擎Drools集成到Spring Boot，
+基于前面介绍过的文章
+[Drools集成SpringBoot](https://www.jianshu.com/p/de5789b29927),
+进一步改造成使用fast-drools-spring-boot-starter的项目。
+
+# 2.fast-drools-spring-boot-starter
+项目地址：
+[Fast Drools](https://github.com/hongwen1993/fast-drools-spring-boot-starter)
+
+项目特性：
+- SpringBoot与Drools快速整合，不需要配置繁琐的kmodule.xml，也不需要自己编写代码初始化Drools
+- 指定文件名执行评估规则，更加直观的流程分析
+- 规则文件动态加载
+- 规则文件分组控制
+- 使用NIO的文件映射，更快速的文件的读写
+- 基于缓存的规则文件控制，更高效的规则评估
+- 支持各种路径格式
+- 支持xls和xlsx格式的规则表文件
+- 日志监控流程中规则与评估对象的动态
+- 执行速度与性能的极致，且可定制
+
+注意：
+这是第三方个人开发的开源项目，
+不推荐在正式项目中使用，
+但是作者已经把jar包等发布到了阿里云的仓库，
+所以国内的同学使用起来还是比较方便的。
+
+# 3.创建Maven工程
+pom.xml工程信息：
+```
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.ai.prd</groupId>
+	<artifactId>drools-fast-demo</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<description>Based on fast-drools-spring-boot-starter, Drools integrats into the Spring Boot</description>
+</project>
+```
+
+# 4.引入Spring Boot相关依赖
+引入spring-boot-starter-web作为Web工程，对外提供Rest服务，
+引入spring-boot-starter-log4j2日志框架，打印测试匹配结果，
+引入spring-boot-starter-test测试框架，开发Junt5测试用例：
+```
+<properties>
+	<spring-boot.version>2.3.1.RELEASE</spring-boot.version>
+</properties>
+
+<dependencyManagement>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-dependencies</artifactId>
+			<version>${spring-boot.version}</version>
+			<type>pom</type>
+			<scope>import</scope>
+		</dependency>
+	</dependencies>
+</dependencyManagement>
+
+<dependencies>
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-web</artifactId>
+		<exclusions>
+			<exclusion>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-logging</artifactId>
+			</exclusion>
+		</exclusions>
+	</dependency>
+	
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-log4j2</artifactId>
+	</dependency>
+
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-test</artifactId>
+		<exclusions>
+			<!-- 单元测试不使用Junit4,使用Junit5 -->
+			<exclusion>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+			</exclusion>
+			<exclusion>
+				<groupId>org.junit.vintage</groupId>
+				<artifactId>junit-vintage-engine</artifactId>
+			</exclusion>
+		</exclusions>
+	</dependency>
+</dependencies>
+```
+
+# 5.引入Drools相关依赖
+引入fast-drools-spring-boot-starter即可:
+```
+<properties>
+	<fast.drools.version>8.0.7</fast.drools.version>
+</properties>
+
+<dependencies>
+	<dependency>
+		<groupId>com.github.hongwen1993</groupId>
+		<artifactId>fast-drools-spring-boot-starter</artifactId>
+		<version>${fast.drools.version}</version>
+	</dependency>
+</dependencies>
+```
+
+# 6.开发启动类
+启动类DroolsApplication.java:
+```
+package com.ai.prd.drools;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class DroolsApplication {
+	public static void main(String[] args) {
+		SpringApplication.run(DroolsApplication.class, args);
+	}
+}
+```
+
+# 7.操作对象Person
+下面会对Person对象进行规则过滤，
+这里给出定义Person.java：
+```
+package com.ai.prd.drools.entity;
+
+public class Person {
+	private String name;
+
+	private int age;
+}
+```
+
+# 8.开发规则文件
+在src/main/resources/rules/com/ai/prd/目录下新建文件
+ai-rules.drl：
+```
+package com.ai.prd
+ 
+import com.ai.prd.drools.entity.Person;
+import com.ai.prd.drools.action.PersonRuleAction;
+
+// 根据名字匹配指定的人
+rule "1.find target person"
+    when
+        $p : Person( name == "bob" )
+    then
+        PersonRuleAction.doParse($p, drools.getRule());
+        System.out.println("Rule name is [" + drools.getRule().getName() + "]"); 
+    	System.out.println("Rule package is [" + drools.getRule().getPackageName() + "]");
+end
+
+// 根据年龄匹配找到打工人
+rule "2.find the work person"
+    when
+        $p : Person( age >= 25 && age < 65 )      
+    then
+        System.out.println( $p + " is a work person！" );
+end
+```
+规则1匹配名字为bob的人，并且调用工具类PersonRuleAction打印相关日志，
+同时打印规则的名称和包路径到控制台。
+规则2匹配年龄在25到65之间的打工人，
+然后把匹配到的人直接打印到控制台。
+
+# 9.规则处理类
+PersonRuleAction.java在匹配到相应规则时被调用，
+此处仅实现日志打印的功能：
+```
+package com.ai.prd.drools.action;
+
+import org.drools.core.definitions.rule.impl.RuleImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.ai.prd.drools.entity.Person;
+
+/**
+ * 触发Person相关的规则后的处理类
+ */
+public class PersonRuleAction {
+	private static Logger LOG = LoggerFactory.getLogger(PersonRuleAction.class);
+
+	// 目前只实现记录日志功能
+	public static void doParse(Person person, RuleImpl rule) {
+		LOG.debug("{} is matched Rule[{}]!", person, rule.getName());
+	}
+}
+```
+
+# 10.配置application.yml
+在src/main/resources下新建application.yml：
+```
+server:
+  port: 5117
+  
+# 指定规则文件文件夹，会自动扫描该目录下所有规则文件，决策表，以及CSV文件
+spring:
+  drools:
+    path: classpath:rules/**/*.drl
+    # 可以指定全局的mode，选择stream或cloud
+    mode: stream
+    # 指定规则文件自动更新的周期，单位秒，默认30秒扫描一次
+    update: 10
+    listener: on 
+```
+指定了应用运行的端口，
+以及Drools相关的配置。
+
+# 11.新建日志配置文件
+在src/main/resources目录下，
+新建日志配置文件Log4j2.xml：
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+	<Appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout
+				pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+		</Console>
+		<RollingFile name="RuleResultFile"
+			fileName="log/rule_result.log"
+			filePattern="log/backup/rule_result-%i.log">
+			<PatternLayout
+				pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level [%l] - %msg%n" />
+			<Policies>
+				<SizeBasedTriggeringPolicy size="10MB" />
+			</Policies>
+			<DefaultRolloverStrategy max="10" />
+		</RollingFile>
+	</Appenders>
+	<Loggers>
+		<Logger name="com.ai.prd.drools.action" level="DEBUG"
+			additivity="true">
+			<AppenderRef ref="RuleResultFile" />
+		</Logger>
+		<Root level="INFO">
+			<AppenderRef ref="Console" />
+		</Root>
+	</Loggers>
+</Configuration>
+```
+日志文件配置后，
+PersonRuleAction类打印的日志
+不仅会输出到log/rule_result.log，
+也会输出到控制台。
+
+# 12.开发Junit5测试用例
+针对上面规则文件中配置的规则，
+开发两个Junit5的测试用例，
+在src/test/java/目录下
+创建DroolsApplicationTest.java:
+```
+package com.ai.prd.drools;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.kie.api.runtime.KieSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import com.ai.prd.drools.entity.Address;
+import com.ai.prd.drools.entity.Person;
+import com.drools.core.KieTemplate;
+
+@SpringBootTest
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class DroolsApplicationTest {
+
+	@Autowired
+	private KieTemplate kieTemplate;
+
+	private KieSession kSession;
+
+	@BeforeAll
+	public void initKieSession() {
+		// 每次测试都要重新获取kSession
+		// 同时可以指定要加载的规则文件
+		kSession = kieTemplate.getKieSession("ai-rules.drl");
+	}
+
+	@AfterAll
+	public void runDispose() {
+		// 全部测试用例执行完毕后，需要手动释放资源
+		kSession.dispose();
+	}
+
+	@Test
+	public void test1findTargetPerson() {
+		Person bob = new Person();
+		bob.setName("bob");
+		kSession.insert(bob);
+
+		Person other = new Person();
+		other.setName("other1");
+		kSession.insert(other);
+
+		int rules = kSession.fireAllRules();
+		// 按照规则1只有bob能够匹配上
+		assertEquals(1, rules);
+	}
+
+	@Test
+	public void test2findWorkPerson() {
+		Person bob = new Person();
+		bob.setAge(33);
+		kSession.insert(bob);
+
+		Person other = new Person();
+		other.setAge(88);
+		kSession.insert(other);
+
+		int rules = kSession.fireAllRules();
+		assertEquals(1, rules);
+	}
+```
+注意这里的KieTemplate是fast-drools-spring-boot-starter提供的，
+而不是以前kie-spring提供的KieContainer了。
+
+# 13.运行测试用例
+DroolsApplicationTest执行后，
+控制台输出：
+```
+15:46:02.441 [main] INFO  com.ai.prd.drools.DroolsApplicationTest - Starting DroolsApplicationTest on yuwen-asiainfo with PID 3836 (started by yuwen in D:\Code\Work\drools\drools-demos\drools-fast-demo)
+15:46:02.443 [main] INFO  com.ai.prd.drools.DroolsApplicationTest - No active profile set, falling back to default profiles: default
+15:46:03.387 [main] INFO  org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor - Initializing ExecutorService 'applicationTaskExecutor'
+15:46:03.701 [main] INFO  com.ai.prd.drools.DroolsApplicationTest - Started DroolsApplicationTest in 1.524 seconds (JVM running for 2.704)
+15:46:04.081 [main] WARN  org.drools.compiler.kie.builder.impl.KieBuilderImpl - File 'file0.drl' is in folder '' but declares package 'com.ai.prd'. It is advised to have a correspondance between package and folder names.
+15:46:04.911 [main] WARN  org.drools.compiler.kie.builder.impl.KieBuilderImpl - File 'file0.drl' is in folder '' but declares package 'com.ai.prd'. It is advised to have a correspondance between package and folder names.
+15:46:05.723 [main] DEBUG com.ai.prd.drools.action.PersonRuleAction - Person [name=bob, birthDay=null, age=0, address=null] is matched Rule[1.find target person]!
+Rule name is [1.find target person]
+Rule package is [com.ai.prd]
+Person [name=null, birthDay=null, age=33, address=null] is a work person！
+15:46:05.748 [SpringContextShutdownHook] INFO  org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor - Shutting down ExecutorService 'applicationTaskExecutor'
+```
