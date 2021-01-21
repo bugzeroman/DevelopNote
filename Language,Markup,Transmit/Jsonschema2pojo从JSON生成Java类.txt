@@ -1,0 +1,534 @@
+# 1.说明
+jsonschema2pojo工具可以从JSON Schema(或示例JSON文件)生成Java类型，
+并且可以配置生成Jackson 1.x,Jackson 2.x, Moshi 1.x或者Gson库的注解。
+支持将jsonschema2pojo作为Maven插件、Ant任务、命令行工具、
+Gradle插件或嵌入到Java应用程序中。
+本文仅介绍Maven插件使用方式。
+另外该工具还提供了在线版本,
+可以在网站上直接使用：
+[jsonschema2pojo online](http://www.jsonschema2pojo.org/)
+
+# 2.创建Maven工程
+Eclipse -> File -> New -> Other... -> Maven -> Maven Project
+创建一个简单Maven工程，
+pom.xml如下：
+```
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>edu.yuwen.util</groupId>
+        <artifactId>json-file</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+    <artifactId>generate-jsonschema2pojo</artifactId>
+    <description>jsonschema2pojo generates Java types from JSON Schema (or example JSON)</description>
+</project>
+```
+
+# 3.引入Maven插件
+Maven方式生成Java类需要jsonschema2pojo-maven-plugin，
+在pom.xml引入这个插件：
+```
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.jsonschema2pojo</groupId>
+            <artifactId>jsonschema2pojo-maven-plugin</artifactId>
+            <version>1.0.2</version>
+            <configuration>
+                <sourceDirectory>${basedir}/src/main/resources/schema</sourceDirectory>
+                <targetPackage>com.example.types</targetPackage>
+            </configuration>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>generate</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+```
+里面的配置项指定了JSON schema文件的目录，
+以及生成的Java类的包路径。
+
+# 4.新建JSON Schema
+在src/main/resources/schema目录下
+新建JSON Schema文件address.schema.json:
+```
+{
+  "$id": "https://example.com/address.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "An address similar to http://microformats.org/wiki/h-card",
+  "type": "object",
+  "properties": {
+    "post-office-box": {
+      "type": "string"
+    },
+    "extended-address": {
+      "type": "string"
+    },
+    "street-address": {
+      "type": "string"
+    },
+    "locality": {
+      "type": "string"
+    },
+    "region": {
+      "type": "string"
+    },
+    "postal-code": {
+      "type": "string"
+    },
+    "country-name": {
+      "type": "string"
+    }
+  },
+  "required": [ "locality", "region", "country-name" ],
+  "dependencies": {
+    "post-office-box": [ "street-address" ],
+    "extended-address": [ "street-address" ]
+  }
+}
+```
+
+# 5.运行Maven插件
+运行Maven命令，
+执行插件功能：
+mvn generate-sources
+或者
+mvn package
+Maven执行成功后，
+会生成target/generated-sources/jsonschema2pojo/com/example/types/Address.java类。
+推荐使用mvn generate-sources，
+这样生成的target目录更干净些。
+
+# 6.查看Address.java
+```
+package com.example.types;
+
+import java.util.HashMap;
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
+/**
+ * An address similar to http://microformats.org/wiki/h-card
+ * 
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({
+    "post-office-box",
+    "extended-address",
+    "street-address",
+    "locality",
+    "region",
+    "postal-code",
+    "country-name"
+})
+public class AddressSchema {
+
+    @JsonProperty("post-office-box")
+    private String postOfficeBox;
+    @JsonProperty("extended-address")
+    private String extendedAddress;
+    @JsonProperty("street-address")
+    private String streetAddress;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("locality")
+    private String locality;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("region")
+    private String region;
+    @JsonProperty("postal-code")
+    private String postalCode;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("country-name")
+    private String countryName;
+    @JsonIgnore
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+
+    @JsonProperty("post-office-box")
+    public String getPostOfficeBox() {
+        return postOfficeBox;
+    }
+
+    @JsonProperty("post-office-box")
+    public void setPostOfficeBox(String postOfficeBox) {
+        this.postOfficeBox = postOfficeBox;
+    }
+
+    @JsonProperty("extended-address")
+    public String getExtendedAddress() {
+        return extendedAddress;
+    }
+
+    @JsonProperty("extended-address")
+    public void setExtendedAddress(String extendedAddress) {
+        this.extendedAddress = extendedAddress;
+    }
+
+    @JsonProperty("street-address")
+    public String getStreetAddress() {
+        return streetAddress;
+    }
+
+    @JsonProperty("street-address")
+    public void setStreetAddress(String streetAddress) {
+        this.streetAddress = streetAddress;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("locality")
+    public String getLocality() {
+        return locality;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("locality")
+    public void setLocality(String locality) {
+        this.locality = locality;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("region")
+    public String getRegion() {
+        return region;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("region")
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
+    @JsonProperty("postal-code")
+    public String getPostalCode() {
+        return postalCode;
+    }
+
+    @JsonProperty("postal-code")
+    public void setPostalCode(String postalCode) {
+        this.postalCode = postalCode;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("country-name")
+    public String getCountryName() {
+        return countryName;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("country-name")
+    public void setCountryName(String countryName) {
+        this.countryName = countryName;
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getAdditionalProperties() {
+        return this.additionalProperties;
+    }
+
+    @JsonAnySetter
+    public void setAdditionalProperty(String name, Object value) {
+        this.additionalProperties.put(name, value);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(AddressSchema.class.getName()).append('@').append(Integer.toHexString(System.identityHashCode(this))).append('[');
+        sb.append("postOfficeBox");
+        sb.append('=');
+        sb.append(((this.postOfficeBox == null)?"<null>":this.postOfficeBox));
+        sb.append(',');
+        sb.append("extendedAddress");
+        sb.append('=');
+        sb.append(((this.extendedAddress == null)?"<null>":this.extendedAddress));
+        sb.append(',');
+        sb.append("streetAddress");
+        sb.append('=');
+        sb.append(((this.streetAddress == null)?"<null>":this.streetAddress));
+        sb.append(',');
+        sb.append("locality");
+        sb.append('=');
+        sb.append(((this.locality == null)?"<null>":this.locality));
+        sb.append(',');
+        sb.append("region");
+        sb.append('=');
+        sb.append(((this.region == null)?"<null>":this.region));
+        sb.append(',');
+        sb.append("postalCode");
+        sb.append('=');
+        sb.append(((this.postalCode == null)?"<null>":this.postalCode));
+        sb.append(',');
+        sb.append("countryName");
+        sb.append('=');
+        sb.append(((this.countryName == null)?"<null>":this.countryName));
+        sb.append(',');
+        sb.append("additionalProperties");
+        sb.append('=');
+        sb.append(((this.additionalProperties == null)?"<null>":this.additionalProperties));
+        sb.append(',');
+        if (sb.charAt((sb.length()- 1)) == ',') {
+            sb.setCharAt((sb.length()- 1), ']');
+        } else {
+            sb.append(']');
+        }
+        return sb.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = ((result* 31)+((this.postOfficeBox == null)? 0 :this.postOfficeBox.hashCode()));
+        result = ((result* 31)+((this.streetAddress == null)? 0 :this.streetAddress.hashCode()));
+        result = ((result* 31)+((this.postalCode == null)? 0 :this.postalCode.hashCode()));
+        result = ((result* 31)+((this.locality == null)? 0 :this.locality.hashCode()));
+        result = ((result* 31)+((this.countryName == null)? 0 :this.countryName.hashCode()));
+        result = ((result* 31)+((this.additionalProperties == null)? 0 :this.additionalProperties.hashCode()));
+        result = ((result* 31)+((this.extendedAddress == null)? 0 :this.extendedAddress.hashCode()));
+        result = ((result* 31)+((this.region == null)? 0 :this.region.hashCode()));
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof AddressSchema) == false) {
+            return false;
+        }
+        AddressSchema rhs = ((AddressSchema) other);
+        return (((((((((this.postOfficeBox == rhs.postOfficeBox)||((this.postOfficeBox!= null)&&this.postOfficeBox.equals(rhs.postOfficeBox)))&&((this.streetAddress == rhs.streetAddress)||((this.streetAddress!= null)&&this.streetAddress.equals(rhs.streetAddress))))&&((this.postalCode == rhs.postalCode)||((this.postalCode!= null)&&this.postalCode.equals(rhs.postalCode))))&&((this.locality == rhs.locality)||((this.locality!= null)&&this.locality.equals(rhs.locality))))&&((this.countryName == rhs.countryName)||((this.countryName!= null)&&this.countryName.equals(rhs.countryName))))&&((this.additionalProperties == rhs.additionalProperties)||((this.additionalProperties!= null)&&this.additionalProperties.equals(rhs.additionalProperties))))&&((this.extendedAddress == rhs.extendedAddress)||((this.extendedAddress!= null)&&this.extendedAddress.equals(rhs.extendedAddress))))&&((this.region == rhs.region)||((this.region!= null)&&this.region.equals(rhs.region))));
+    }
+
+}
+```
+
+# 7.引入插件依赖
+当把Address.java放到工程的src/main/java目录下时，
+Java编译会报错，
+这是因为生成的类型依赖于Commons Lang的equals、hashCode和toString。
+一些模式结构也会以Jackson注释的形式产生解析器提示。
+需要在pom.xml中添加必要的依赖：
+```
+<dependencies>
+    <dependency>
+        <groupId>commons-lang</groupId>
+        <artifactId>commons-lang</artifactId>
+        <version>2.4</version>
+    </dependency>
+    <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>2.5.4</version>
+    </dependency>
+</dependencies>
+```
+
+# 8.新建JSON文件
+上面演示了从JSON Schema生成Java类，
+下面演示从JSON文件生成Java类，
+首先在src\main\resources\json目录下，
+新建一个JOSN文件person.json：
+```
+{
+    "name":"bob",
+    "age":33
+}
+```
+
+# 9.修改插件配置
+主要是指定了sourceType和sourceDirectory，
+指定了源文件的格式是json和所在目录。
+```
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.jsonschema2pojo</groupId>
+            <artifactId>jsonschema2pojo-maven-plugin</artifactId>
+            <version>1.0.2</version>
+            <configuration>
+                <sourceType>json</sourceType>
+                <sourceDirectory>${basedir}/src/main/resources/json</sourceDirectory>
+                <outputDirectory>${basedir}/src/main/java</outputDirectory>
+                <targetPackage>com.example.types</targetPackage>
+                <addCompileSourceRoot>true</addCompileSourceRoot>
+                <annotationStyle>jackson2</annotationStyle>
+            </configuration>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>generate</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+```
+
+# 10.生成Person.java类
+mvn generate-sources执行成功后，
+会生成src/main/java/com/example/types/Person.java：
+```
+package com.example.types;
+
+import java.util.HashMap;
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({
+    "name",
+    "age"
+})
+public class Person {
+
+    @JsonProperty("name")
+    private String name;
+    @JsonProperty("age")
+    private Integer age;
+    @JsonIgnore
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+
+    @JsonProperty("name")
+    public String getName() {
+        return name;
+    }
+
+    @JsonProperty("name")
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @JsonProperty("age")
+    public Integer getAge() {
+        return age;
+    }
+
+    @JsonProperty("age")
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getAdditionalProperties() {
+        return this.additionalProperties;
+    }
+
+    @JsonAnySetter
+    public void setAdditionalProperty(String name, Object value) {
+        this.additionalProperties.put(name, value);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(Person.class.getName()).append('@').append(Integer.toHexString(System.identityHashCode(this))).append('[');
+        sb.append("name");
+        sb.append('=');
+        sb.append(((this.name == null)?"<null>":this.name));
+        sb.append(',');
+        sb.append("age");
+        sb.append('=');
+        sb.append(((this.age == null)?"<null>":this.age));
+        sb.append(',');
+        sb.append("additionalProperties");
+        sb.append('=');
+        sb.append(((this.additionalProperties == null)?"<null>":this.additionalProperties));
+        sb.append(',');
+        if (sb.charAt((sb.length()- 1)) == ',') {
+            sb.setCharAt((sb.length()- 1), ']');
+        } else {
+            sb.append(']');
+        }
+        return sb.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = ((result* 31)+((this.name == null)? 0 :this.name.hashCode()));
+        result = ((result* 31)+((this.additionalProperties == null)? 0 :this.additionalProperties.hashCode()));
+        result = ((result* 31)+((this.age == null)? 0 :this.age.hashCode()));
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof Person) == false) {
+            return false;
+        }
+        Person rhs = ((Person) other);
+        return ((((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name)))&&((this.additionalProperties == rhs.additionalProperties)||((this.additionalProperties!= null)&&this.additionalProperties.equals(rhs.additionalProperties))))&&((this.age == rhs.age)||((this.age!= null)&&this.age.equals(rhs.age))));
+    }
+}
+```
+
+# 11.插件配置项说明
+1. sourceType:两个可选值，JSON Schema或者JSON文件，默认为JSON Schema。
+2. sourceDirectory:源文件所在的目录，会将该目录下所有文件进行转换，不支持指定单个文件，如果不想全部转换，可以添加一个excludes节点。
+3. outputDirectory:生成Java Pojo类的（根）目录，生成Java类的目录为此目录+包目录，默认值为target/generated-sources/jsonschema2pojo。
+4. targetPackage:生成的Java pojo类的包路径。
+5. addCompileSourceRoot:是否将输出目录作为项目的源码根目录。
+6. annotationStyle:生成的（字段）注解样式，五个可选值：jackson1、jackson2、gson、moshi1和none，默认是jackson2，如果fastjson等工具不支持的，需要设置为none。
+
+更多配置项的使用请参考：
+[jsonschema2pojo-maven-plugin Optional Parameters](http://joelittlejohn.github.io/jsonschema2pojo/site/1.0.2/generate-mojo.html)
+
+# 12.参考文章
+[使用maven根据JSON文件自动生成Java POJO类（Java Bean）源文件](https://www.cnblogs.com/xyb930826/p/6850758.html)
+[jsonschema2pojo github](https://github.com/joelittlejohn/jsonschema2pojo)
