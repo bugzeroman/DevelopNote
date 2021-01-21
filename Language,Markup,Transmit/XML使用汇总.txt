@@ -1,0 +1,14 @@
+使用xjc把xsd文件转换为java类
+
+xjc是JDK自带的，
+查看xjc是否存在：
+xjc -version
+
+xjc pserson.xsd
+
+xjc book.xsd
+
+Trang把xml生成xsd，
+xjc把xsd生成java类。
+
+根据xsd生成xml(示例)
