@@ -106,7 +106,7 @@ Maven执行成功后，
 推荐使用mvn generate-sources，
 这样生成的target目录更干净些。
 
-# 6.查看Address.java
+# 6.查看AddressSchema.java
 ```
 package com.example.types;
 

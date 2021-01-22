@@ -1,0 +1,620 @@
+# 1.说明
+jsonschema2pojo工具可以从JSON Schema(或示例JSON文件)生成Java类型，
+在文章[Jsonschema2pojo从JSON生成Java类(Maven)](https://www.jianshu.com/p/203eb284b2f3)
+已经介绍过Maven插件使用方式,
+本文介绍jsonschema2pojo的命令行使用方式。
+
+# 2.下载工具包
+以下地址可以下载到最新的发布包：
+https://github.com/joelittlejohn/jsonschema2pojo/releases
+下面演示在Windows的CMD下使用命令行，
+所以下载了对应的zip包：
+jsonschema2pojo-1.0.2.zip
+
+# 3.解压工具包
+把zip包解压到当前目录，
+可以看到bin和lib目录，
+以及jsonschema2pojo-1.0.2-javadoc.jar。
+在bin目录下是两个脚本文件，
+bash和bat分别支持Linux和Windows操作系统。
+
+# 4.新建JSON Schema
+在bin目录下新建resource/schema目录，
+然后新建JSON Schema文件address.schema.json:
+```
+{
+  "$id": "https://example.com/address.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "An address similar to http://microformats.org/wiki/h-card",
+  "type": "object",
+  "properties": {
+    "post-office-box": {
+      "type": "string"
+    },
+    "extended-address": {
+      "type": "string"
+    },
+    "street-address": {
+      "type": "string"
+    },
+    "locality": {
+      "type": "string"
+    },
+    "region": {
+      "type": "string"
+    },
+    "postal-code": {
+      "type": "string"
+    },
+    "country-name": {
+      "type": "string"
+    }
+  },
+  "required": [ "locality", "region", "country-name" ],
+  "dependencies": {
+    "post-office-box": [ "street-address" ],
+    "extended-address": [ "street-address" ]
+  }
+}
+```
+
+# 5.命令行执行脚本
+进入CMD命令行，
+执行脚本，
+从JSON Schema生成Java类：
+jsonschema2pojo --source resource\schema --target java-gen
+
+执行成功后会在bin目录下生成java-gen/AddressSchema.java。
+
+# 6.查看AddressSchema.java
+```
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
+/**
+ * An address similar to http://microformats.org/wiki/h-card
+ * 
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({
+    "post-office-box",
+    "extended-address",
+    "street-address",
+    "locality",
+    "region",
+    "postal-code",
+    "country-name"
+})
+public class AddressSchema {
+
+    @JsonProperty("post-office-box")
+    private String postOfficeBox;
+    @JsonProperty("extended-address")
+    private String extendedAddress;
+    @JsonProperty("street-address")
+    private String streetAddress;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("locality")
+    private String locality;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("region")
+    private String region;
+    @JsonProperty("postal-code")
+    private String postalCode;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("country-name")
+    private String countryName;
+
+    @JsonProperty("post-office-box")
+    public String getPostOfficeBox() {
+        return postOfficeBox;
+    }
+
+    @JsonProperty("post-office-box")
+    public void setPostOfficeBox(String postOfficeBox) {
+        this.postOfficeBox = postOfficeBox;
+    }
+
+    @JsonProperty("extended-address")
+    public String getExtendedAddress() {
+        return extendedAddress;
+    }
+
+    @JsonProperty("extended-address")
+    public void setExtendedAddress(String extendedAddress) {
+        this.extendedAddress = extendedAddress;
+    }
+
+    @JsonProperty("street-address")
+    public String getStreetAddress() {
+        return streetAddress;
+    }
+
+    @JsonProperty("street-address")
+    public void setStreetAddress(String streetAddress) {
+        this.streetAddress = streetAddress;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("locality")
+    public String getLocality() {
+        return locality;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("locality")
+    public void setLocality(String locality) {
+        this.locality = locality;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("region")
+    public String getRegion() {
+        return region;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("region")
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
+    @JsonProperty("postal-code")
+    public String getPostalCode() {
+        return postalCode;
+    }
+
+    @JsonProperty("postal-code")
+    public void setPostalCode(String postalCode) {
+        this.postalCode = postalCode;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("country-name")
+    public String getCountryName() {
+        return countryName;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("country-name")
+    public void setCountryName(String countryName) {
+        this.countryName = countryName;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(AddressSchema.class.getName()).append('@').append(Integer.toHexString(System.identityHashCode(this))).append('[');
+        sb.append("postOfficeBox");
+        sb.append('=');
+        sb.append(((this.postOfficeBox == null)?"<null>":this.postOfficeBox));
+        sb.append(',');
+        sb.append("extendedAddress");
+        sb.append('=');
+        sb.append(((this.extendedAddress == null)?"<null>":this.extendedAddress));
+        sb.append(',');
+        sb.append("streetAddress");
+        sb.append('=');
+        sb.append(((this.streetAddress == null)?"<null>":this.streetAddress));
+        sb.append(',');
+        sb.append("locality");
+        sb.append('=');
+        sb.append(((this.locality == null)?"<null>":this.locality));
+        sb.append(',');
+        sb.append("region");
+        sb.append('=');
+        sb.append(((this.region == null)?"<null>":this.region));
+        sb.append(',');
+        sb.append("postalCode");
+        sb.append('=');
+        sb.append(((this.postalCode == null)?"<null>":this.postalCode));
+        sb.append(',');
+        sb.append("countryName");
+        sb.append('=');
+        sb.append(((this.countryName == null)?"<null>":this.countryName));
+        sb.append(',');
+        if (sb.charAt((sb.length()- 1)) == ',') {
+            sb.setCharAt((sb.length()- 1), ']');
+        } else {
+            sb.append(']');
+        }
+        return sb.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = ((result* 31)+((this.postOfficeBox == null)? 0 :this.postOfficeBox.hashCode()));
+        result = ((result* 31)+((this.streetAddress == null)? 0 :this.streetAddress.hashCode()));
+        result = ((result* 31)+((this.postalCode == null)? 0 :this.postalCode.hashCode()));
+        result = ((result* 31)+((this.locality == null)? 0 :this.locality.hashCode()));
+        result = ((result* 31)+((this.countryName == null)? 0 :this.countryName.hashCode()));
+        result = ((result* 31)+((this.extendedAddress == null)? 0 :this.extendedAddress.hashCode()));
+        result = ((result* 31)+((this.region == null)? 0 :this.region.hashCode()));
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof AddressSchema) == false) {
+            return false;
+        }
+        AddressSchema rhs = ((AddressSchema) other);
+        return ((((((((this.postOfficeBox == rhs.postOfficeBox)||((this.postOfficeBox!= null)&&this.postOfficeBox.equals(rhs.postOfficeBox)))&&((this.streetAddress == rhs.streetAddress)||((this.streetAddress!= null)&&this.streetAddress.equals(rhs.streetAddress))))&&((this.postalCode == rhs.postalCode)||((this.postalCode!= null)&&this.postalCode.equals(rhs.postalCode))))&&((this.locality == rhs.locality)||((this.locality!= null)&&this.locality.equals(rhs.locality))))&&((this.countryName == rhs.countryName)||((this.countryName!= null)&&this.countryName.equals(rhs.countryName))))&&((this.extendedAddress == rhs.extendedAddress)||((this.extendedAddress!= null)&&this.extendedAddress.equals(rhs.extendedAddress))))&&((this.region == rhs.region)||((this.region!= null)&&this.region.equals(rhs.region))));
+    }
+
+}
+```
+
+# 7.新建JSON文件
+上面演示了从JSON Schema生成Java类，
+下面演示从JSON文件生成Java类，
+首先在src\main\resources\json目录下，
+新建一个JOSN文件person.json：
+```
+{
+    "name":"bob",
+    "age":33
+}
+```
+
+# 8.命令行执行脚本
+进入CMD命令行，
+执行脚本，
+从JSON文件生成Java类：
+jsonschema2pojo --source-type JSON --source resource\json --target java-gen --package com.example.types --annotation-style JACKSON2
+执行成功后会在bin目录下生成java-gen/com/example/types/Person.java。
+
+# 9.查看Person.java
+```
+package com.example.types;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({
+    "name",
+    "age"
+})
+public class Person {
+
+    @JsonProperty("name")
+    private String name;
+    @JsonProperty("age")
+    private Integer age;
+
+    @JsonProperty("name")
+    public String getName() {
+        return name;
+    }
+
+    @JsonProperty("name")
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @JsonProperty("age")
+    public Integer getAge() {
+        return age;
+    }
+
+    @JsonProperty("age")
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(Person.class.getName()).append('@').append(Integer.toHexString(System.identityHashCode(this))).append('[');
+        sb.append("name");
+        sb.append('=');
+        sb.append(((this.name == null)?"<null>":this.name));
+        sb.append(',');
+        sb.append("age");
+        sb.append('=');
+        sb.append(((this.age == null)?"<null>":this.age));
+        sb.append(',');
+        if (sb.charAt((sb.length()- 1)) == ',') {
+            sb.setCharAt((sb.length()- 1), ']');
+        } else {
+            sb.append(']');
+        }
+        return sb.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = ((result* 31)+((this.name == null)? 0 :this.name.hashCode()));
+        result = ((result* 31)+((this.age == null)? 0 :this.age.hashCode()));
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof Person) == false) {
+            return false;
+        }
+        Person rhs = ((Person) other);
+        return (((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name)))&&((this.age == rhs.age)||((this.age!= null)&&this.age.equals(rhs.age))));
+    }
+}
+```
+
+# 10.命令行帮助
+更多命令行的使用方法，
+请使用帮助命令：
+jsonschema2pojo --help
+
+帮助信息如下：
+```
+The following options are required: -s, --source -t, --target
+Usage: jsonschema2pojo [options]
+  Options:
+    -a, --annotation-style
+       Options: [JACKSON, JACKSON1, JACKSON2, GSON, MOSHI1, NONE]
+       Default: JACKSON
+    -i, --big-decimals
+       Use BigDecimal instead of double (or Double) when the JSON Schema type
+       'number' is encountered. Note that this overrides -f/--float-numbers
+       Default: false
+    -bi, --big-integers
+       Use BigInteger instead of int (or Integer) when the JSON Schema type
+       'integer' is encountered. Note that this overrides -l/--long-integers
+       Default: false
+    -y, --class-prefix
+       Prefix for generated class.
+       Default: <empty string>
+    -x, --class-suffix
+       Suffix for generated class.
+       Default: <empty string>
+    -c3, --commons-lang3
+       Deprecated. Please remove it from your command-line arguments.
+       Default: false
+        --constructors-include-all-properties-constructor
+       Generate a constructor with all fields
+       Default: true
+        --constructors-include-copy-constructor
+       Generate constructors with a copy oriented parameter
+       Default: false
+        --constructors-include-required-properties-constructor
+       Generate a constructor with only required fields
+       Default: false
+    -r, --constructors-required-only
+       Generate only a constructor with only required fields
+       Default: false
+    -A, --custom-annotator
+       The fully qualified class name of referring to a custom annotator class
+       that implements org.jsonschema2pojo.Annotator and will be used in addition to
+       the --annotation-style. If you want to use a custom annotator alone, set
+       --annotation-style to none
+       Default: class org.jsonschema2pojo.NoopAnnotator
+    -F, --custom-rule-factory
+       The fully qualified class name of referring to a custom rule factory
+       class that extends org.jsonschema2pojo.rules.RuleFactory to create custom rules
+       for code generation.
+       Default: class org.jsonschema2pojo.rules.RuleFactory
+    -dt, --date-class
+       Specify date class
+    -dp, --date-pattern
+       A custom pattern to use when formatting date fields during serialization
+    -dtp, --date-time-pattern
+       A custom pattern to use when formatting date-time fields during
+       serialization
+    -dtt, --datetime-class
+       Specify datetime class
+    -dg, --disable-getters
+       Whether to omit getter methods and create public fields instead.
+       Default: false
+    -ds, --disable-setters
+       Whether to omit setter methods and create public fields instead.
+       Default: false
+    -D, --enable-additional-properties
+       Enable additional properties support on generated types, regardless of
+       the input schema(s)
+       Default: false
+    -fe, --file-extensions
+       The extensions that should be considered as standard filename extensions
+       when creating java class names.
+       Default: <empty string>
+    -f, --float-numbers
+       Use float (or Float) instead of double (or Double) when the JSON Schema
+       type 'number' is encountered
+       Default: false
+    -fdt, --format-date-times
+       Whether the fields of type `date-time` are formatted during serialization
+       with a default pattern of `yyyy-MM-dd'T'HH:mm:ss.SSSZ` and timezone set to
+       default value of `UTC`
+       Default: false
+    -fd, --format-dates
+       Whether the fields of type `date` are formatted during serialization with
+       a default pattern of `yyyy-MM-dd`
+       Default: false
+    -ft, --format-times
+       Whether the fields of type `time` are formatted during serialization with
+       a default pattern of `HH:mm:ss.SSS`
+       Default: false
+    -ftm, --format-type-mapping
+       Mapping from format identifier to type: <format>:<fully.qualified.Type>.
+       Default: []
+    -b, --generate-builders
+       Generate builder-style methods as well as setters
+       Default: false
+    -c, --generate-constructors
+       Generate constructors
+       Default: false
+    -h, --help
+       Print help information and exit
+       Default: false
+        --include-constructor-properties-annotation
+       Generate ConstructorProperties annotation with parameter names of
+       constructors. (Not Available on Android)
+       Default: false
+    -ida, --include-dynamic-accessors
+       Include dynamic getter, setter, and builder support on generated types.
+       Default: false
+    -idb, --include-dynamic-builders
+       Include dynamic builder support on generated types.
+       Default: false
+    -idg, --include-dynamic-getters
+       Include dynamic getter support on generated types.
+       Default: false
+    -ids, --include-dynamic-setters
+       Include dynamic setter support on generated types.
+       Default: false
+        --include-type-info
+       Include json type info; required to support polymorphic type handling. https://github.com/FasterXML/jackson-docs/wiki/JacksonPolymorphicDeserialization
+       Default: false
+    -il, --inclusion-level
+       Options: [ALWAYS, NON_ABSENT, NON_DEFAULT, NON_EMPTY, NON_NULL,
+       USE_DEFAULTS]
+       Default: NON_NULL
+    -j, --joda-dates
+       Whether to use org.joda.time.DateTime instead of java.util.Date when
+       adding date-time type fields to generated Java types.
+       Default: false
+    -jd, --joda-local-dates
+       Whether to use org.joda.time.LocalDate insteadof String when adding date
+       type fields to generated Java types.
+       Default: false
+    -jt, --joda-local-times
+       Whether to use org.joda.time.LocalTime insteadof String when adding time
+       type fields to generated Java types.
+       Default: false
+    -303, --jsr303-annotations
+       Add JSR-303/349 annotations to generated Java types.
+       Default: false
+    -305, --jsr305-annotations
+       Add JSR-305 annotations to generated Java types.
+       Default: false
+    -l, --long-integers
+       Use long (or Long) instead of int (or Integer) when the JSON Schema type
+       'integer' is encountered
+       Default: false
+    -N, --null-collections
+       Initialize Set and List fields to null instead of an empty collection.
+       Default: false
+    -E, --omit-hashcode-and-equals
+       Omit hashCode and equals methods in the generated Java types
+       Default: false
+    -S, --omit-tostring
+       Omit the toString method in the generated Java types
+       Default: false
+    -e, --output-encoding
+       The character encoding that should be used when writing the generated
+       Java source files.
+       Default: UTF-8
+    -p, --package
+       A java package used for generated types
+    -pl, --parcelable
+       **EXPERIMENTAL** Whether to make the generated types 'parcelable' (for
+       Android development).
+       Default: false
+        --print-log-levels
+       Prints available log levels and exit.
+       Default: false
+    -rpd, --ref-fragment-path-delimiters
+       A string containing any characters that should act as path delimiters
+       when resolving $ref fragments. By default, #, / and . are used in an attempt
+       to support JSON Pointer and JSON Path.
+       Default: #/.
+    -R, --remove-old-output
+       Whether to empty the target directory before generation occurs, to clear
+       out all source files that have been generated previously (indiscriminately
+       deletes all files and folders).
+       Default: false
+    -sl, --serializable
+       Whether to make the generated types 'serializable'.
+       Default: false
+  * -s, --source
+       The source file(s) or directory(ies) from which JSON Schema will be read
+    -sso, --source-sort-order
+       The sort order to be applied to the source files.  Available options are:
+       OS, FILES_FIRST or SUBDIRS_FIRST
+       Default: OS
+    -T, --source-type
+       Options: [JSONSCHEMA, JSON, YAMLSCHEMA, YAML]
+       Default: JSONSCHEMA
+  * -t, --target
+       The target directory into which generated types will be written
+    -tl, --target-language
+       The type of code that will be generated.  Available options are: JAVA or
+       SCALA
+       Default: JAVA
+    -tv, --target-version
+       The target version for generated source files.
+       Default: 1.6
+    -tt, --time-class
+       Specify time class
+    -tp, --time-pattern
+       A custom pattern to use when formatting time fields during serialization
+    -tse, --tostring-excludes
+       The fields that should be excluded from generated toString methods
+       Default: <empty string>
+        --use-inner-class-builders
+       Generate an inner class with builder-style methods
+       Default: false
+    -o, --use-optional-for-getters
+       Use Optional for getters of non-required fields.
+       Default: false
+    -P, --use-primitives
+       Use primitives instead of wrapper types for bean properties
+       Default: false
+    -d, --word-delimiters
+       The characters that should be considered as word delimiters when creating
+       Java Bean property names from JSON property names
+       Default: - _
+    -log
+       Configure log level. Defaults to info. Available options are: off, error,
+       warn, info, debug, trace
+       Default: info
+    -ut, --use-title-as-classname, When set class names are generated from title attributes rather than property names.
+
+       Default: false
+```
