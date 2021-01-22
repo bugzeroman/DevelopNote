@@ -96,7 +96,8 @@ Maven方式生成Java类需要jsonschema2pojo-maven-plugin，
 
 # 5.运行Maven插件
 运行Maven命令，
-执行插件功能：
+执行插件功能,
+从JSON Schema生成Java类：
 mvn generate-sources
 或者
 mvn package
@@ -412,9 +413,16 @@ Java编译会报错，
 </build>
 ```
 
-# 10.生成Person.java类
-mvn generate-sources执行成功后，
+# 10.运行Maven插件
+运行Maven命令，
+执行插件功能,
+从JSON文件生成Java类：
+mvn generate-sources
+
+执行成功后，
 会生成src/main/java/com/example/types/Person.java：
+
+# 11.查看Person.java
 ```
 package com.example.types;
 
@@ -518,7 +526,7 @@ public class Person {
 }
 ```
 
-# 11.插件配置项说明
+# 12.插件配置项说明
 1. sourceType:两个可选值，JSON Schema或者JSON文件，默认为JSON Schema。
 2. sourceDirectory:源文件所在的目录，会将该目录下所有文件进行转换，不支持指定单个文件，如果不想全部转换，可以添加一个excludes节点。
 3. outputDirectory:生成Java Pojo类的（根）目录，生成Java类的目录为此目录+包目录，默认值为target/generated-sources/jsonschema2pojo。
@@ -529,6 +537,6 @@ public class Person {
 更多配置项的使用请参考：
 [jsonschema2pojo-maven-plugin Optional Parameters](http://joelittlejohn.github.io/jsonschema2pojo/site/1.0.2/generate-mojo.html)
 
-# 12.参考文章
+# 13.参考文章
 [使用maven根据JSON文件自动生成Java POJO类（Java Bean）源文件](https://www.cnblogs.com/xyb930826/p/6850758.html)
 [jsonschema2pojo github](https://github.com/joelittlejohn/jsonschema2pojo)
