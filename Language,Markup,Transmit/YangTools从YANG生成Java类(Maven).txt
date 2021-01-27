@@ -1,0 +1,635 @@
+# 1.说明
+ODL提供了Yang Tools工具从YANG文件生成Java类，
+本文介绍使用Maven插件的方式生成，
+基于yang-maven-plugin这个插件。
+
+# 2.创建Maven工程
+Eclipse -> File -> New -> Other... -> Maven -> Maven Project
+创建一个简单Maven工程，
+pom.xml如下：
+```
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.ai.prd.yang</groupId>
+	<artifactId>generate-yang-tools</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<description>使用ODL的Yang Tools工具，从yang文件生成Java类</description>
+</project>
+```
+
+# 3.增加父pom
+在pom.xml增加mdsal-parent作为父pom：
+```
+<parent>
+	<groupId>org.opendaylight.controller</groupId>
+	<artifactId>mdsal-parent</artifactId>
+	<version>1.10.4</version>
+	<relativePath>../../parent</relativePath>
+</parent>
+```
+
+查看父pom，发现依赖了yang-maven-plugin插件：
+```
+<dependency>
+  <groupId>org.opendaylight.yangtools</groupId>
+  <artifactId>yang-maven-plugin</artifactId>
+  <version>3.0.16</version>
+</dependency>
+```
+以及在build配置了这个插件从YANG生成Java类：
+```
+<plugin>
+  <groupId>org.opendaylight.yangtools</groupId>
+  <artifactId>yang-maven-plugin</artifactId>
+  <version>3.0.16</version>
+  <executions>
+    <execution>
+      <id>binding</id>
+      <goals>
+        <goal>generate-sources</goal>
+      </goals>
+      <configuration>
+        <codeGenerators>
+          <generator>
+            <codeGeneratorClass>org.opendaylight.mdsal.binding.maven.api.gen.plugin.CodeGeneratorImpl</codeGeneratorClass>
+            <outputBaseDir>D:\Code\Work\ODL-Netconf\yang-demos\generate-yang-tools\target-ide/generated-sources/mdsal-binding</outputBaseDir>
+            <resourceBaseDir>D:\Code\Work\ODL-Netconf\yang-demos\generate-yang-tools\target-ide/generated-sources/spi</resourceBaseDir>
+          </generator>
+        </codeGenerators>
+        <inspectDependencies>true</inspectDependencies>
+      </configuration>
+    </execution>
+  </executions>
+  <dependencies>
+    <dependency>
+      <groupId>org.opendaylight.mdsal</groupId>
+      <artifactId>maven-sal-api-gen-plugin</artifactId>
+      <version>2.0.17</version>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+</plugin>
+```
+
+# 4.创建YANG文件
+由于插件默认的YANG文件位置是src\main\yang，
+所有在src\main\yang目录下新建文件acme-system.yang：
+```
+module acme-system {
+    namespace "http://acme.example.com/system";
+    prefix "acme";
+
+    organization "ACME Inc.";
+    contact "joe@acme.example.com";
+    description
+        "The module for entities implementing the ACME system.";
+
+    revision 2007-06-09 {
+        description "Initial revision.";
+    }
+
+    container system {
+        leaf host-name {
+            type string;
+            description "Hostname for this system";
+        }
+
+        leaf-list domain-search {
+            type string;
+            description "List of domain names to search";
+        }
+
+        container login {
+            leaf message {
+                type string;
+                description
+                    "Message given at start of login session";
+            }
+
+            list user {
+                key "name";
+                leaf name {
+                    type string;
+                }
+                leaf full-name {
+                    type string;
+                }
+                leaf class {
+                    type string;
+                }
+            }
+        }
+    }
+}
+```
+对该YANG文件的解读请参考：
+[对YANG的解读(一)](https://www.jianshu.com/p/ca7f5fe11fae)
+
+# 5.运行Maven插件
+运行Maven命令，
+执行插件功能,
+从YANG文件生成Java类：
+```
+mvn clean generate-sources
+```
+
+Maven编译成功日志：
+```
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------------< com.ai.prd.yang:generate-yang-tools >-----------------
+[INFO] Building generate-yang-tools 0.0.1-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-clean-plugin:3.1.0:clean (default-clean) @ generate-yang-tools ---
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.0.0-M2:enforce (enforce-maven) @ generate-yang-tools ---
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.0.0-M2:enforce (enforce-banned-dependencies) @ generate-yang-tools ---
+[INFO] 
+[INFO] --- git-commit-id-plugin:3.0.1:revision (get-git-infos) @ generate-yang-tools ---
+[INFO] 
+[INFO] --- jacoco-maven-plugin:0.8.5:prepare-agent (pre-unit-test) @ generate-yang-tools ---
+[INFO] argLine set to -javaagent:C:\\developtools\\maven-repository\\org\\jacoco\\org.jacoco.agent\\0.8.5\\org.jacoco.agent-0.8.5-runtime.jar=destfile=D:\\Code\\Work\\ODL-Netconf\\yang-demos\\generate-yang-tools\\target\\code-coverage\\jacoco.exec,excludes=**/gen/**:**/generated-sources/**:**/generated-test-sources/**:**/yang-gen/**:**/yang-gen-config/**:**/yang-gen-sal/**:**/yang-gen-code/**:**/pax/**
+[INFO] 
+[INFO] --- yang-maven-plugin:3.0.16:generate-sources (binding) @ generate-yang-tools ---
+[INFO] yang-to-sources: Code generator instantiated from org.opendaylight.mdsal.binding.maven.api.gen.plugin.CodeGeneratorImpl
+[INFO] yang-to-sources: Inspecting D:\Code\Work\ODL-Netconf\yang-demos\generate-yang-tools\src\main\yang
+[INFO] yang-to-sources: Found 0 dependencies in 40.39 ms
+[INFO] yang-to-sources: Project model files found: 1
+[INFO] yang-to-sources: 1 YANG models processed in 110.2 ms
+[INFO] yang-to-sources: Sources will be generated to D:\Code\Work\ODL-Netconf\yang-demos\generate-yang-tools\target\generated-sources\mdsal-binding
+[INFO] Found 5 Binding types in 58.11 ms
+[INFO] Generating 8 Binding source files into 3 directories
+[INFO] yang-to-sources: Sources generated by org.opendaylight.mdsal.binding.maven.api.gen.plugin.CodeGeneratorImpl: 11 in 136.5 ms
+[INFO] 
+[INFO] --- build-helper-maven-plugin:3.0.0:add-source (add-yang-sources) @ generate-yang-tools ---
+[INFO] Source directory: D:\Code\Work\ODL-Netconf\yang-demos\generate-yang-tools\target\generated-sources\mdsal-binding added.
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  3.983 s
+[INFO] Finished at: 2021-01-27T15:47:28+08:00
+[INFO] ------------------------------------------------------------------------
+```
+
+# 6.查看生成的Java类
+Maven命令执行成功后，
+生成的Java类在工程的target\generated-sources\mdsal-binding目录下，
+然后是Java类的包路径：org\opendaylight\yang\gen\v1\http\acme\example\com\system\rev070609，
+目录rev070609的详细文件如下：
+```
+.:
+system/  '$YangModelBindingProvider.java'  '$YangModuleInfoImpl.java'
+AcmeSystemData.java  System.java  SystemBuilder.java
+
+./system:
+login/  Login.java  LoginBuilder.java
+
+./system/login:
+User.java  UserBuilder.java  UserKey.java
+```
+
+原始的YANG文件也会输出到target\generated-sources\yang\META-INF\yang下面，
+并且重命名为acme-system@2007-06-09.yang。
+
+由于生成的Java类都比较大，
+这里仅贴出Login.java和LoginBuilder.java两个类。
+Login.java:
+```
+package org.opendaylight.yang.gen.v1.http.acme.example.com.system.rev070609.system;
+import java.lang.Class;
+import java.lang.Override;
+import java.lang.String;
+import java.util.List;
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
+import org.opendaylight.yang.gen.v1.http.acme.example.com.system.rev070609.$YangModuleInfoImpl;
+import org.opendaylight.yang.gen.v1.http.acme.example.com.system.rev070609.System;
+import org.opendaylight.yang.gen.v1.http.acme.example.com.system.rev070609.system.login.User;
+import org.opendaylight.yangtools.yang.binding.Augmentable;
+import org.opendaylight.yangtools.yang.binding.ChildOf;
+import org.opendaylight.yangtools.yang.binding.CodeHelpers;
+import org.opendaylight.yangtools.yang.common.QName;
+
+/**
+ * 
+ * <p>
+ * This class represents the following YANG schema fragment defined in module <b>acme-system</b>
+ * <pre>
+ * container login {
+ *   leaf message {
+ *     type string;
+ *   }
+ *   list user {
+ *     key name;
+ *     leaf name {
+ *       type string;
+ *     }
+ *     leaf full-name {
+ *       type string;
+ *     }
+ *     leaf class {
+ *       type string;
+ *     }
+ *   }
+ * }
+ * </pre>The schema path to identify an instance is
+ * <i>acme-system/system/login</i>
+ * 
+ * <p>To create instances of this class use {@link LoginBuilder}.
+ * @see LoginBuilder
+ *
+ */
+public interface Login
+    extends
+    ChildOf<System>,
+    Augmentable<Login>
+{
+    public static final @NonNull QName QNAME = $YangModuleInfoImpl.qnameOf("login");
+
+    @Override
+    default Class<org.opendaylight.yang.gen.v1.http.acme.example.com.system.rev070609.system.Login> implementedInterface() {
+        return org.opendaylight.yang.gen.v1.http.acme.example.com.system.rev070609.system.Login.class;
+    }
+    
+    /**
+     * Message given at start of login session
+     *
+     *
+     *
+     * @return <code>java.lang.String</code> <code>message</code>, or <code>null</code> if not present
+     */
+    @Nullable String getMessage();
+    
+    /**
+     * @return <code>java.util.List</code> <code>user</code>, or <code>null</code> if not present
+     */
+    @Nullable List<User> getUser();
+    
+    /**
+     * @return <code>java.util.List</code> <code>user</code>, or an empty list if it is not present
+     */
+    default @NonNull List<User> nonnullUser() {
+        return CodeHelpers.nonnull(getUser());
+    }
+}
+```
+
+LoginBuilder.java:
+```
+package org.opendaylight.yang.gen.v1.http.acme.example.com.system.rev070609.system;
+import com.google.common.base.MoreObjects;
+import java.lang.Class;
+import java.lang.Object;
+import java.lang.Override;
+import java.lang.String;
+import java.lang.SuppressWarnings;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import org.opendaylight.yang.gen.v1.http.acme.example.com.system.rev070609.system.login.User;
+import org.opendaylight.yangtools.concepts.Builder;
+import org.opendaylight.yangtools.yang.binding.AbstractAugmentable;
+import org.opendaylight.yangtools.yang.binding.Augmentation;
+import org.opendaylight.yangtools.yang.binding.AugmentationHolder;
+import org.opendaylight.yangtools.yang.binding.CodeHelpers;
+import org.opendaylight.yangtools.yang.binding.DataObject;
+
+/**
+ * Class that builds {@link LoginBuilder} instances. Overall design of the class is that of a
+ * <a href="https://en.wikipedia.org/wiki/Fluent_interface">fluent interface</a>, where method chaining is used.
+ * 
+ * <p>
+ * In general, this class is supposed to be used like this template:
+ * <pre>
+ *   <code>
+ *     LoginBuilder createTarget(int fooXyzzy, int barBaz) {
+ *         return new LoginBuilderBuilder()
+ *             .setFoo(new FooBuilder().setXyzzy(fooXyzzy).build())
+ *             .setBar(new BarBuilder().setBaz(barBaz).build())
+ *             .build();
+ *     }
+ *   </code>
+ * </pre>
+ * 
+ * <p>
+ * This pattern is supported by the immutable nature of LoginBuilder, as instances can be freely passed around without
+ * worrying about synchronization issues.
+ * 
+ * <p>
+ * As a side note: method chaining results in:
+ * <ul>
+ *   <li>very efficient Java bytecode, as the method invocation result, in this case the Builder reference, is
+ *       on the stack, so further method invocations just need to fill method arguments for the next method
+ *       invocation, which is terminated by {@link #build()}, which is then returned from the method</li>
+ *   <li>better understanding by humans, as the scope of mutable state (the builder) is kept to a minimum and is
+ *       very localized</li>
+ *   <li>better optimization oportunities, as the object scope is minimized in terms of invocation (rather than
+ *       method) stack, making <a href="https://en.wikipedia.org/wiki/Escape_analysis">escape analysis</a> a lot
+ *       easier. Given enough compiler (JIT/AOT) prowess, the cost of th builder object can be completely
+ *       eliminated</li>
+ * </ul>
+ * 
+ * @see LoginBuilder
+ * @see Builder
+ *
+ */
+public class LoginBuilder implements Builder<Login> {
+
+    private String _message;
+    private List<User> _user;
+
+    Map<Class<? extends Augmentation<Login>>, Augmentation<Login>> augmentation = Collections.emptyMap();
+
+    public LoginBuilder() {
+    }
+
+    public LoginBuilder(Login base) {
+        if (base instanceof AugmentationHolder) {
+            @SuppressWarnings("unchecked")
+            Map<Class<? extends Augmentation<Login>>, Augmentation<Login>> aug =((AugmentationHolder<Login>) base).augmentations();
+            if (!aug.isEmpty()) {
+                this.augmentation = new HashMap<>(aug);
+            }
+        }
+        this._message = base.getMessage();
+        this._user = base.getUser();
+    }
+
+    public String getMessage() {
+        return _message;
+    }
+    
+    public List<User> getUser() {
+        return _user;
+    }
+
+    @SuppressWarnings({ "unchecked", "checkstyle:methodTypeParameterName"})
+    public <E$$ extends Augmentation<Login>> E$$ augmentation(Class<E$$> augmentationType) {
+        return (E$$) augmentation.get(CodeHelpers.nonNullValue(augmentationType, "augmentationType"));
+    }
+
+    public LoginBuilder setMessage(final String value) {
+        this._message = value;
+        return this;
+    }
+    public LoginBuilder setUser(final List<User> values) {
+        this._user = values;
+        return this;
+    }    
+    
+    public LoginBuilder addAugmentation(Class<? extends Augmentation<Login>> augmentationType, Augmentation<Login> augmentationValue) {
+        if (augmentationValue == null) {
+            return removeAugmentation(augmentationType);
+        }
+    
+        if (!(this.augmentation instanceof HashMap)) {
+            this.augmentation = new HashMap<>();
+        }
+    
+        this.augmentation.put(augmentationType, augmentationValue);
+        return this;
+    }
+    
+    public LoginBuilder removeAugmentation(Class<? extends Augmentation<Login>> augmentationType) {
+        if (this.augmentation instanceof HashMap) {
+            this.augmentation.remove(augmentationType);
+        }
+        return this;
+    }
+
+    @Override
+    public Login build() {
+        return new LoginImpl(this);
+    }
+
+    private static final class LoginImpl
+        extends AbstractAugmentable<Login>
+        implements Login {
+    
+        private final String _message;
+        private final List<User> _user;
+    
+        LoginImpl(LoginBuilder base) {
+            super(base.augmentation);
+            this._message = base.getMessage();
+            this._user = base.getUser();
+        }
+    
+        @Override
+        public String getMessage() {
+            return _message;
+        }
+        
+        @Override
+        public List<User> getUser() {
+            return _user;
+        }
+    
+        private int hash = 0;
+        private volatile boolean hashValid = false;
+        
+        @Override
+        public int hashCode() {
+            if (hashValid) {
+                return hash;
+            }
+        
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + Objects.hashCode(_message);
+            result = prime * result + Objects.hashCode(_user);
+            result = prime * result + Objects.hashCode(augmentations());
+        
+            hash = result;
+            hashValid = true;
+            return result;
+        }
+    
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (!(obj instanceof DataObject)) {
+                return false;
+            }
+            if (!Login.class.equals(((DataObject)obj).implementedInterface())) {
+                return false;
+            }
+            Login other = (Login)obj;
+            if (!Objects.equals(_message, other.getMessage())) {
+                return false;
+            }
+            if (!Objects.equals(_user, other.getUser())) {
+                return false;
+            }
+            if (getClass() == obj.getClass()) {
+                // Simple case: we are comparing against self
+                LoginImpl otherImpl = (LoginImpl) obj;
+                if (!Objects.equals(augmentations(), otherImpl.augmentations())) {
+                    return false;
+                }
+            } else {
+                // Hard case: compare our augments with presence there...
+                for (Map.Entry<Class<? extends Augmentation<Login>>, Augmentation<Login>> e : augmentations().entrySet()) {
+                    if (!e.getValue().equals(other.augmentation(e.getKey()))) {
+                        return false;
+                    }
+                }
+                // .. and give the other one the chance to do the same
+                if (!obj.equals(this)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    
+        @Override
+        public String toString() {
+            final MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper("Login");
+            CodeHelpers.appendValue(helper, "_message", _message);
+            CodeHelpers.appendValue(helper, "_user", _user);
+            CodeHelpers.appendValue(helper, "augmentation", augmentations().values());
+            return helper.toString();
+        }
+    }
+}
+```
+
+# 7.问题解决
+在Eclipse缺少某些插件时，
+会报Maven的一些goals无法执行的错误，
+下面配置去掉Eclipse中的pom报错，
+并且不影响Maven命令执行结果:
+```
+<build>
+	<pluginManagement>
+		<plugins>
+			<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+			<plugin>
+				<groupId>org.eclipse.m2e</groupId>
+				<artifactId>lifecycle-mapping</artifactId>
+				<version>1.0.0</version>
+				<configuration>
+					<lifecycleMappingMetadata>
+						<pluginExecutions>
+							<pluginExecution>
+								<pluginExecutionFilter>
+									<groupId>
+										com.github.spotbugs
+									</groupId>
+									<artifactId>
+										spotbugs-maven-plugin
+									</artifactId>
+									<versionRange>
+										[3.1.12.2,)
+									</versionRange>
+									<goals>
+										<goal>check</goal>
+									</goals>
+								</pluginExecutionFilter>
+								<action>
+									<ignore></ignore>
+								</action>
+							</pluginExecution>
+							<pluginExecution>
+								<pluginExecutionFilter>
+									<groupId>
+										org.apache.maven.plugins
+									</groupId>
+									<artifactId>
+										maven-checkstyle-plugin
+									</artifactId>
+									<versionRange>
+										[3.1.1,)
+									</versionRange>
+									<goals>
+										<goal>check</goal>
+									</goals>
+								</pluginExecutionFilter>
+								<action>
+									<ignore></ignore>
+								</action>
+							</pluginExecution>
+						</pluginExecutions>
+					</lifecycleMappingMetadata>
+				</configuration>
+			</plugin>
+		</plugins>
+	</pluginManagement>
+</build>
+```
+
+# 8.使用ODL提供的样例工程
+ODL提供了一个和上面类似的工程，
+下载地址：
+https://github.com/opendaylight/controller/releases?after=v2.0.5
+选择下载版本release/sodium-sr4，
+这个是钠版本的稳定发布版本，
+且支持JDK 1.8和Maven 3.6.9，
+这是由于在父pom中指定了requireJavaVersion为1.8.0，
+以及requireMavenVersion大于等于3.5.0。
+```
+<plugin>
+  <artifactId>maven-enforcer-plugin</artifactId>
+  <version>3.0.0-M2</version>
+  <executions>
+    <execution>
+      <id>enforce-maven</id>
+      <goals>
+        <goal>enforce</goal>
+      </goals>
+      <configuration>
+        <rules>
+          <requireJavaVersion>
+            <version>1.8.0</version>
+          </requireJavaVersion>
+          <requireMavenVersion>
+            <version>[3.5.0,)</version>
+          </requireMavenVersion>
+        </rules>
+      </configuration>
+    </execution>
+    <execution>
+      <id>enforce-banned-dependencies</id>
+      <goals>
+        <goal>enforce</goal>
+      </goals>
+      <configuration>
+        <rules>
+          <bannedDependencies>
+            <message>Please always use mockito-core instead of mockito-all (see https://bugs.opendaylight.org/show_bug.cgi?id=7662), and spotbugs:annotations instead of findbugs:annotations</message>
+            <excludes>
+              <exclude>org.mockito:mockito-all</exclude>
+              <exclude>com.google.code.findbugs:annotations</exclude>
+            </excludes>
+          </bannedDependencies>
+        </rules>
+        <fail>true</fail>
+      </configuration>
+    </execution>
+  </executions>
+</plugin>
+```
+
+# 9.使用样例工程
+下载的controller-release-sodium-sr4.zip解压到本地，
+找到toaster工程：
+D:\temp\controller-release-sodium-sr4\opendaylight\md-sal\samples\toaster
+然后在工程下面执行编译命令即可:
+```
+mvn clean generate-sources
+```
+也可以把工程复制出来单独编译，
+也可以把工程导入Eclipse编译，
+生成的结果和上面类似。
+
+# 10.参考文章
+[使用yangtools将yang文件转化成java](https://kangyucheng.blog.csdn.net/article/details/88989435)
+[Yang Tools Github](https://github.com/opendaylight/yangtools)
