@@ -28,8 +28,10 @@ git log -S usersync
 创建分支
 git branch [分支名]
 
-查看分支
+查看当前分支
 git branch -v
+查看所有分支
+git branch -a
 
 切换分支
 git checkout [分支名]
@@ -39,3 +41,17 @@ git push origin master
 
 拉取远程变化，包括分支
 git fetch origin
+
+删除掉暂存区的文件，不会删除工作空间的：
+git rm --cached JAXBXML.java 
+
+创建新分支rule,并且切换过去：
+git checkout -b rule
+等价于：
+git branch rule
+git checkout rule
+
+查看所有标签
+git tag -l
+切换到对应标签
+git checkout release/sodium-sr4
