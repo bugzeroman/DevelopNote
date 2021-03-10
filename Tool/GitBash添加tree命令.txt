@@ -1,0 +1,71 @@
+# 1.说明
+Tree命令以树形显示文件目录结构，
+非常适合展示文件目录的组成，
+在Windows中安装的GitBash默认没有tree命令，
+本文介绍tree命令的下载、安装和使用。
+
+# 2.下载地址
+http://gnuwin32.sourceforge.net/packages/tree.htm
+点击Binaries二进制包下载，
+下载文件为tree-1.5.2.2-bin.zip。
+
+# 3.解压文件
+使用解压工具解压zip文件，
+然后在解压后的bin目录下找到tree.exe，
+把tree.exe拷贝到GitBash安装路径的bin目录下：
+C:\Program Files (my)\Git\bin
+
+# 4.使用tree
+在GitBash命令行窗口,
+切换到需要查看文件层级的目录，
+执行tree命令：
+tree
+
+会把该目录下所有的文件和目录以树形展示出来:
+```
+.
+|-- Code
+|   |-- Learn
+|   |-- Reference
+|   |-- Work
+|   `-- readme.md
+|-- Downloads
+|   |-- 360Downloads
+|   |-- BaiduNetdiskDownload
+|   `-- DirverDownloads
+|-- MyDoc
+|   |-- DevelopConfigration
+|   |-- DevelopNote
+|   |-- Learn
+|   |-- LearnNetworkCourse
+|   `-- LearnReferenceBook
+|-- MyLife
+|   |-- Book
+|   |-- Game
+|   |-- Movie
+|   `-- Music
+```
+如果要限制目录显示层级,
+可以通过-L level参数,
+比如只显示当前目录下的第一层文件和目录：
+tree -L 1
+```
+.
+|-- Code
+|-- Data
+|-- Doc
+|-- Downloads
+|-- MyDoc
+|-- MyLife
+`-- temp
+```
+
+# 5.问题解决
+如果执行时，找不到tree命令，
+可以把tree所在目录添加到Windows环境变量，
+或者使用绝对路径执行命令：
+"C:\Program Files (my)\Git\bin\tree" -L 1
+
+# 6.参考文章
+[git-bash添加tree命令](https://blog.csdn.net/u010887126/article/details/84963103)
+[Linux tree命令](https://www.runoob.com/linux/linux-comm-tree.html)
