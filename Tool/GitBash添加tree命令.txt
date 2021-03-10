@@ -61,10 +61,20 @@ tree -L 1
 ```
 
 # 5.问题解决
+## 5.1.找不到命令
 如果执行时，找不到tree命令，
 可以把tree所在目录添加到Windows环境变量，
 或者使用绝对路径执行命令：
 "C:\Program Files (my)\Git\bin\tree" -L 1
+
+## 5.2.中文乱码
+输出中文名称的文件乱码，
+使用-N参数：
+tree -N 
+如果仍然乱码,
+可以把输出直接导入到文件，
+然后使用Notepad++之类的文件编辑器打开：
+tree -N > fileName.txt
 
 # 6.参考文章
 [git-bash添加tree命令](https://blog.csdn.net/u010887126/article/details/84963103)
