@@ -79,7 +79,6 @@ Eclipse -> File -> Export -> Java -> Runnable JAR file
 可以双击某个时间点的版本，比对修改的情况。
 ![FileLocalHistory.jpg](https://upload-images.jianshu.io/upload_images/11810589-ea4c992cc3aa9d7c.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-
 # 13.查看String的源码
 Eclipse -> window -> Preferences -> Java -> Installed JRES
 此时"Installed JRES"右边是列表窗格，
@@ -95,6 +94,31 @@ D:\Program Files (x86)\java\jdk7\lib\rt.jar
 选中这一项，点右边的按钮Source Attachment,
 选择你的JDK目录下的src.zip文件即可。
 
+# 14.设置Eclipse背景颜色
+Eclipse -> Window -> Preferences -> General -> Editors -> Text Editors -> Appearance color options
+选择Background color，
+勾选右边的System Defautl。
+这样Eclipse就是使用系统设置的保护色了。
+![](https://upload-images.jianshu.io/upload_images/11810589-b1a3a167e25d8a4b.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+或者使用如下自定义颜色：
+|名称         | 数值 |
+|--------------|-------|
+|色调(E)     | 84   |
+|饱和度(S)  | 91   |
+|亮度(L)      |  205 |
+或者
+|名称     | 数值 |
+|----------|-------|
+|红(R)    | 204 |
+|绿(G)    | 232 |
+|蓝(U)    | 207 |
 
-
-
+# 15.工程递归查看
+按照工程的父子结构查看Maven工程，
+而不是把所有工程项目平铺在一起。
+打开Eclipse工程视图的方法，
+Eclipse -> Windows -> Show View -> Console
+然后点击视图右上角的下拉箭头：
+选择Projects Presentation -> Hierarchical
+这样工程就能按照父子结构展示。
+ProjectsPresentationHierarchical.png

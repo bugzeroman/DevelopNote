@@ -24,3 +24,17 @@ java -client -version
 
 //查看JVM的服务器端环境，针对生产环境优化,运行速度快，启动速度慢
 java -server -version  
+
+//直接运行MANIFEST.MF中指定的 main 方法：
+java -jar demo-1.0.0.jar
+
+//运行指定的main方法：
+java -cp demo-1.0.0.jar com.sample.Test
+
+//后面指定main方法的入参：
+java -cp demo-1.0.0.jar com.sample.Test hello
+
+
+
+
+

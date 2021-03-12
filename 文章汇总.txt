@@ -1,10 +1,9 @@
 1.文章发布网站
 简书：       https://www.jianshu.com/u/669b3db8f6fe
 CSDN:        https://blog.csdn.net/bugzeroman
-新浪博客：   http://blog.sina.com.cn/u/1914861954
+博客园：     https://www.cnblogs.com/bugzeroman/
 
 2.待写作文章：
-Windows\Chrome插件推荐.txt
 Windows\Notepad插件推荐.txt
 Linux\X-manager(X-shell)介绍
 Xshell打开Linux图形化界面
@@ -33,9 +32,9 @@ Eclipse使用技巧
 5.待转载的文章
 
 6.待处理其他事项
-同步文章到CSDN和新浪BLOG
-等待CSDN每月自动同步一次后，
-再同步新浪BLOG，不然要多同步一次CSDN。
+文章主要发布到简书，
+等待CSDN自动同步，
+然后博客园周末手动同步。
 
 7.需要备份的目录：
 D:\MyDoc\DevelopNote
@@ -44,3 +43,19 @@ D:\MyDoc\Learn
 
 D:\Code\Learn
 C:\Users\yuwen\Desktop\开发
+
+8.需要开发的代码
+log-framework log相关日志框架的使用
+parse-file xml,json相关文件的解析和创建
+common-util apache工具类，guava等工具类的测试使用
+JdkDemo 只使用到JDK相关类的功能测试
+MavenDemo 需要使用到Maven依赖的jar包的功能测试，后续可能抽到其他工程
+DownloadMaven 临时用来下载Maven jar包的工程
+
+9.其他
+更新文件目录到readme.md
+"C:\Program Files (my)\Git\bin\tree" -L 2 -N > readme.md
+
+
+
+

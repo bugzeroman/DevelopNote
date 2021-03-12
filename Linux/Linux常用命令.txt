@@ -187,6 +187,9 @@ cat /etc/profile
 个人环境变量，会继承上面的全局环境变量
 cat .bash_profile
 
+读取pid文件的进程号，然后kill对应进程：
+cat pid.txt | xargs kill -9
+
 修改vim的配色
 root用户，查看已有的配色
 ls /usr/share/vim/vim72/colors
@@ -428,3 +431,11 @@ vi /etc/selinux/config
 
 查看终端连接限制:
 cat /etc/ssh/sshd_config | grep -i max
+
+查看文档的目录结构，树形输出
+tree
+
+只查看当前前两级的目录
+tree -L 2 
+
+

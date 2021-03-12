@@ -32,15 +32,15 @@ export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/li
 集群名称,建议修改成自己的，防止误用默认集群
 cluster.name: yuwenes
 
-配置外网可以访问
-network.host: 0.0.0.0
+配置为本机IP，外网可以访问
+network.host: 10.43.159.14
 配置访问端口
 http.port: 9200
 
 配置ES的节点名称
 node.name: node-1
 修改集群信息为本机：
-cluster.initial_master_nodes: ["node-1"]
+discovery.seed_hosts: ["10.43.159.14"]
 
 # 6.启动elasticsearch
 ./bin/elasticsearch
