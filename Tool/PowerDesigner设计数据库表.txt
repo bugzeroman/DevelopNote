@@ -11,7 +11,7 @@ File -> New Model... ->
 选择Diagram下的Conceptual Diagram  ->
 Model Name填写UserProjectCDM ->
 点击OK即可创建概念数据模型。
-1.newModel.png
+![](https://upload-images.jianshu.io/upload_images/11810589-9370198d9c2c8bf6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 然后保存一下模型：
 File -> Save -> 
@@ -19,10 +19,10 @@ File -> Save ->
 D:\项目设计\用户项目\1.数据库表概要设计\PowerDesignerModel
 以及修改保存的文件名：
 UserProjectCDM.cdm
-2.saveModel.png
+![](https://upload-images.jianshu.io/upload_images/11810589-54c24eed3632c1f5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 创建模型结果如下：
-3.createdModel.png
+![](https://upload-images.jianshu.io/upload_images/11810589-a3e39be1a94bbf32.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 # 3.创建工作空间
 工作空间不需要单独创建，
@@ -33,7 +33,7 @@ File -> Save Workspace ->
 C:\developtools\workspace-other\PowerDesign\UserProject
 以及工作空间默认的文件名：
 Workspace.sws
-4.createWorkspace.png
+![](https://upload-images.jianshu.io/upload_images/11810589-790563ecb7e381f6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 # 4.设计表
 先来设计一下需要创建的用户表：
@@ -64,7 +64,7 @@ Workspace.sws
 连续点击能创建多个表，
 右键取消连续创建，
 鼠标箭头恢复。
-5.createTable.png
+![](https://upload-images.jianshu.io/upload_images/11810589-c487cadd826bf126.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 默认创建出来的图标很小，
 使用Ctrl+鼠标滚轮可以放大图表。
@@ -76,7 +76,7 @@ General标签 -> Diagram ->
 取消勾选Show page delimiter，
 点击OK，
 这样就能去掉背景中的黑色网格线了。
-x.1.ShowPageDelimiter.png
+![](https://upload-images.jianshu.io/upload_images/11810589-f0b8b1812aa1a99e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 # 6.修改表名
 默认创建的表名是Entity_1，
@@ -86,7 +86,7 @@ x.1.ShowPageDelimiter.png
 Name：用户表
 Code: tbl_user
 Comment: 用户表，记录用户信息。
-6.setTableName.png
+![](https://upload-images.jianshu.io/upload_images/11810589-7841a621a91c5e1e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 最后生成数据库SQL的时候，
 会使用Code作为表名。
 
@@ -104,9 +104,11 @@ Defaule Value:该字段没有默认值，空着不填
 勾选M(Mandatory)，代表字段必填，
 勾选P(Primary Identifier),代表字段是主键，
 勾选D(Display),代表字段不需要隐藏，默认情况下是显示的
-7.createOneField.png
+![](https://upload-images.jianshu.io/upload_images/11810589-0303313acdd0e0b8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 其他字段依次创建即可：
-8.createOtherField.png
+![](https://upload-images.jianshu.io/upload_images/11810589-7ab7bac078732ccb.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 如果想要调整字段的先后顺序，
 可以选中一行后，
 点击左下角的向下或者向上的箭头，
