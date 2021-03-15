@@ -12,8 +12,8 @@ http://gnuwin32.sourceforge.net/packages/tree.htm
 # 3.解压文件
 使用解压工具解压zip文件，
 然后在解压后的bin目录下找到tree.exe，
-把tree.exe拷贝到GitBash安装路径的bin目录下：
-C:\Program Files (my)\Git\bin
+把tree.exe拷贝到GitBash安装路径的usr\bin目录下：
+C:\Program Files (my)\Git\usr\bin
 
 # 4.使用tree
 在GitBash命令行窗口,
@@ -76,6 +76,20 @@ tree -N
 然后使用Notepad++之类的文件编辑器打开：
 tree -N > fileName.txt
 
-# 6.参考文章
+# 6.使用Windows提供的tree
+在Windows的命令行中也支持tree命令，
+Windows的tree.com区别于Linux的tree.exe。
+
+直接在gitbash调用Windows的tree.com命令，
+增加winpty能解决中文乱码问题：
+winpty tree.com
+通过cmd调用tree.co命令，并且立刻退出:
+cmd //c tree
+说明在gitbash中调用cmd会进入Windows的命令行，
+进入后可以手动exit退出，
+也可以像上面执行完命令后自动退出。
+
+# 7.参考文章
 [git-bash添加tree命令](https://blog.csdn.net/u010887126/article/details/84963103)
 [Linux tree命令](https://www.runoob.com/linux/linux-comm-tree.html)
+[git bash 如何扩展支持tree命令](https://blog.csdn.net/weixin_38171180/article/details/100689153)
