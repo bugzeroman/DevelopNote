@@ -1,0 +1,140 @@
+# 1.说明
+使用PowerDesigner设计数据库表，
+然后将表设计导出为Word文档，
+以及MySQL数据库对应的DDL刷库脚本。
+
+# 2.创建模型
+首先创建概念数据模型：
+File -> New Model... -> 
+选择左边的Model types ->
+选择Model type下的Conceptual Data Model ->
+选择Diagram下的Conceptual Diagram  ->
+Model Name填写UserProjectCDM ->
+点击OK即可创建概念数据模型。
+1.newModel.png
+
+然后保存一下模型：
+File -> Save -> 
+选择模型保存的目录:
+D:\项目设计\用户项目\1.数据库表概要设计\PowerDesignerModel
+以及修改保存的文件名：
+UserProjectCDM.cdm
+2.saveModel.png
+
+创建模型结果如下：
+3.createdModel.png
+
+# 3.创建工作空间
+工作空间不需要单独创建，
+创建了模型后，
+直接保存对应的工作空间即可：
+File -> Save Workspace -> 
+选择工作空间保存的目录:
+C:\developtools\workspace-other\PowerDesign\UserProject
+以及工作空间默认的文件名：
+Workspace.sws
+4.createWorkspace.png
+
+# 4.设计表
+先来设计一下需要创建的用户表：
+```
+用户表名    tbl_user
+用户ID      id          字符串，必填
+用户名称    name        字符串，必填     
+用户状态    status      枚举，有正常和暂停两种状态，选填，默认状态为正常
+创建时间    create_time 时间类型，必填         
+修改时间    update_time 时间类型，选填
+```
+
+# 5.新建表
+在左边的Object Browser下面找到名为Workspace的工作空间，
+然后找到工作空间下面的UserProjectCDM，
+然后继续找到下面的Diagram_1，
+双击该名称，修改为UserDiagram，
+在这下面就可以开始创建表了，
+在UserProjectCDM下面可以创建多个Diagram,
+可以认为一个Diagram是一组相关的表，
+这里创建一个UserDiagram就可以了。
+
+然后找到右边Toolbox -> Conceptual Diagram -> Entity,
+单击一下Entity，
+鼠标变成表格一样的图标，
+然后在UserDiagram的空白处单击一下，
+就能创建一个表的实体，
+连续点击能创建多个表，
+右键取消连续创建，
+鼠标箭头恢复。
+5.createTable.png
+
+默认创建出来的图标很小，
+使用Ctrl+鼠标滚轮可以放大图表。
+
+顺便提个使用技巧，
+去掉图表中难看的网格底线：
+Tools -> Dispaly Preferences -> General Settings -> 
+General标签 -> Diagram -> 
+取消勾选Show page delimiter，
+点击OK，
+这样就能去掉背景中的黑色网格线了。
+x.1.ShowPageDelimiter.png
+
+# 6.修改表名
+默认创建的表名是Entity_1，
+双击这个表实体打开Entity Properties设置界面，
+在General标签下，
+可以设置表的中英文名称和描述，
+Name：用户表
+Code: tbl_user
+Comment: 用户表，记录用户信息。
+6.setTableName.png
+最后生成数据库SQL的时候，
+会使用Code作为表名。
+
+# 7.新建表字段
+打开Entity Properties设置界面，
+在Attributes标签下，
+点击空白处，可以新建一个字段：
+比如新建用户ID字段设置如下：
+Name: 用户ID 
+Code: id 
+Data Type: Variable characters(%n)
+Length: 100
+Comment:用户ID
+Defaule Value:该字段没有默认值，空着不填
+勾选M(Mandatory)，代表字段必填，
+勾选P(Primary Identifier),代表字段是主键，
+勾选D(Display),代表字段不需要隐藏，默认情况下是显示的
+7.createOneField.png
+其他字段依次创建即可：
+8.createOtherField.png
+如果想要调整字段的先后顺序，
+可以选中一行后，
+点击左下角的向下或者向上的箭头，
+把字段调整到想要的位置。
+
+另外Attributes标签下面的快捷操作图标，
+可以方便的插入删除拷贝字段。
+
+# 8.生成数据库设计文档
+请参考[PowerDesigner生成数据库设计文档]
+
+# 9.生成数据库刷库脚本
+生成MySQL数据库对应的DDL刷库脚本,
+请参考[PowerDesigner生成数据库设计文档]
+
+# 10.生成Java POJO类
+PowerDesigner可以根据表设计直接生成Java的POJO类，
+用于映射数据库对应的表，
+避免了手工编写Java类，
+但是实际使用效果并不是很理想，
+推荐使用MyBatis-Plus提供的AutoGenerator代码生成器，
+先使用对应的数据库刷库脚本刷库，
+然后基于数据库生成Java POJO等各个模块的代码,
+请参考[SpringBoot集成MyBatis-Plus代码生成器(Dao)](https://www.jianshu.com/p/5fbdaf0415cb)。
+
+# 11.参考文章
+[PowerDesign使用](https://blog.csdn.net/u011402896/article/details/80319427)
+[PowerDesigner常用设置](https://www.cnblogs.com/ShaYeBlog/p/4054480.html)
+[PowerDesigner的数据类型](https://www.cnblogs.com/ThinkWorld/p/3304975.html)
+[powerdesigner生成javabean](https://www.jianshu.com/p/f4fa81acd81d)
+[PowerDesigner设置类名首字母大写](http://blog.chinaunix.net/uid-20024324-id-1738598.html)
