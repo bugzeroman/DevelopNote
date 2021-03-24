@@ -9,7 +9,7 @@
 # 2.创建eureka-server模块
 这一步创建一个Maven Module，
 作为Spring Cloud的父工程下的一个子工程：
-在父工程spring-cloud-demo上右键 -> New -> Other... -> Maven -> Maven Project
+在父工程spring-cloud-demo上右键 -> New -> Other... -> Maven -> Maven Module
 ![](https://upload-images.jianshu.io/upload_images/11810589-324c76381194c3d2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 勾选Create a simple project(skip archetype selection),
