@@ -12,7 +12,7 @@
 # 2.创建config模块
 这一步创建一个Maven Module，
 作为Spring Cloud的父工程下的一个子工程：
-在父工程spring-cloud-demo上右键 -> New -> Other... -> Maven -> Maven Project
+在父工程spring-cloud-demo上右键 -> New -> Other... -> Maven -> Maven Module
 
 勾选Create a simple project(skip archetype selection),
 输入Module Name:config-server,
@@ -211,3 +211,4 @@ spring:
 
 # 9.Config服务注册到Eureka
 请参考：[SpringCloud创建Eureka Client服务注册](https://www.jianshu.com/p/22a9e7b546f3)
+
