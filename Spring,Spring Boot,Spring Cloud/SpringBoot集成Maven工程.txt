@@ -1,0 +1,199 @@
+# 1.说明
+通过Maven向导创建一个Maven Project，
+而非Spring Boot向导创建Spring Starter Project，
+然后通过手工修改的方式，
+使这个Maven工程支持Spring Boot。
+
+# 2.创建Maven Project
+通过Eclipse的工程创建向导，
+创建一个Maven Project：
+File -> New -> Other... -> Maven -> Maven Project
+1.createMavenProject.png
+
+勾选Create a simple project(skip archetype selection),
+然后去掉勾选Use default Workspace location，
+点击Browse...设置自己项目保存的Location:
+D:\Code\Learn\SpringBoot\spring-boot-maven
+2.newMavenProject.png
+
+点击Next下一步，
+这里输入要创建的项目的名称等信息，
+主要是修改Group Id，Artifact Id，Packaging，
+注意Packaging设置为jar:
+3.configMavenProject.png
+点击Finish完成工程创建。
+
+# 3.查看pom.xml
+```
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.yuwen.spring</groupId>
+  <artifactId>spring-boot-maven</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+</project>
+```
+
+# 4.增加Spring Boot依赖管理
+将Spring Boot相关依赖增加到创建好的Maven Project,
+为了方便统一管理相关依赖，
+先增加Spring Boot依赖管理，
+有两种方式，
+一种是继承父pom的方式，
+另一种是通过import导入的方式。
+
+## 4.1.继承父pom方式
+修改pom.xml，
+增加spring-boot-starter-parent作为父pom：
+```
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.3.1.RELEASE</version>
+</parent>
+```
+缺点是限制了工程的父pom，
+无法指定自己的父pom了。
+
+## 4.2.通过import导入方式
+修改pom.xml，
+在dependencyManagement依赖管理中，
+增加spring-boot-dependencies依赖：
+```
+<dependencyManagement>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-dependencies</artifactId>
+			<version>2.3.1.RELEASE</version>
+			<type>pom</type>
+			<scope>import</scope>
+		</dependency>
+	</dependencies>
+</dependencyManagement>
+```
+好处是不占用父pom,
+可以指定自己的父pom，
+这种方式在开发中更加常见。
+但是可能会导致工程打包运行有问题，
+需要添加额外的构建配置：
+```
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <version>2.3.1.RELEASE</version>
+            <executions>
+                <execution>
+                    <!--打包时，重新打包指定spring boot的启动类 -->
+                    <id>repackage</id>
+                    <goals>
+                        <goal>repackage</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+```
+顺便一提，
+在spring-boot-starter-parent作为父pom的时候，
+帮我们配置了dependencyManagement和build，
+子pom继承过来之后就能直接使用，
+所有不需要重复配置了。
+
+# 5.新增Spring依赖
+修改pom.xml,
+在dependencies依赖中，
+新增Spring Boot Web服务依赖：
+```
+<dependencies>
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-web</artifactId>
+	</dependency>
+</dependencies>
+```
+
+# 6.新增配置文件
+在src/main/resource目录下，
+新增application.yml配置文件，
+并且配置启动端口：
+```
+server:
+  port: 8088
+```        
+
+# 7.新增主启动类
+在src/main/java目录下新增主启动类，
+DemoApplication.java：
+```
+package com.yuwen.spring.demo;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class DemoApplication {
+	public static void main(String[] args) {
+		SpringApplication.run(DemoApplication.class, args);
+	}
+}
+```
+注意新增注解@SpringBootApplication。
+
+# 8.启动微服务
+右键主启动类DemoApplication.java，
+Run As ... -> Java Application
+成功启动日志如下，
+可以看到对外提供的服务端口是8088：
+```
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v2.3.1.RELEASE)
+
+2021-03-25 15:49:11.245  INFO 5656 --- [           main] com.yuwen.spring.demo.DemoApplication    : Starting DemoApplication on yuwen-asiainfo with PID 5656 (D:\Code\Learn\SpringBoot\spring-boot-maven\target\classes started by yuwen in D:\Code\Learn\SpringBoot\spring-boot-maven)
+2021-03-25 15:49:11.247  INFO 5656 --- [           main] com.yuwen.spring.demo.DemoApplication    : No active profile set, falling back to default profiles: default
+2021-03-25 15:49:12.562  INFO 5656 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8088 (http)
+2021-03-25 15:49:12.572  INFO 5656 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2021-03-25 15:49:12.572  INFO 5656 --- [           main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.36]
+2021-03-25 15:49:12.643  INFO 5656 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2021-03-25 15:49:12.643  INFO 5656 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1359 ms
+2021-03-25 15:49:12.766  INFO 5656 --- [           main] o.s.s.concurrent.ThreadPoolTaskExecutor  : Initializing ExecutorService 'applicationTaskExecutor'
+2021-03-25 15:49:12.897  INFO 5656 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8088 (http) with context path ''
+2021-03-25 15:49:12.906  INFO 5656 --- [           main] com.yuwen.spring.demo.DemoApplication    : Started DemoApplication in 2.008 seconds (JVM running for 2.402)
+```
+
+# 9.查看微服务
+浏览器输入URL:
+http://localhost:8088
+返回一个空白的错误页，
+这是因为还没有对外提供Restful服务：
+4.errorPage.png
+
+
+# 10.其他功能
+为了让SpringBoot工程更加方便开发，
+下面提供一些建议配置。
+
+## 10.1.添加Spring Boot开发工具
+主要用于开发调试时代码自动重新部署：
+```
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-devtools</artifactId>
+	<scope>runtime</scope>
+	<optional>true</optional>
+</dependency>
+```
+## 10.2.添加Junit单元测试
+请参考[SpringBoot集成Junit单元测试](TODO)
+
+## 10.3.添加Log4j2日志框架 
+请参考[SpringBoot集成Log4j2框架](https://www.jianshu.com/p/000467747f65)       
+        
