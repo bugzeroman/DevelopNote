@@ -8,19 +8,19 @@
 通过Eclipse的工程创建向导，
 创建一个Maven Project：
 File -> New -> Other... -> Maven -> Maven Project
-1.createMavenProject.png
+![](https://upload-images.jianshu.io/upload_images/11810589-3d00e3064c36bd3c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 勾选Create a simple project(skip archetype selection),
 然后去掉勾选Use default Workspace location，
 点击Browse...设置自己项目保存的Location:
 D:\Code\Learn\SpringBoot\spring-boot-maven
-2.newMavenProject.png
+![](https://upload-images.jianshu.io/upload_images/11810589-62979445232693ef.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 点击Next下一步，
 这里输入要创建的项目的名称等信息，
 主要是修改Group Id，Artifact Id，Packaging，
 注意Packaging设置为jar:
-3.configMavenProject.png
+![](https://upload-images.jianshu.io/upload_images/11810589-490c31476949ac4f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 点击Finish完成工程创建。
 
 # 3.查看pom.xml
@@ -174,8 +174,9 @@ Run As ... -> Java Application
 http://localhost:8088
 返回一个空白的错误页，
 这是因为还没有对外提供Restful服务：
-4.errorPage.png
-
+![](https://upload-images.jianshu.io/upload_images/11810589-eb8e7d3de7afee5b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+对应Restful服务的开发，
+请参考[SpringBoot开发Restful接口](TODO)
 
 # 10.其他功能
 为了让SpringBoot工程更加方便开发，
