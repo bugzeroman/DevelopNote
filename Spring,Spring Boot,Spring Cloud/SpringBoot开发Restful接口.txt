@@ -1,0 +1,322 @@
+# 1.说明
+基于已经创建好的Spring Boot工程，
+开发Restful风格的接口，
+并且对外提供HTTP服务。
+
+Spring Boot工程创建方式有两种：
+Maven向导方式：
+[SpringBoot集成Maven工程](https://www.jianshu.com/p/5322be26deec)
+Spring Boot向导方式：
+[SpringBoot集成MyBatis-Plus框架详细方法](https://www.jianshu.com/p/51c2217a9bc3)
+
+# 2.示例说明
+有一个用户对象需要操作，
+用户有ID，名称，生日，电子邮箱等属性，
+需要对外提供用户的基本增删改查操作。
+
+# 3.新建实体类
+用户实体类User.java：
+```
+package com.yuwen.spring.demo.entity;
+
+import java.util.Date;
+
+public class User {
+	private Long id;
+
+	private String name;
+
+	private Date birthday;
+
+	private String email;
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Date getBirthday() {
+		return birthday;
+	}
+
+	public void setBirthday(Date birthday) {
+		this.birthday = birthday;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	@Override
+	public String toString() {
+		return "User [id=" + id + ", name=" + name + ", birthday=" + birthday + ", email=" + email + "]";
+	}
+}
+```
+
+# 4.新建接口类
+用户接口类UserController.java
+```
+package com.yuwen.spring.demo.controller;
+
+import java.util.List;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import com.yuwen.spring.demo.entity.User;
+
+/**
+ * 用户的增删改查相关接口
+ */
+@RequestMapping("user")
+public interface UserController {
+	/**
+	 * 创建用户
+	 */
+	@PostMapping
+	void createUser(@RequestBody User user);
+
+	/**
+	 * 更新用户
+	 */
+	@PutMapping("{id}")
+	void upadteUser(@PathVariable Long id, @RequestBody User user);
+
+	/**
+	 * 删除用户
+	 */
+	@DeleteMapping("{id}")
+	void deleteUser(@PathVariable("id") Long id);
+
+	/**
+	 * 查询指定用户
+	 */
+	@GetMapping("one/{id}")
+	User getOneUser(@PathVariable Long id);
+
+	/**
+	 * 查询所有用户，支持分页
+	 */
+	@GetMapping("all")
+	List<User> getAllUser(@RequestParam(required = false) Integer pageNum,
+			@RequestParam(required = false) Integer pageSize);
+
+}
+```
+
+# 5.新建接口实现类
+用户接口实现类UserControllerImpl.java,
+为了方便演示，简化了后台逻辑：
+```
+package com.yuwen.spring.demo.controller.impl;
+
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import org.springframework.web.bind.annotation.RestController;
+import com.yuwen.spring.demo.controller.UserController;
+import com.yuwen.spring.demo.entity.User;
+
+@RestController
+public class UserControllerImpl implements UserController {
+
+	@Override
+	public void createUser(User user) {
+		System.out.println("createUser, user=" + user);
+	}
+
+	@Override
+	public void upadteUser(Long id, User user) {
+		System.out.println("upadteUser, id=" + id + ", user=" + user);
+	}
+
+	@Override
+	public void deleteUser(Long id) {
+		System.out.println("deleteUser, id=" + id);
+	}
+
+	@Override
+	public User getOneUser(Long id) {
+		System.out.println("getOneUser, id=" + id);
+		User user = new User();
+		user.setId(id);
+		return user;
+	}
+
+	@Override
+	public List<User> getAllUser(Integer pageNum, Integer pageSize) {
+		System.out.println("getAllUser, pageNum=" + pageNum + ", pageSize=" + pageSize);
+		User user = new User();
+		user.setId(999L);
+		user.setName("all");
+		user.setBirthday(new Date());
+		return Collections.singletonList(user);
+	}
+}
+```
+注意在实现类上面增加@RestController注解，
+表示对外提供Restful服务的类，
+而且该注解必须配置在实现类上面，
+加到接口上面是不生效的。
+
+# 6.启动Spring Boot服务
+右键主启动类DemoApplication.java，
+Run As ... -> Java Application
+成功启动日志中没有报错，
+对外提供的服务端口是8088。
+
+# 7.创建用户
+使用HTTP工具调用创建用户接口：
+```
+HTTP Method: POST
+HTTP URL   : http://localhost:8088/user
+HTTP RequestBody:
+{
+  "id" : 1,
+  "name" : "tom",
+  "birthday" : "2021-03-25T09:21:45.061+00:00",
+  "email" : "tom@ai.com"
+}
+```
+
+控制台输出:
+```
+createUser, user=User [id=1, name=tom, birthday=Thu Mar 25 17:21:45 GMT+08:00 2021, email=tom@ai.com]
+```
+
+# 8.更新用户
+使用HTTP工具调用更新用户接口：
+```
+HTTP Method: PUT
+HTTP URL   : http://localhost:8088/user/1
+HTTP RequestBody:
+{
+  "id" : 1,
+  "name" : "tom2",
+  "birthday" : "2021-03-25T09:21:45.061+00:00",
+  "email" : "tom2@ai.com"
+}
+```
+
+控制台输出:
+```
+upadteUser, id=1, user=User [id=1, name=tom2, birthday=Thu Mar 25 17:21:45 GMT+08:00 2021, email=tom2@ai.com]
+```
+
+# 9.删除用户
+使用HTTP工具调用删除用户接口：
+```
+HTTP Method: DELETE
+HTTP URL   : http://localhost:8088/user/1
+```
+
+控制台输出:
+```
+deleteUser, id=1
+```
+
+# 10.查询指定用户
+使用HTTP工具调用查询指定用户接口：
+```
+HTTP Method: GET
+HTTP URL   : http://localhost:8088/user/one/1
+```
+工具返回HTTP Response：
+```
+{
+  "id" : 1,
+  "name" : null,
+  "birthday" : null,
+  "email" : null
+}
+```
+
+控制台输出:
+```
+getOneUser, id=1
+```
+
+# 11.查询所有用户，支持分页
+使用HTTP工具调用查询所有用户接口：
+```
+HTTP Method: GET
+HTTP URL   : http://localhost:8088/user/all?pageNum=1&pageSize=10
+```
+工具返回响应：
+```
+HTTP Response:
+[
+  {
+    "id" : 999,
+    "name" : "all",
+    "birthday" : "2021-03-25T09:38:38.093+00:00",
+    "email" : null
+  }
+]
+```
+
+控制台输出:
+```
+getAllUser, pageNum=1, pageSize=10
+```
+
+# 12.HTTP Method
+通过上面的例子，
+可以看出HTTP Method与接口中注解的对应关系：
+POST    <-> @PostMapping
+PUT     <-> @PutMapping
+DELETE  <-> @DeleteMapping
+GET     <-> @GetMapping
+
+# 13.HTTP URL
+主要有如下三种URL格式：
+http://localhost:8088/user
+http://localhost:8088/user/one/1
+http://localhost:8088/user/all?pageNum=1&pageSize=10
+
+URL中的固定前缀http://localhost:8088/
+http表示传输协议,
+localhost表示IP地址,
+8088表示服务端口;
+
+## 13.1
+URL中的user对应接口的注解@RequestMapping("user");
+
+## 13.2
+URL中的one/1中:
+one/1对应方法的注解@GetMapping("one/{id}");
+1对应方法参数的注解@PathVariable Long id,
+或者@PathVariable("id") Long id，
+注解的参数id不是必填的;
+
+## 13.3
+URL中的?pageNum=1&pageSize=10对应方法参数的注解:
+@RequestParam(required = false) Integer pageNum,
+@RequestParam(required = false) Integer pageSize;
+注解的required属性为false，
+表示该参数不是必填的，
+注意默认情况下true。
+
+# 14.HTTP RequestBody
+HTTP RequestBody请求参数很简单，
+对应应方法参数的注解@RequestBody User user;
