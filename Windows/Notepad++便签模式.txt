@@ -2,7 +2,7 @@
 Notepad++提供的便签模式，
 可以很方便的进行零碎记事，
 不需要安装其他工具，
-可以使用Notepad++总在最前， 
+就能使Notepad++总在最前， 
 而且仅有文本编辑功能，
 没有多余的按钮占用屏幕空间。
 
@@ -11,15 +11,16 @@ Notepad++提供的便签模式，
 Notepad++  -> 视图(V) -> 便签模式
 或者使用快捷键：
 F12
-Notepad++便签模式总在最前.png
+![](https://upload-images.jianshu.io/upload_images/11810589-b2029e406d3e523e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 顺便一提，
 [视图(V)]中的[总在最前]不是必须勾选的，
-便签模式自带
+便签模式自带总在屏幕最前功能。
 
 # 3.退出便签模式
 进入便签模式后，
 效果如下：
-Notepad++便签模式.png
+![](https://upload-images.jianshu.io/upload_images/11810589-1ed5964f8ef10e11.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 点击右上角的加号，
 就能退出便签模式。
 
@@ -29,6 +30,4 @@ Notepad++便签模式.png
 也不能缩放便签，
 需要提前把Notepadd++窗口缩小，
 并且移动到合适的位置：
-Notepad++缩放模式.png
-
-
+![](https://upload-images.jianshu.io/upload_images/11810589-a0bbf31e0674557b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
