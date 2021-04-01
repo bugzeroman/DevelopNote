@@ -15,19 +15,21 @@ Sticky Notes定位于零碎笔记，
 在Windows左下角的搜索框输入Sticky Notes，
 可以找到便签应用，
 点击打开即可：
-1.Windows便签工具设置.png
+![](https://upload-images.jianshu.io/upload_images/11810589-ed40d428cb9f3fa4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 可以把便签应用固定到任务栏，
 方便下次使用。
 
 # 3.便签视图
 便签打开后，视图如下：
-2.Windows便签工具视图.png
+![](https://upload-images.jianshu.io/upload_images/11810589-04cb6cf9294a1acf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 左边的便签管理界面，
 显示了所有创建的便签，
 右边的是正在编辑的便签，
 可以关掉左边的管理界面，
 这样桌面只有一个简洁的便签：
-3.Windows便签工具页面.png
+![](https://upload-images.jianshu.io/upload_images/11810589-01a4e5dd45a7c912.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 # 4.便签操作
 点击便签左上角的加号，
@@ -36,7 +38,7 @@ Sticky Notes定位于零碎笔记，
 可以设备便签的颜色，
 可以打开笔记列表，即前面的便签管理界面，
 也可以删除笔记，即删除当前便签：
-4.Windows便签工具操作.png
+![](https://upload-images.jianshu.io/upload_images/11810589-ac45baa752bc89a6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 # 5.问题说明
 Windows的便签不支持固定在电脑桌面，
