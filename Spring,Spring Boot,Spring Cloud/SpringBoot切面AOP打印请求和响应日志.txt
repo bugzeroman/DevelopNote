@@ -1,0 +1,139 @@
+# 1.说明
+Spring Boot微服务对外开放的Restful接口，
+为了方便定位问题，
+一般需要记录请求日志和响应日志，
+而在每个接口中开发日志代码是非常繁琐的，
+本文介绍使用Spring的切面AOP，
+统一打印接口中的请求和响应日志，
+也可以捕获异常，打印异常日志，
+让接口的代码实现更加简洁，
+同时也方便后期修改。
+
+下面基于开发好Restful接口的微服务：
+[SpringBoot开发Restful接口](https://www.jianshu.com/p/dc259f77915c)
+添加AOP切面打印日志功能。
+
+# 2.添加切面依赖
+修改pom.xml文件,
+增加spring-boot-starter-aop切面依赖：
+```
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-aop</artifactId>
+</dependency>
+```
+
+如果使用的是Log4j2日志框架，
+需要移除默认的Logback依赖。
+```
+<!-- Log4j2 日志框架 -->
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-log4j2</artifactId>
+</dependency>
+<!-- Spring Boot Web服务 -->
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-web</artifactId>
+	<exclusions>
+		<exclusion>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-logging</artifactId>
+		</exclusion>
+	</exclusions>
+</dependency>
+<!-- Spring Boot Aop切面 -->
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-aop</artifactId>
+	<exclusions>
+		<exclusion>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-logging</artifactId>
+		</exclusion>
+	</exclusions>
+</dependency>
+```
+
+# 3.新建切面类
+新建切面类WebLogAspect.java:
+```
+package com.yuwen.spring.demo.aspect;
+
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+/**
+ * Restful接口日志切面，用于打印请求日志和响应日志
+ */
+@Component
+@Aspect
+public class WebLogAspect {
+	private Logger logger = LoggerFactory.getLogger(getClass());
+
+	@Pointcut("execution(public * com.yuwen.spring.demo.controller.*.*(..))")
+	public void webLog() {
+	}
+
+	@Around("webLog()")
+	public Object around(ProceedingJoinPoint point) throws Throwable {
+
+		String methodName = point.getSignature().toShortString();
+
+		Object[] params = point.getArgs();
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("{} start, request={}", methodName, params);
+		}
+
+		Object result;
+		try {
+			result = point.proceed();
+		} catch (Exception e) {
+			logger.error("{} error, exception={}", methodName, e);
+			throw e;
+		}
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("{} end, result={}", methodName, result);
+		}
+		return result;
+
+	}
+}
+```
+
+注意修改切点，
+配置为需要打印请求和响应日志的接口，
+这里配置的是com.yuwen.spring.demo.controller包下的所有类的所有方法，
+微服务运行后，匹配到的方法都会打印日志：
+```
+@Pointcut("execution(public * com.yuwen.spring.demo.controller.*.*(..))")
+```
+
+# 4.打印日志
+启动Spring Boot服务，
+然后随便调用几个Rest接口，
+比如创建用户，
+切面打印日志效果如下：
+```
+17:34:38.888 [http-nio-8088-exec-1] DEBUG [com.yuwen.spring.demo.aspect.WebLogAspect.around(WebLogAspect.java:34)] - UserControllerImpl.createUser(..) start, request=[User [id=1, name=tom, birthday=Thu Mar 25 17:21:45 GMT+08:00 2021, email=tom@ai.com]]
+createUser, user=User [id=1, name=tom, birthday=Thu Mar 25 17:21:45 GMT+08:00 2021, email=tom@ai.com]
+17:34:38.899 [http-nio-8088-exec-1] DEBUG [com.yuwen.spring.demo.aspect.WebLogAspect.around(WebLogAspect.java:46)] - UserControllerImpl.createUser(..) end, result=null
+```
+第1条日志对应接口请求，
+第2条日志是创建用户的接口自己打印的，
+第3条日志对应响应日志。
+另外如果发生异常，
+也会打印异常日志。
+
+# 5.问题解决
+如果微服务不打印日志，
+可以参考：
+[SpringBoot集成Log4j2框架](https://www.jianshu.com/p/000467747f65)
+
