@@ -1,0 +1,299 @@
+# 1.说明
+Spring定义了CacheManager和Cache接口，
+用来统一不同的缓存技术，
+例如JCache,EhCache,Hazelcast,Guava,Redis等。
+本文通过Spring Boot Cache缓存抽象，
+底层集成Ehcache缓存框架，
+演示基于注解的缓存使用方法。
+
+下面基于开发好Restful接口的微服务：
+[SpringBoot开发Restful接口](https://www.jianshu.com/p/dc259f77915c)
+为接口添加缓存功能。
+
+# 2.新增缓存依赖
+修改pom.xml文件,
+增加spring-boot-starter-cache缓存抽象，
+以及ehcache缓存框架的依赖：
+```
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-cache</artifactId>
+</dependency>
+<dependency>
+	<groupId>net.sf.ehcache</groupId>
+	<artifactId>ehcache</artifactId>
+</dependency>
+```
+
+# 3.新增ehcache配置文件
+在src/main/resource目录下，
+新增ehcache.xml配置文件：
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="http://ehcache.org/ehcache.xsd"
+	updateCheck="false">
+	<!-- 缓存在本地磁盘存储路径 -->
+	<diskStore path="user.dir/ehcache-data" />
+
+	<!-- defaultCache:默认的缓存配置信息-->
+	<defaultCache maxElementsInMemory="10000" eternal="false"
+		timeToIdleSeconds="600" timeToLiveSeconds="600" overflowToDisk="true" />
+
+    <!-- 缓存会过期，内存中缓存数量超过最大数量后，会保存到磁盘 -->
+	<cache name="user" maxElementsInMemory="10000" eternal="false"
+		timeToIdleSeconds="120" timeToLiveSeconds="600" overflowToDisk="true" />
+</ehcache>
+```
+
+# 4.配置缓存框架
+修改application.yml,
+配置Sping Boot Cache缓存实现为ehcache，
+同时指定ehcache的配置文件:
+```  
+spring:
+  cache:
+    type: ehcache
+    ehcache:
+      config: classpath:ehcache.xml
+```
+        
+# 5.启用缓存功能
+修改微服务启动类CacheApplication.java，
+新增注解@EnableCaching，
+开启缓存功能：
+```
+package com.yuwen.spring.demo;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
+
+@EnableCaching
+@SpringBootApplication
+public class CacheApplication {
+	public static void main(String[] args) {
+		SpringApplication.run(CacheApplication.class, args);
+	}
+}
+```
+
+这样服务启动后，
+就会自动开启缓存了，
+下面修改业务代码，
+配置业务接口的缓存策略，
+演示Spring支持的几个缓存注解的使用。       
+
+# 6.实体类序列化
+业务的User对象需要实现序列化接口，
+否则缓存无法保存对象，
+修改User.java类，
+实现Serializable接口：
+```
+package com.yuwen.spring.demo.entity;
+
+import java.io.Serializable;
+import java.util.Date;
+
+public class User implements Serializable {
+	private static final long serialVersionUID = -3301999810945119126L;
+
+	private Long id;
+
+	private String name;
+
+	private Date birthday;
+
+	private String email;
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Date getBirthday() {
+		return birthday;
+	}
+
+	public void setBirthday(Date birthday) {
+		this.birthday = birthday;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	@Override
+	public String toString() {
+		return "User [id=" + id + ", name=" + name + ", birthday=" + birthday + ", email=" + email + "]";
+	}
+}
+```
+
+# 7.修改业务接口
+下面就要修改业务接口，
+使用@Cacheable、@CachePut、@CacheEvict、@Caching、@CacheConfig，
+分别定义每个接口的缓存策略。
+修改UserController.java接口类：
+```
+package com.yuwen.spring.demo.controller;
+
+import java.util.List;
+
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.yuwen.spring.demo.entity.User;
+
+/**
+ * 用户的增删改查相关接口
+ */
+@CacheConfig(cacheNames = UserController.USER_CACHE_NAME)
+@RequestMapping("user")
+public interface UserController {
+	/**
+	 * 用户缓存名称
+	 */
+	String USER_CACHE_NAME = "user";
+	/**
+	 * 用户缓存主键
+	 */
+	String USER_CACHE_KEY = "targetClass.getName() + #id";
+
+	/**
+	 * 创建用户
+	 */
+	@PostMapping
+	void createUser(@RequestBody User user);
+
+	/**
+	 * 更新用户
+	 */
+	@CachePut(key = USER_CACHE_KEY)
+	@PutMapping("{id}")
+	User upadteUser(@PathVariable Long id, @RequestBody User user);
+
+	/**
+	 * 删除用户
+	 */
+	@CacheEvict(key = USER_CACHE_KEY)
+	@DeleteMapping("{id}")
+	void deleteUser(@PathVariable("id") Long id);
+
+	/**
+	 * 查询指定用户
+	 */
+	@Cacheable(key = USER_CACHE_KEY)
+	@GetMapping("one/{id}")
+	User getOneUser(@PathVariable Long id);
+
+	/**
+	 * 查询所有用户，支持分页
+	 */
+	@GetMapping("all")
+	List<User> getAllUser(@RequestParam(required = false) Integer pageNum,
+			@RequestParam(required = false) Integer pageSize);
+
+}
+```
+主要关注查询指定用户，删除用户，更新用户三个接口。
+
+# 8.查询指定用户接口说明
+```
+@Cacheable(key = USER_CACHE_KEY)
+@GetMapping("one/{id}")
+User getOneUser(@PathVariable Long id);
+```
+查询指定用户使用了@Cacheable注解，
+同时指定了缓存key的名称为"targetClass.getName() + #id"，
+这样保存在缓存的key就为"当前类名称+方法入参id"，
+对应缓存的value就是接口返回的User。
+
+同时在接口UserController.java上的注解
+@CacheConfig(cacheNames = UserController.USER_CACHE_NAME)，
+指定了缓存的名称为user,
+对应ehcache.xml中配置的名称：
+<cache name="user">
+由于在类上面声明的注解，
+所以类的所有带有@Cacheable、@CachePut、@CacheEvict注解的
+接口都使用user这个缓存，
+下面的接口不再特别说明这个注解。
+
+@Cacheable表示先从缓存中查询，
+如果查询到就直接返回对应数据，
+如果查询不到就进入方法内部，
+当方法返回数据时，
+把对应的数据放到缓存中，
+以备下次查询使用。
+
+使用效果是第一次查询时，
+会从数据库查询并且返回，
+第二次查询时，
+发现缓存中有数据，
+就会直接返回缓存的数据。
+
+# 9.删除用户接口说明
+```
+@CacheEvict(key = USER_CACHE_KEY)
+@DeleteMapping("{id}")
+void deleteUser(@PathVariable("id") Long id);
+```
+@CacheEvict是用来清除缓存的注解，
+使用效果是当删除用户时，
+同时删除缓存中的数据，
+否则当一个用户已经删除，
+但是调用查询指定用户接口，
+还是会返回已经缓存的数据，
+那业务就会发生错误。
+
+另外通过设置@CachEvict的allEntries=true，
+调用这个接口时，
+会删除缓存user中的所有数据，
+而不单单是删除指定key的缓存。
+
+# 10.更新用户接口
+```
+@CachePut(key = USER_CACHE_KEY)
+@PutMapping("{id}")
+User upadteUser(@PathVariable Long id, @RequestBody User user);
+```
+@CachePut只是用来缓存结果的，
+并不会从缓存中查询数据，
+符合更新用户接口的逻辑，
+当用户更新接口被调用时，
+这个接口一定会被执行，
+同时把接口返回的结果缓存，
+这样调用查询指定用户接口，
+就能直接从缓存中返回更新过的用户。
+
+注意@CachePut注解的方法一定要有返回值，
+否则框架不知道缓存什么数据。
+
+# 11.参考文章
+[史上最全的Spring Boot Cache使用与整合](https://blog.csdn.net/qq_32448349/article/details/101696892)
+[SpringBoot学习－（十八）SpringBoot整合EhCache](https://blog.csdn.net/qq_28988969/article/details/78210873)
