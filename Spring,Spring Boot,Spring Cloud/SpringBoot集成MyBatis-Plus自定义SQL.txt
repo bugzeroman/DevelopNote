@@ -1,5 +1,5 @@
 # 1.说明
-本文介绍Spring Boot集成MyBatis-Plus框架后，
+本文介绍[Spring Boot集成MyBatis-Plus框架](https://www.jianshu.com/p/4508fffde997)后，
 基于已经创建好的Spring Boot工程，
 添加自定义的SQL实现复杂查询等操作。
 自定义SQL主要有两种方式，
