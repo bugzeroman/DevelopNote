@@ -1,0 +1,35 @@
+Java开发中用到的各种占位符汇总
+
+String JDK自带
+
+log4j2日志
+
+Spring配置
+
+Mybatis配置
+
+pom.xml配置属性
+
+主要是两种格式
+1.${}
+2.#{}
+3.两种都支持${},#{}
+4.%s
+5.{}
+
+1.Slf4j的日志
+占位符：{}
+```
+private static final Logger logger = LoggerFactory.getLogger(MyApp.class);
+String nodeId="node1";
+logger.debug("MyApp log, nodeId={}", nodeId);
+```
+
+2.Mybatis配置
+#{}是一个参数占位符，
+对于字符串类型，会自动加上""，其他类型不加。
+由于Mybatis采用预编译，其后的参数不会再进行SQL编译，
+所以一定程度上防止SQL注入。
+${}是一个简单的字符串替换，
+字符串是什么，就会解析成什么，
+存在SQL注入风险。

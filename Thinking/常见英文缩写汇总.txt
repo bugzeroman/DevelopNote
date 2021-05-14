@@ -1,0 +1,101 @@
+
+
+网络配置协议NETCONF（Network Configuration Protocol）
+应用程序编程接口API（Application Programming Interface）
+可扩展标记语言XML（Extensible Markup Language）
+XML Schema（XSD)
+XSLT (Extensible Stylesheet Language Transformations) XML 样式表语言
+DOM （Document Object Model，文档对象模型）
+JAXP（Java API for XMLProcessing，意为XML处理的Java API）
+远程过程调用RPC（Remote Procedure Call）
+HTTP即超文本传输协议
+简单网络管理协议SNMP（Simple Network Management Protocol）
+AAA（Authentication Authorization Accounting）
+NPE Null Pointer Exception 空指针异常
+
+TCP（Transmission Control Protocol 传输控制协议）
+
+
+统一资源标识符（Uniform Resource Identifier (URI)）
+统一资源定位器(URL)
+统一资源命名(URN)
+
+PCDATA 的意思是被解析的字符数据（parsed character data）。
+CDATA 的意思是字符数据（character data）。
+
+XML Schema 语言也称作 XML Schema 定义（XML Schema Definition，XSD）。
+
+WSDL（网络服务描述语言，Web Services Description Language）
+
+TCP/IP 指传输控制协议/网际协议 (Transmission Control Protocol / Internet Protocol)。
+
+JSON：JavaScript 对象表示法（JavaScript Object Notation）
+
+CL，全称是 Change List
+
+PR（Pull Request）
+
+JDK（Java Development Kit）是Java语言的软件开发工具
+
+DHCP
+动态主机配置协议（Dynamic Host Configuration Protocol）
+ICMP
+全称Internet Control Message Protocol，就是互联网控制报文协议
+
+STP协议
+最小生成树算法叫作STP，
+全称Spanning Tree Protocol
+
+OSPF
+（Open Shortest Path First，开放式最短路径优先）
+
+IGP
+内部网关协议（Interior Gateway Protocol）
+
+BGP
+外网路由协议（Border Gateway Protocol）。
+
+自治系统AS（Autonomous System）
+
+
+QUIC（全称Quick UDP Internet Connections，快速UDP互联网连接）
+
+IPv6	Internet Protocol Version 6 (互联网协议-第6版)
+VPN	Virtual PrivateNetwork（虚拟专用网）
+SDN	Software Defined Network(软件定义网络)
+SR	Segment Routing（段路由）
+PCEP	Path Computation Element (PCE) Communication Protocol（路径计算元素通信协议）
+BFD	Bidirectional Forwarding Detection（双向转发检测）
+BGP	(Border Gateway Protocol)边界网关协议
+TWAMP	Tow-Way Active Measurement Pootocol （双向主动测量协议）
+IPFIX	IP Flow Information Export（IP数据流信息输出）
+L3VPN	Layer 3 virtual private network（三层虚拟专用网）
+BGP FlowSpec	BGP Flow Specification（边界网关协议流规则）
+NetStream/Netflow	网络流量采集
+SR-TE	Segment Routing-Traffic Engineering（段路由流量工程）
+SR Policy	Segment Routing Policy（段路由策略）
+SRv6 Policy	IPv6 Segment Routing Policy（IPV6段路由策略）
+BMP	BGP monitoring protocol（路由分析协议/路由监控协议）
+BGP-LS	Border Gateway Protocol (BGP)-link state (LS)（BGP链路状态协议）
+BOD	Bandwidth on demand（带宽按需分配）
+
+MPLS（MultiProtocol Lable Switch）
+多协议标签交换
+
+ATM是Asynchronous Transfer Mode（ATM）异步传输模式的缩写，是实现B-ISDN的业务的核心技术之一。ATM是以信元为基础的一种分组交换和复用技术。
+
+边界路由器（Border Router）。
+
+TRILL（Transparent Interconnection of Lots of Link），即多链接透明互联协议
+VPN，全名Virtual Private Network，虚拟专用网
+
+因特网密钥交换（IKE，Internet Key Exchange）
+
+IPsec VPN。这是基于IP协议的安全隧道协议   一种十分安全的VPN
+
+
+
+
+
+
+
