@@ -93,6 +93,39 @@ VPN，全名Virtual Private Network，虚拟专用网
 
 IPsec VPN。这是基于IP协议的安全隧道协议   一种十分安全的VPN
 
+公共交换电话网（PSTN，Public Switched Telephone Network）
+基站子系统（BSS，Base Station SubsystemBSS）
+基站收发信台（BTS，Base Transceiver Station）
+基站控制器（BSC，Base Station Controller）
+无线接入网（RAN，Radio Access Network）
+核心网（CN，Core Network）
+移动业务交换中心（MSC，Mobile Service Switching Center）
+鉴权中心（AUC，Authentication Center）
+设备识别寄存器（EIR，Equipment Identity Register）
+访问位置寄存器（VLR，Visit Location Register）
+归属位置寄存器（HLR，Home Location Register）
+网关移动交换中心（GMSC ，Gateway Mobile Switching Center）
+网络子系统（NSS，Network and Switching Subsystem）
+分组控制单元（PCU，Packet Control Unit）
+在核心网里面，有个朝前的接待员（SGSN，Service GPRS Supported Node）
+和朝后连接IP网络的网关型GPRS支持节点（GGSN，Gateway GPRS Supported Node）。
+
+无线网络控制器（RNC，Radio Network Controller）
+令牌桶规则（TBF，Token Bucket Filte）
+分层令牌桶规则（HTB， Hierarchical Token Bucket）
+
+
+NFS（Network File System）就是网络文件系统
+XDR（External Data Representation，外部数据表示法）
+SOAP 全称简单对象访问协议（Simple Object Access Protocol）
+Web服务描述语言，WSDL（Web Service Description Languages）
+UDDI（Universal Description, Discovery, and Integration），也即统一描述、发现和集成协议
+
+VPC（Virtual Private Cloud，虚拟私有网络）
+
+
+
+
 
 
 

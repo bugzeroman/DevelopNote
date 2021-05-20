@@ -1,0 +1,15 @@
+
+
+
+
+直接运行
+java -jar eureka-server.jar
+
+指定外部配置文件
+java -jar -Dspring.config.location=application.yml eureka-server.jar
+
+后台运行，启动日志输出到eureka-server.out
+nohup java -jar eureka-server.jar > eureka-server.out 2>&1 &
+
+后台运行，指定配置文件和输出日志
+nohup java -jar -Dspring.config.location=application.yml eureka-server.jar > eureka-server.out 2>&1 &

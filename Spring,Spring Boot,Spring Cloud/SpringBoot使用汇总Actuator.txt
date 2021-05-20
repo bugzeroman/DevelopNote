@@ -1,0 +1,14 @@
+1.
+GitProperties继承了InfoProperties，
+只要继承InfoProperties，
+就能配置git.properties，
+其中配置了GitProperties提供的属性，
+然后在info端点就能查看到。
+
+2.查看日志级别
+http://localhost:8011/actuator/loggers
+
+
+3.保护HTTP端点
+
+4.

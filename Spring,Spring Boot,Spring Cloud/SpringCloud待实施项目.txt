@@ -1,0 +1,13 @@
+1.
+Config Server读取自己配置中心的文件配置
+TODO 代码读取示例，目前不研究，
+可以参考Config Client客户端使用代码。
+
+2.
+yaml文件格式检查工具
+
+3.
+actuator使用
+
+4.
+open feign使用

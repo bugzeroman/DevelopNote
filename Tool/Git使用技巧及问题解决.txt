@@ -1,0 +1,14 @@
+1.git下载代码时报错Filename too long
+在git for windows下使用git clone的Filename too long
+设置：
+git config --global core.longpaths true
+
+2.配置代码提交信息的模板
+C:\Users\yuwen\.gitconfig
+[commit]
+  template=C:/ProgramData/Git/commit_template
+  
+在commit_template文件中写入模板信息：
+```
+【云宽带】【5GNI_REQ_565】【俞文】开发告警配置表初始化脚本
+```

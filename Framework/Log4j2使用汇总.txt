@@ -1,0 +1,31 @@
+1.说明
+记录零散的细碎的Log4j2使用知识
+
+1.日志打印到控制台的方法
+1.1.AppenderRef指定Console
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+	<Appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout
+				pattern="%d{HH:mm:ss.SSS} [%t] %-5level [%l] - %msg%n" />
+		</Console>
+	</Appenders>
+	<Loggers>
+		<Logger
+			name="ai.prd.yuwen.client"
+			level="TRACE" additivity="false">
+			<AppenderRef ref="Console" />
+		</Logger>
+		<Root level="DEBUG">
+			<AppenderRef ref="Console" />
+		</Root>
+	</Loggers>
+</Configuration>
+
+1.2.配置additivity为true，打印到控制台
+<Logger
+	name="ai.prd.yuwen.client"
+	level="TRACE" additivity="true">
+</Logger>
+

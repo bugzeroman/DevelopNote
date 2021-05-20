@@ -1,0 +1,20 @@
+# 1.说明
+
+MyBatis-Plus开启数据库字段下划线自动转换驼峰命名规则：
+增加配置信息
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+
+
+使用BaseMapper<T>类提供的根据ID查询方法，
+不需要在对象T类上面添加@TableId注解，
+也可以正常使用该方法。
+T selectById(Serializable id);
+
+x.参考
+
+
+
+
+[快速入门 mybatis-plus-boot-starter](https://baomidou.gitee.io/mybatis-plus-doc/#/spring-boot)

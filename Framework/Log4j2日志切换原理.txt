@@ -1,0 +1,31 @@
+1.问题
+
+2.原理
+
+
+3.代码
+在每次记录日志，调用logger的打印日志方法：
+org.apache.logging.log4j.Logger.info(String)
+org.apache.logging.log4j.core.appender.rolling.RollingFileManager.checkRollover(LogEvent)
+org.apache.logging.log4j.core.appender.rolling.CompositeTriggeringPolicy.isTriggeringEvent(LogEvent)
+
+org.apache.logging.log4j.core.appender.rolling.TimeBasedTriggeringPolicy.isTriggeringEvent(LogEvent)
+
+log4j2.xml配置了TimeBasedTriggeringPolicy按时间滚动的策略：
+<RollingFile name="RollingFile${USER_INFO}" fileName="${LOG_HOME}/${USER_INFO}.csv"
+    filePattern="${LOG_HOME}/$${date:yyyy-MM}/${USER_INFO}-%d{yyyy-MM-dd}.csv">
+    <PatternLayout pattern="%msg%n" />
+    <Policies>
+        <TimeBasedTriggeringPolicy interval="1" modulate="true" />
+    </Policies>
+    <DefaultRolloverStrategy>
+        <Delete basePath="${LOG_HOME}" maxDepth="2">
+            <IfFileName glob="*/${USER_INFO}*.csv" />
+            <IfLastModified age="180D" />
+        </Delete>
+    </DefaultRolloverStrategy>
+</RollingFile>
+
+
+
+

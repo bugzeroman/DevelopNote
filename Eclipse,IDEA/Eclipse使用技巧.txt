@@ -122,3 +122,15 @@ Eclipse -> Windows -> Show View -> Console
 选择Projects Presentation -> Hierarchical
 这样工程就能按照父子结构展示。
 ProjectsPresentationHierarchical.png
+
+# 16.分栏查看同一个文件
+左右分栏
+Ctrl+Shift+[
+上下分栏
+Ctrl+Shift+[
+
+# 17.分栏查看多个文件
+打开两个及以上文件时，
+通过鼠标拖动其中某一个文件，
+会弹出吸附提示预览框，
+按提示移动鼠标即可分栏。

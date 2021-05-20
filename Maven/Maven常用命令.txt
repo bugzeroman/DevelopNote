@@ -18,3 +18,27 @@ mvn test -DskipTests
 
 查看pom中生效的profile
 mvn help:active-profiles -N
+
+查看系统所有环境变量
+mvn help:system
+
+查看指定插件的帮助文档
+mvn clean:help
+其中clean可以换成其他插件名称
+
+直接运行Spring Boot
+mvn spring-boot:run
+
+TODO:
+查看插件目标参数列表
+mvn 插件goupId:插件artifactId[:插件version]:help -Dgoal=目标名称 -Ddetail
+mvn 插件前缀:help -Dgoal=目标名称 -Ddetail
+上面命令中的-Ddetail用户输出目标详细的参数列表信息，如果没有这个，目标的参数列表不会输出出来，看效果。
+
+插件前缀与插件groupId:artifactId是一一对应的关系，这个关系的配置存储在仓库的元数据中，元数据位于下面2个xml中：
+
+~/.m2/repository/org/apache/maven/plugins/maven-metadata-central.xml
+~/.m2/repository/org/codehaus/mojo/maven-metadata-central.xml
+C:\developtools\maven-repository\org\apache\maven\plugins\maven-metadata-alimaven.xml
+Maven help帮助命令使用
+Maven...

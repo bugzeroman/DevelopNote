@@ -51,11 +51,19 @@ common-util apache工具类，guava等工具类的测试使用
 JdkDemo 只使用到JDK相关类的功能测试
 MavenDemo 需要使用到Maven依赖的jar包的功能测试，后续可能抽到其他工程
 DownloadMaven 临时用来下载Maven jar包的工程
+Power designer相关两篇：导出word,导出SQL
+语言代码表 https://mp.weixin.qq.com/s?__biz=MzA5MTkxMDQ4MQ==&mid=2648934484&idx=1&sn=ef0a704c891f318a7c23fe000d9003d5&chksm=8862106abf15997c39a3387ce7b2e044cfb3abd92b908eb0971d084c8238ff5f99af412d6054&token=1299257585&lang=zh_CN#rd
+http://www.itsoku.com/article/282
+SpringBoot集成Cache缓存(Ehcache缓存框架，编程方式)
+mybatis内置别名和自定义别名
 
 9.其他
 更新文件目录到readme.md
 "C:\Program Files (my)\Git\bin\tree" -L 2 -N > readme.md
 
-
-
-
+编程式和声明式写法。
+1.编程式：
+编写代码
+2.声明式：
+配置XML
+使用注解

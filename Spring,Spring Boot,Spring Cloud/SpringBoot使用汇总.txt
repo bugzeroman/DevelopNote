@@ -1,0 +1,12 @@
+1.DataSource打印出来为null,实际是有参数的
+@Autowired
+DataSource ds;
+
+@Autowired
+DataSourceProperties dataSourceProperties;
+
+System.out.println(ds.toString());
+System.out.println(dataSourceProperties.toString());
+
+2.官方常见问题说明
+https://docs.spring.io/spring-boot/docs/current/reference/html/howto.html

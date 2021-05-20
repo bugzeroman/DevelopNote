@@ -363,6 +363,7 @@ service sshd start
 service network restart
 网络查看
 ifconfig
+ip addr
 
 数据去重:
 cat duplicate.txt | sort -u

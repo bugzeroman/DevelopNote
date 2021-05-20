@@ -1,0 +1,46 @@
+1.双引号转义
+双引号使用单引号替代，
+注意外面的使用双引号，
+或者使用\转义，
+举例：
+原文：
+```
+<?xml version="1.0" encoding="utf-8"?>
+```
+
+转义：
+```
+<?xml version='1.0' encoding='utf-8'?>
+<?xml version=\"1.0\" encoding=\"utf-8\"?>
+```
+
+转义后可以填入json的值，
+解析时就不会报错了：
+```
+{
+  "nodeId" : "node-107",
+  "command" : "<?xml version='1.0' encoding='utf-8'?>"
+}
+```
+
+2.回车换行需要转义
+原文：
+```
+<?xml version="1.0" encoding="utf-8"?>
+<rpc>
+</rpc>
+```
+转义：
+```
+<?xml version='1.0' encoding='utf-8'?>\r\n<rpc>\r\n</rpc>
+```
+不转义会报错，
+jackson可以支持不转义回车换行等控制符，
+通过设置如下参数为true：
+```
+com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS
+```
+
+com.google.common.net.MediaType.JSON_UTF_8
+xmlMapper.configure(DeserializationFeature.UNWRAP_ROOT_VALUE, true);
+xmlMapper.configure(SerializationFeature.WRAP_ROOT_VALUE, true);

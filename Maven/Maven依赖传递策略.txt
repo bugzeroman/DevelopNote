@@ -1,0 +1,6 @@
+
+依赖jar包冲突解决：
+路径最近原则、最先声明原则。
+
+参考：
+https://mp.weixin.qq.com/s?__biz=MzA5MTkxMDQ4MQ==&mid=2648933527&idx=1&sn=b09b1d6bd7a893224ad53282f15b962e&chksm=88621ca9bf1595bfb7034a5fc201f36ea24b7d80aa77d89505976c3bc52787b71cf4e28fb711&scene=178&cur_album_id=1318992648564424704#rd
