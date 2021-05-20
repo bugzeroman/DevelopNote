@@ -122,7 +122,7 @@ Defaule Value:该字段没有默认值，空着不填
 
 # 9.生成数据库刷库脚本
 生成MySQL数据库对应的DDL刷库脚本,
-请参考[PowerDesigner生成数据库设计文档]
+请参考[PowerDesigner生成数据库刷库脚本](https://www.jianshu.com/p/88ad36fbb7bd)
 
 # 10.生成Java POJO类
 PowerDesigner可以根据表设计直接生成Java的POJO类，
