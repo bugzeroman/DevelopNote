@@ -1,0 +1,102 @@
+1.说明
+使用PowerDesigner设计数据库表，
+基于[PowerDesigner设计数据库表](https://www.jianshu.com/p/8fcacfa74423),
+生成MySQL数据库对应的DDL刷库脚本。
+
+2.生成物理数据模型
+首先介绍PowerDesigner数据模型：
+CDM：Conceptual Data Model 概念数据模型
+PDM：Physical Data Model   物理数据模型
+二者的区别是，
+CDM是纯粹概念上的模型，
+PDM是和具体的数据库类型相关的，
+比如PostgreSQL、Oracle、MySQL等。
+生成SQL语句当然也就需要从PDM生成。
+
+这里首先先将CDM转换成PDM,
+对应的PDM类型为MySQL。
+在菜单上选择：
+Tools -> Generate Physical Data Model
+1.GeneratePhysicalDataModel.png
+然后新建一个PDM，
+DBMS选择MySQL5.0，
+Name填写UserProjectPDM,
+Code填写UserProjectPDM,
+点击确定即可：
+2.PDMGenerationOptions.png
+
+3.保存物理数据模型
+点击菜单栏的保存按钮(Saves the document),
+选择模型保存的目录:
+D:\项目设计\用户项目\1.数据库表概要设计\PowerDesignerModel
+以及修改保存的文件名：
+UserProjectPDM.pdm
+3.SavePDM.png
+
+4.生成数据库脚本
+确保使用的是物理模型PDM，
+可以生成对应数据库SQL脚本。
+在菜单上选择：
+Database -> Generate Database
+4.GenerateDatabase.png
+
+出现Database Generation对话框，
+默认在General选项卡下，
+Directory设置脚本保存目录：
+D:\MyDoc\Learn\9.项目设计\用户项目\1.数据库表概要设计\
+File name设置脚本文件名称，
+UserProject_MySQL刷库脚本.sql
+General type选择脚本的生成类型：
+Script Geneartion
+5.DatabaseGeneration.png
+点击确定生成脚本，
+会显示生成的文件，
+可以点击Edit...查看生成的脚本。
+9.GeneratedFiles.png
+
+5.查看生成的脚本
+UserProject_MySQL刷库脚本.sql：
+```
+/*==============================================================*/
+/* DBMS name:      MySQL 5.0                                    */
+/* Created on:     2021/5/20 16:22:53                           */
+/*==============================================================*/
+
+
+drop table if exists tbl_user;
+
+/*==============================================================*/
+/* Table: tbl_user                                              */
+/*==============================================================*/
+create table tbl_user
+(
+   id                   varchar(100) not null comment '用户ID',
+   name                 varchar(1024) comment '用户名称 ',
+   status               varchar(10) not null default 'NORMAL' comment '用户状态，有正常和暂停两种状态，默认状态为正常',
+   create_time          datetime not null comment '创建时间',
+   update_time          datetime comment '修改时间',
+   primary key (id)
+);
+
+alter table tbl_user comment '用户表，记录用户信息。';
+```
+
+6.生成脚本的其他参数
+在上面的Database Generation对话框，
+还有一些其它选项卡，
+可以控制生成的脚本的内容。
+6.1.Options选项卡
+可以选择是否生成drop table语句，
+是否需要创建索引等：
+6.DatabaseGenerationOptions.png
+
+6.2.Format选项卡
+可以选择生成的脚本文件格式，
+以及文件中字符大小写等：
+7.DatabaseGenerationFormat.png
+
+6.3.Preview选项卡
+可以提前预览生成的SQL，
+配合前面的参数配置查看效果：
+8.DatabaseGenerationPreview.png
+
