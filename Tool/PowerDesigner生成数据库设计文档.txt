@@ -1,0 +1,135 @@
+# 1.说明
+使用PowerDesigner设计数据库表，
+基于[PowerDesigner设计数据库表](https://www.jianshu.com/p/8fcacfa74423),
+生成数据库对应的表设计文档，
+PowerDesigner支持生成HTML、RTF和本地格式的文档，
+下面演示生成RTF格式的文档，
+然后把RTF文档保存为常见的Word文档格式。
+
+2.报表向导
+下面开始演示使用报表向导生成文档，
+在菜单上选择：
+Report -> Report Wizard...
+1.ReportWizard.png
+
+3.Welcome
+单击Report Wizard...后，
+首先进入Welcome标签页，
+可以修改生成的报表名称：
+UserTableReport
+选择报表使用的语言：
+Simplified Chinese(简体中文)
+2.Welcome.png
+
+4.Presentation Options
+单击下一步(N)>，
+进入Presentation Options标签页，
+选择生成的报表格式：
+RTF(Rich Text Format)
+3.PresentationOptions.png
+
+5.Report Structure
+单击下一步(N)>，
+进入Report Structure标签页，
+这里可以配置报表的内容格式，
+可以去掉勾选Short Descritpion Section，
+这样生成的文档就没有简略描述章节，
+因为这部分和全量描述章节重复了，
+就可以有选择的去掉：
+4.ReportStructure.png
+
+6.Report Layout
+单击下一步(N)>，
+进入Report Layout标签页，
+这里可以配置内容的具体样式，
+包括要显示哪些数据项，
+显示表的哪些字段，
+以及这些字段的宽度等，
+可以去掉Data Item，
+因为不需要单独展示每个字段，
+以及不需要展示关系约束字段：
+5.ReportLayout.png
+
+7.End
+单击下一步(N)>，
+进入End标签页，
+这里可以使用Preview...预览，
+如果不满意预览效果，
+可以退回到上一步进行修改，
+还可以选择完成创建向导时的动作，
+默认包括打开生成的文档：
+6.EndReportCreation.png
+
+8.RTF文档
+单击完成，
+就会生成RTF格式的文档，
+选择文档保存的目录:
+D:\项目设计\用户项目\1.数据库表概要设计\PowerDesignerModel
+7.SaveRTF.png
+单击保存(S)后，
+会弹出对话框，
+确认是否使用默认的RTF编辑器打开文档：
+8.OPenRTF.png
+单击是(Y)后，
+会使用Word打开文档，
+文件类型选择RTF格式即可：
+9.WordOPenRTFForamt.png
+
+9.修改RTF的目录
+打开RTF文档后，
+在目录的位置显示如下，
+没有生成对应的目录结构：
+```
+Table of Contents
+
+The 'Table of Contents' field needs to be updated!
+```
+需要手动增加目录
+Word -> 引用 -> 目录 -> 自动目录1
+
+9.文档内容
+生成目录后，
+文档内容如下：
+10.RFTContent.png
+
+10.另存为docx格式
+使用Word的另存为功能，
+将RTF格式转换为常见的docx格式，
+方便其他人查阅。
+Word -> 文件 -> 另存为
+选择保存类型(T):
+Word文档(*.docx)
+单击保存(S)即可：
+11.SaveWord.png
+
+11.报表视图
+在运行过报表向导后，
+左边的Object Browser下面会生成对应的Reports,
+可以保存这个视图，
+后面就能直接生成文档了，
+而不用重新使用报表向导：
+12.ReportsDigram.png
+
+12.重新生成文档
+在修改了数据库表设计后，
+可以直接重新生成文档，
+在菜单上选择：
+Report -> Generate RTF...
+13.GenerateRTF.png
+
+13.其他设置
+可以通过一系列配置，
+控制生成的文档，
+直到符合自己的要求：
+4.1.ReportStructureDefine.png
+
+
+
+
+
+
+
+
+
+
+
