@@ -1,0 +1,112 @@
+PowerDesigner概念汇总
+
+1.概念数据模型
+    生成物理模型
+    生成面向对象模型
+    生成数据库设计文档
+        数据库文档模板修改，优化展示的字段。
+
+2.物理数据模型
+    数据库模型
+    PostgreSQL
+    生成PostgreSQL数据库DDL脚本
+        生成数据库脚本模板修改，优化生成的SQL。
+
+3.面向对象模型
+    Java POJO
+    生成Java POJO Class源码类
+
+
+使用技巧汇总
+1.去掉图表中的网格底线
+Tools -> Dispaly Preferences -> General Settings -> 
+General标签 -> Diagram -> 
+取消勾选Show page delimiter，
+点击OK，
+这样就能去掉背景中的黑色网格线了。
+1.ShowPageDelimiter.png
+
+2.多个表创建相同的字段冲突
+多个表创建同一个字段的时候，
+比如都创建id属性，会报冲突，
+不允许创建同一个字段，
+Tools -> ModelOptions
+取消勾选Model Settings中的Data Item下的
+Unique code
+Allow reuse
+2.ModelOptions.png
+
+3.设置生成mysql的表注释字符最大长度
+项目的表注释字数很多是，
+自动生成表的时候，
+注释就会出现字数显示不全的问题。
+
+表的注释：
+设置dbms的属性，找到mysql5.0-->script-->objects-->Table-->TableComment:
+value内容如下：
+```
+alter table [%QUALIFIER%]%TABLE% comment %.60qA:COMMENT%
+```
+60代表生成注解的最大字符数，修改这个数值就搞定了,
+可以修改为600等。
+3.TableColumnLayout.png
+
+4.设置字段默认的数据类型和长度
+新建字段时，
+需要选择字段的类型和长度，
+可以设置一个常用的默认值，
+只需要修改不一样的字段，
+而不用每次创建都设置了。
+4.DefaultDataTypeAndLength.png
+
+5.自定义字段的属性
+PowerDesigner提供了很多字段的属性，
+不需要使用全部的属性，
+可以有过滤一下，只显示需要的属性。
+5.CustomizeColumnFilter.png
+
+6.修改字段内部类型对应的物理类型
+在概念数据模型转换到物理数据模型时，
+字段的类型也会自动对应到物理数据类型，
+如果觉得映射关系不满意，
+可以修改内部类型对应的物理类型，
+比如下面的Internal的DT类型，
+对应PostgreSQL的物理类型为TIMESTAMP。
+6.DateTime2TIMESTAMP.png
+
+7.关闭Name到Code的自动映射
+创建字段时，
+如果Name和Code不相同，
+可以关闭自动映射。
+7.GeneralOptionsNameToCode.png
+
+8.重新布局表关系连接线
+在表的位置发生移动后，
+连接线会变得很乱，
+可以重新布局连接线。
+8.Relationship_Dispoition_ArrangerConnectors.png
+
+9.表按照创建时间排序
+生成报表时，
+确认表展示的顺序，
+可以按照创建时间排序。
+9.EntitySort.png
+
+10.报表字段True显示为是
+生成报表时，
+报表的Boolean字段,
+显示的是True和False,
+可以修改为"是"和"否"。
+10.ReportTrue.png
+
+11.报表字段Mandatory显示为必填
+11.RepotrMandatory.png
+
+12.报表的表格属性和宽度
+生成报表时，
+可以设置表格需要显示的属性，
+以及对应的宽度，
+宽度可以设置为比例或者绝对值，
+从而让报表更美观。
+12.TableColumnLayout.png
+
