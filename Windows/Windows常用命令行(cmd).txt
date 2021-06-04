@@ -1,0 +1,15 @@
+进入Windows cmd命令行，
+可以使用如下命令：
+
+1.查看IP和Mac地址对应关系
+arp -a
+
+2.查看网络可达性
+ping 10.21.13.14
+
+3.查看Windows IP配置
+ipconfig
+
+4.跟踪到目标地址经过的路由
+tracert 10.21.13.14
+

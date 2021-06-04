@@ -12,6 +12,19 @@ object：对象，需要操作的对象，和表关联
 注意设计的URL不能冲突，
 比如多个path variable不能在同一个层级。
 
+对应代码方法的开发：
+create*
+update*
+delete*
+query*
+queryBatch*
+同义词:
+create -- add
+query  -- get
+queryBatch --  getAll
+建议不要混用同义词,
+使用一套统一的命名方法。
+
 # 2.url为多个单词，使用驼峰结构
 proejct/myDesignObject POST
 
