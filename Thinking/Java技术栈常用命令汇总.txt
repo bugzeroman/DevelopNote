@@ -1,0 +1,18 @@
+Java技术栈常用命令汇总
+是在Java开发中用到的服务器的各种命令的汇总，
+包括各种服务的快捷启动命令：
+
+1.MySQL数据库
+启动MySQL服务
+/etc/init.d/mysqld restart
+
+/etc/init.d/mysqld start
+/etc/init.d/mysqld stop
+
+2.PostgreSQL数据库
+1.启动数据库
+pg_ctl -D $PGDATA -l $PGLOG/logfile start
+2.停止数据库
+pg_ctl -D $PGDATA stop
+3.客户端连接数据库
+psql -d postgres -p 5432 -U postgres -h 10.21.13.14

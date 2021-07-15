@@ -164,5 +164,15 @@ Java编辑器 使用try/catch块来包围 未设置，太常用了，所以在这里列出,建议自己设置。
 执行 Ctrl+U 
 
 # 自动生成源码
-快速生成toString的方法：
-Alt+ Shift + s ——> s ——>Enter 
+不带Shift使用Eclipse菜单，
+带Shift弹出快捷菜单。
+
+快速生成get/set方法：
+Alt + s —> r 
+Alt+ Shift + s —> r 
+
+快速生成toString方法：
+Alt + s —> s
+Alt+ Shift + s —> s
+
+

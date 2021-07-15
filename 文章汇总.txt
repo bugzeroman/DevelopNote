@@ -20,6 +20,7 @@ Linux下犀利的FTP工具-lftp
 Python在Windows安装Version3.8(下载到安装选项说明)
 Redis启动和停止命令，以及对应的Shell脚本
 使用openssh生成私钥和秘钥
+IDEA查看类结果图的方法
 
 3.待发布文章
 
@@ -50,7 +51,7 @@ JdkDemo 只使用到JDK相关类的功能测试
 MavenDemo 需要使用到Maven依赖的jar包的功能测试，后续可能抽到其他工程
 DownloadMaven 临时用来下载Maven jar包的工程
 Power designer使用汇总，小的配置修改点
-语言代码表 https://mp.weixin.qq.com/s?__biz=MzA5MTkxMDQ4MQ==&mid=2648934484&idx=1&sn=ef0a704c891f318a7c23fe000d9003d5&chksm=8862106abf15997c39a3387ce7b2e044cfb3abd92b908eb0971d084c8238ff5f99af412d6054&token=1299257585&lang=zh_CN#rd
+语言代码表 https://mp.weixin.qq.com/s?_Biz=MzA5MTkxMDQ4MQ==&mid=2648934484&idx=1&sn=ef0a704c891f318a7c23fe000d9003d5&chksm=8862106abf15997c39a3387ce7b2e044cfb3abd92b908eb0971d084c8238ff5f99af412d6054&token=1299257585&lang=zhCN#rd
 http://www.itsoku.com/article/282
 SpringBoot集成Cache缓存(Ehcache缓存框架，编程方式)
 mybatis内置别名和自定义别名

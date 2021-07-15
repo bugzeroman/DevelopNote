@@ -8,8 +8,8 @@
 # 2.驼峰命名转成下划线命名
 正则为  `(?<=[a-z])([A-Z])`
 替换为 `_\l$1`
-对于小驼峰helloWord转成hello_word，
-对于大驼峰HelloWord转成Hello_word
+对于小驼峰helloWord转成helloWord，
+对于大驼峰HelloWord转成HelloWord
 大驼峰首字母如果需要转成小写，
 就需要配合其他正则表达式。
 

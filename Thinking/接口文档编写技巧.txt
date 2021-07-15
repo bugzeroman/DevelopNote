@@ -19,8 +19,8 @@ delete*
 query*
 queryBatch*
 同义词:
-create -- add
-query  -- get
+create -- add, insert, save
+query  -- get, select
 queryBatch --  getAll
 建议不要混用同义词,
 使用一套统一的命名方法。
@@ -95,6 +95,11 @@ PageHelper对应参数pageNum=0有不同的处理方式，
 以该条规则优先级更高。
 
 
+10.
+说明：响应参数使用的是HTTP协议的返回，不需要业务单独处理。
+说明：响应参数的nodes是一个List类型，
+在返回的JSON报文中直接是一个数组，
+不需要业务另外包装一个有nodes节点的对象返回。
 
 
 

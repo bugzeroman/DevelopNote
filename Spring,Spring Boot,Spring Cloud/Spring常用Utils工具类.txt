@@ -1,0 +1,25 @@
+1.spring-core中的工具类
+<dependency>
+  <groupId>org.springframework</groupId>
+  <artifactId>spring-core</artifactId>
+  <version>5.2.15.RELEASE</version>
+</dependency>
+2.ReflectionUtils
+org.springframework.util.ReflectionUtils
+
+
+3.PropertiesLoaderUtils
+org.springframework.core.io.support.PropertiesLoaderUtils
+
+4.ClassUtils
+org.springframework.util.ClassUtils
+
+
+2.spring-beans中的工具类
+<dependency>
+  <groupId>org.springframework</groupId>
+  <artifactId>spring-beans</artifactId>
+  <version>5.2.4.RELEASE</version>
+</dependency>
+1.BeanUtils
+org.springframework.beans.BeanUtils

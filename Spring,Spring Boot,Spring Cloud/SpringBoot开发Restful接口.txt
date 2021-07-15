@@ -319,4 +319,4 @@ URL中的?pageNum=1&pageSize=10对应方法参数的注解:
 
 # 14.HTTP RequestBody
 HTTP RequestBody请求参数很简单，
-对应应方法参数的注解@RequestBody User user;
+对应方法参数的注解@RequestBody User user;

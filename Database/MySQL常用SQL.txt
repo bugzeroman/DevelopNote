@@ -89,8 +89,10 @@ DROP TABLE city;
 DROP TABLE IF EXISTS `city`;
 
 -- 5.表数据data操作相关
--- 插入数据到表city中
+-- 插入数据到表city中,不指定字段名称，必须对应所有字段
 INSERT city VALUES (1 ,1,'常州市','木木与呆呆的家在常州。');
+--  指定字段名称，值的填写可以更灵活
+INSERT INTO city(id,province_id,city_name,description) VALUES (1 ,1,'常州市','木木与呆呆的家在常州。');
 
 -- 修改表数据
 UPDATE city SET city_name='南京市' WHERE id=1;
@@ -135,3 +137,47 @@ show variables like 'character%';
 set character_set_database=utf8;
 SET character_set_system=utf8;
 
+-- 查看系统当前时间
+SELECT NOW() FROM DUAL;
+
+-- 常用参考模板
+-- 1.删除和创建表结构
+DROP TABLE IF EXISTS city;
+CREATE TABLE `city` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '城市编号',
+  `province_id` int(10) unsigned  NOT NULL COMMENT '省份编号',
+  `city_name` varchar(25) DEFAULT NULL COMMENT '城市名称',
+  `description` varchar(25) DEFAULT NULL COMMENT '描述',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+-- 2.查看和删除表数据
+SELECT * FROM city;
+DELETE FROM city;
+
+-- 3.插入、更新、删除表数据
+INSERT city VALUES (1 ,1,'常州市','木木与呆呆的家在常州。');
+INSERT INTO city(id,province_id,city_name,description) VALUES (1 ,1,'常州市','木木与呆呆的家在常州。');
+
+-- 1.删除和创建表结构
+DROP TABLE IF EXISTS tbl_port;
+create table tbl_port
+(
+   device_id            varchar(100) not null comment '设备ID',
+   port_id              varchar(100) not null comment '端口ID',
+   port_name            varchar(100) not null comment '端口名称，网元设备上具体接口名称',
+   band                 varchar(100) comment '带宽，接口的带宽',
+   state                varchar(100) not null comment '接口状态，接口的激活状态，up/down',
+   create_time          datetime not null comment '创建时间',
+   update_time          datetime comment '修改时间',
+   primary key (device_id, port_id)
+);
+
+-- 2.查看和删除表数据
+SELECT * FROM tbl_port;
+DELETE FROM tbl_port;
+
+-- 3.插入、更新、删除表数据
+INSERT INTO tbl_port(device_id, port_id, port_name, band, state, create_time) 
+VALUES("0x69E760","28","GigabitEthernet0/3/40",1000,"up",NOW());
+INSERT tbl_port VALUES("0x69E760","28","GigabitEthernet0/3/40",1000,"up",NOW(),NULL);
